@@ -1510,3 +1510,47 @@ nav button { flex-shrink:0; }
   .prep-sheet { break-after:page; }
   .batch-label { break-inside:avoid; }
 }
+
+/* Owner tutorial */
+.tutorial-overlay { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:24px; background:rgba(24,47,57,.72); backdrop-filter:blur(3px); }
+.tutorial-dialog { width:min(620px,100%); padding:34px; box-shadow:0 24px 80px rgba(11,32,41,.35); }
+.tutorial-dialog h2 { margin:12px 0; font-size:28px; color:#314f60; }
+.tutorial-dialog > p { color:#5f7683; font-size:14px; line-height:1.7; }
+.tutorial-progress { display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-bottom:26px; }
+.tutorial-progress span { height:5px; border-radius:9px; background:#dbe5e9; }
+.tutorial-progress span.complete { background:#4d8878; }
+.tutorial-tip { display:grid; gap:6px; margin:20px 0; padding:16px 18px; border-left:4px solid #d8a85b; border-radius:5px; background:#fff8ea; color:#5e6463; font-size:12px; line-height:1.6; }
+.tutorial-open { width:100%; justify-content:center; }
+.tutorial-actions { display:flex; align-items:center; gap:10px; margin-top:28px; }
+.tutorial-actions > span { flex:1; }
+.tutorial-welcome { display:flex; align-items:center; justify-content:space-between; gap:30px; padding:30px; background:linear-gradient(135deg,#e8f2ef,#fff); }
+.tutorial-welcome h2 { margin:8px 0; color:#365a68; }
+.tutorial-welcome p { max-width:720px; margin:0; color:#617783; line-height:1.7; }
+.tutorial-welcome button { flex-shrink:0; }
+.tutorial-flow { display:flex; align-items:center; justify-content:center; gap:10px; margin:24px 0; padding:14px; border-radius:8px; background:#344f59; color:#fff; font-size:11px; }
+.tutorial-flow span { padding:7px 11px; border-radius:20px; background:#42636f; }
+.tutorial-flow b { color:#9fc6b9; }
+.tutorial-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.tutorial-card { display:grid; grid-template-columns:auto 1fr; gap:16px; padding:24px; }
+.tutorial-number { display:grid; place-items:center; width:34px; height:34px; border-radius:50%; background:#dfeee9; color:#316a5c; font-weight:700; }
+.tutorial-card h3 { margin:5px 0 10px; color:#3b5b6a; }
+.tutorial-card p { margin:0 0 12px; color:#627986; font-size:12px; line-height:1.65; }
+.tutorial-card small { display:block; min-height:45px; color:#7a8d96; line-height:1.55; }
+.tutorial-card button { margin-top:16px; padding:0; color:#2f6f62; }
+.tutorial-rhythm { margin-top:22px; padding:28px; }
+.tutorial-rhythm h2 { margin-top:0; }
+.tutorial-rhythm > div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 28px; }
+.tutorial-rhythm p { margin:0; color:#617783; font-size:12px; line-height:1.6; }
+@media (max-width:700px) {
+  .tutorial-overlay { align-items:end; padding:10px; }
+  .tutorial-dialog { max-height:92vh; overflow:auto; padding:24px; }
+  .tutorial-dialog h2 { font-size:23px; }
+  .tutorial-welcome { align-items:flex-start; flex-direction:column; padding:24px; }
+  .tutorial-flow { justify-content:flex-start; overflow-x:auto; }
+  .tutorial-flow span,.tutorial-flow b { flex-shrink:0; }
+  .tutorial-grid,.tutorial-rhythm > div { grid-template-columns:1fr; }
+  .tutorial-card small { min-height:0; }
+  .tutorial-actions { flex-wrap:wrap; }
+  .tutorial-actions .text-button { width:100%; order:4; }
+}
+@media print { .tutorial-overlay { display:none!important; } }

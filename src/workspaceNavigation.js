@@ -32,7 +32,7 @@ export const sections = [
   },
   {
     name: "Settings",
-    pages: ["Cost settings", "Tax settings", "Backups", "Security"],
+    pages: ["Tutorial", "Cost settings", "Tax settings", "Backups", "Security"],
   },
 ];
 export const pages = {
@@ -190,6 +190,11 @@ export const pages = {
     label: "Production costs",
     description:
       "Set wage and electricity assumptions for future production and quotes.",
+  },
+  Tutorial: {
+    label: "Getting started",
+    description:
+      "Follow the owner workflow from initial setup through production, fulfillment and monthly review.",
   },
   "Tax settings": {
     label: "Tax settings",

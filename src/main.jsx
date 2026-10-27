@@ -8,6 +8,7 @@ import { persistWorkspace } from "./backupStorage.js";
 import { stockAlerts } from "./business.js";
 import PlanningWorkspace from "./PlanningWorkspace.jsx";
 import OwnerWorkspace from "./OwnerWorkspace.jsx";
+import TutorialWorkspace, { GuidedTutorial } from "./TutorialWorkspace.jsx";
 import { verifyPin } from "./security.js";
 import {
   sections,
@@ -38,6 +39,7 @@ import { units, lineCost, recipeCost, convertItem } from "./costing.js";
 import "./style.css";
 const uid = () => crypto.randomUUID();
 const lockKey = "bakery-ledger-lock-v1";
+const tutorialKey = "bakery-ledger-tutorial-v1";
 const readLock = () => {
   try {
     return JSON.parse(localStorage.getItem(lockKey)) || null;
@@ -139,6 +141,9 @@ function App() {
   });
   const [lockConfig, setLockState] = useState(readLock);
   const [locked, setLocked] = useState(() => !!readLock());
+  const [showTutorial, setShowTutorial] = useState(
+    () => !localStorage.getItem(tutorialKey),
+  );
   const [page, setPage] = useState(() => readRoute(window.location.hash).page),
     [routeContext, setRouteContext] = useState(
       () => readRoute(window.location.hash).context,
@@ -196,6 +201,10 @@ function App() {
     else localStorage.removeItem(lockKey);
     setLockState(next);
     setLocked(false);
+  }
+  function closeTutorial() {
+    localStorage.setItem(tutorialKey, "complete");
+    setShowTutorial(false);
   }
   function save(next, restoring = false) {
     try {
@@ -454,6 +463,9 @@ function App() {
           <button className="text-button" onClick={() => navigate("Backups")}>
             Backups & recovery
           </button>
+          <button className="text-button" onClick={() => setShowTutorial(true)}>
+            Open tutorial
+          </button>
           {lockConfig && (
             <button className="text-button" onClick={() => setLocked(true)}>
               Lock workspace
@@ -578,7 +590,12 @@ function App() {
               </div>
             </section>
           )}
-          {[
+          {page === "Tutorial" ? (
+            <TutorialWorkspace
+              navigate={navigate}
+              startTour={() => setShowTutorial(true)}
+            />
+          ) : [
             "Calendar",
             "Prep sheets",
             "Inventory lots",
@@ -1115,6 +1132,9 @@ function App() {
             </form>
           </section>
         </div>
+      )}
+      {showTutorial && (
+        <GuidedTutorial navigate={navigate} onClose={closeTutorial} />
       )}
     </div>
   );
