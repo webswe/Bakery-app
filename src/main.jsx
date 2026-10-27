@@ -1,5 +1,5 @@
-import Operations, { SaleFields } from "./Operations";
-import { addPresets, sell, fullCost } from "./operations";
+import Operations, { SaleFields } from "./InventoryWorkspace.jsx";
+import { addPresets, sell, fullCost } from "./operations.js";
 import Dashboard from "./Dashboard";
 import { migrateData } from "./analytics";
 import React, { useState } from "react";

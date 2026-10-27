@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { addPresets, availability, produce, fullCost } from "./operations";
-import { units, convert } from "./costing";
+import { addPresets, availability, produce, fullCost } from "./operations.js";
+import { units, convert } from "./costing.js";
 const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     n,
