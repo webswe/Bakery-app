@@ -1554,3 +1554,78 @@ nav button { flex-shrink:0; }
   .tutorial-actions .text-button { width:100%; order:4; }
 }
 @media print { .tutorial-overlay { display:none!important; } }
+
+/* Responsive quality-of-life controls */
+.header-tools { min-width:0; }
+.quick-nav-label { display:flex; align-items:center; gap:8px; color:#6d808b; }
+.quick-nav-label > span { font-size:10px; }
+.quick-nav { width:190px; max-width:28vw; padding:8px 30px 8px 10px; border:1px solid #d9e4e8; border-radius:7px; background:#f8fafb; color:#365362; font-size:11px; }
+.quick-nav-label kbd { padding:3px 6px; border:1px solid #dbe4e8; border-bottom-width:2px; border-radius:4px; background:#fff; color:#7b8c95; font-family:inherit; font-size:9px; white-space:nowrap; }
+.save-indicator { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
+.back-to-top { position:fixed; right:22px; bottom:22px; z-index:9; width:44px; height:44px; border:1px solid #cbdde1; border-radius:50%; background:#fff; color:#2f6f62; box-shadow:0 8px 26px rgba(23,52,62,.18); font-size:20px; }
+.content > .panel:has(> table),.planning-workspace > .panel:has(> table) { overflow-x:auto; }
+.content table { font-variant-numeric:tabular-nums; }
+.workspace-tabs { scrollbar-width:thin; scrollbar-color:#b7c9cf transparent; }
+.workspace-tabs button { min-height:40px; }
+
+@media (max-width:1000px) {
+  .quick-nav-label > span,.quick-nav-label kbd,.save-indicator { display:none; }
+  .quick-nav { max-width:230px; width:210px; }
+  .metric-strip { overflow-x:auto; }
+}
+@media (max-width:850px) {
+  .app > main > header { position:sticky; top:0; z-index:8; height:62px; background:rgba(255,255,255,.96); backdrop-filter:blur(8px); }
+  .app > main > header > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .header-tools { margin-left:auto; }
+  .quick-nav { width:185px; max-width:42vw; }
+  .header-avatar { display:none; }
+  .workspace-tabs { position:sticky; top:62px; z-index:7; margin-inline:-20px; padding:8px 20px; background:rgba(244,246,248,.97); border-block:1px solid #dbe5eb; }
+  .page-title { margin-bottom:22px; }
+  .page-title > div { min-width:0; }
+  .page-title p { max-width:650px; }
+  .content > .panel:has(> table),.planning-workspace > .panel:has(> table),.table-scroll { overscroll-behavior-inline:contain; scrollbar-width:thin; }
+}
+@media (max-width:700px) {
+  .form-row { flex-direction:column; gap:0; }
+  .planning-form .form-row { gap:12px; }
+  table { min-width:680px; }
+  .calendar-grid { min-width:680px; }
+  .panel-heading { align-items:flex-start; flex-wrap:wrap; padding:18px; }
+  .panel-heading > button { min-height:40px; }
+  .cost-summary { align-items:flex-start; flex-direction:column; gap:10px; }
+  .cost-summary b { margin-left:6px; }
+  .operations-banner { align-items:flex-start; flex-direction:column; }
+  .operations-banner button { width:100%; }
+  .receipt { padding:22px; }
+  .back-to-top { right:14px; bottom:14px; }
+}
+@media (max-width:580px) {
+  .app > main > header { padding:0 14px; }
+  .app > main > header > span { display:none; }
+  .header-tools,.quick-nav-label,.quick-nav { width:100%; max-width:none; }
+  .content { padding:18px 12px 72px; }
+  .content > .page-title { margin-bottom:20px; }
+  .page-title h1 { margin-bottom:8px; }
+  .page-title .primary { width:100%; min-height:44px; }
+  .workspace-tabs { top:62px; margin-inline:-12px; padding-inline:12px; }
+  .stats { grid-template-columns:1fr; gap:10px; }
+  .stat { padding:16px 18px; }
+  .stat strong { margin:10px 0 6px; }
+  .metric-strip { display:flex; padding:14px 4px; }
+  .metric-strip > div { min-width:145px; }
+  .planning-toolbar { gap:16px; margin-bottom:18px; }
+  .planning-toolbar h2 { font-size:19px; }
+  .planning-actions > button,.planning-actions > label { flex:1 1 145px; min-height:44px; }
+  .stock-form { display:grid; grid-template-columns:minmax(0,1fr) minmax(90px,.65fr); min-width:0; width:100%; }
+  .stock-form input,.stock-form select { width:100%; min-height:42px; }
+  .stock-form > button { min-height:42px; }
+  .modal { max-height:96vh; border-radius:12px 12px 0 0; }
+  .overlay { align-items:flex-end; padding:0; }
+  .modal-actions { position:sticky; bottom:-17px; z-index:2; margin-inline:-17px; padding:14px 17px; background:#fff; box-shadow:0 -8px 20px rgba(34,60,70,.08); }
+  .modal-actions button { flex:1; min-height:44px; }
+  .line-amount { flex-wrap:wrap; }
+  .line-amount select { flex:1; min-width:110px; }
+  .saved-quote,.production-task { padding:19px; }
+  .workflow-handoff button { padding-left:0; text-align:left; }
+  .tutorial-card { grid-template-columns:1fr; }
+}

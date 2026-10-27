@@ -17,7 +17,7 @@ import {
   readRoute,
   routeHash,
 } from "./workspaceNavigation.js";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
   LayoutDashboard,
@@ -144,6 +144,8 @@ function App() {
   const [showTutorial, setShowTutorial] = useState(
     () => !localStorage.getItem(tutorialKey),
   );
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const quickNav = useRef(null);
   const [page, setPage] = useState(() => readRoute(window.location.hash).page),
     [routeContext, setRouteContext] = useState(
       () => readRoute(window.location.hash).context,
@@ -176,8 +178,27 @@ function App() {
   }, []);
   useEffect(() => {
     document.getElementById("workspace-title")?.focus({ preventScroll: true });
+    document
+      .querySelector('.workspace-tabs [aria-current="page"]')
+      ?.scrollIntoView({ block: "nearest", inline: "center" });
     window.scrollTo(0, 0);
   }, [page]);
+  useEffect(() => {
+    const scroll = () => setShowBackToTop(window.scrollY > 500);
+    const shortcut = (event) => {
+      if (document.querySelector('[aria-modal="true"]')) return;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        quickNav.current?.focus();
+      }
+    };
+    window.addEventListener("scroll", scroll, { passive: true });
+    window.addEventListener("keydown", shortcut);
+    return () => {
+      window.removeEventListener("scroll", scroll);
+      window.removeEventListener("keydown", shortcut);
+    };
+  }, []);
   useEffect(() => {
     if (!lockConfig || locked) return;
     let timer;
@@ -478,8 +499,28 @@ function App() {
           <span>
             Workspace <span className="slash">/</span> <b>{section.name}</b>
           </span>
-          <div>
-            <span className="status-dot" /> Local workspace{" "}
+          <div className="header-tools">
+            <label className="quick-nav-label">
+              <span>Jump to</span>
+              <select
+                ref={quickNav}
+                className="quick-nav"
+                value={page}
+                onChange={(event) => navigate(event.target.value)}
+                aria-label="Jump to a workspace page"
+                title="Quick page switcher (Ctrl or Command + K)"
+              >
+                {sections.map((group) => (
+                  <optgroup label={group.name} key={group.name}>
+                    {group.pages.map((name) => (
+                      <option value={name} key={name}>{pages[name].label}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <kbd>⌘/Ctrl K</kbd>
+            </label>
+            <span className="save-indicator"><span className="status-dot" /> Saved locally</span>
             <span className="header-avatar">B</span>
           </div>
         </header>
@@ -1135,6 +1176,24 @@ function App() {
       )}
       {showTutorial && (
         <GuidedTutorial navigate={navigate} onClose={closeTutorial} />
+      )}
+      {showBackToTop && (
+        <button
+          className="back-to-top no-print"
+          aria-label="Back to top"
+          title="Back to top"
+          onClick={() =>
+            window.scrollTo({
+              top: 0,
+              behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+                .matches
+                ? "auto"
+                : "smooth",
+            })
+          }
+        >
+          ↑
+        </button>
       )}
     </div>
   );
