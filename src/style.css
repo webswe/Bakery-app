@@ -1410,3 +1410,49 @@ nav button { flex-shrink:0; }
 .saved-quote form { display:grid; gap:8px; margin:16px 0; }
 .saved-quote label { display:grid; gap:6px; }
 @media print { aside, header, .page-title, .no-print, .stock-alert {display:none!important;} .app > main {margin:0;width:100%;} .content {padding:0;} .panel {break-inside:avoid;} }
+/* Shared workspace structure */
+.workspace-guide { margin:28px 4px; padding-top:20px; border-top:1px solid #36515b; color:#c7d6d9; line-height:1.6; }
+.workspace-guide p { font-size:11px; margin:0 0 8px; }
+.workspace-guide small { font-size:10px; color:#a2b9bf; }
+.workspace-local { margin-top:auto; padding:18px 4px 0; color:#c7d6d9; font-size:11px; }
+.workspace-local small { display:block; margin:8px 0; color:#a2b9bf; font-size:10px; }
+.workspace-local button { padding:8px 0; color:#d9e6e6; font-size:11px; }
+.workspace-tabs { display:flex; gap:4px; overflow-x:auto; border-bottom:1px solid #dbe5eb; margin:-8px 0 24px; padding:0 0 8px; }
+.workspace-tabs button { flex-shrink:0; background:transparent; color:#5c7483; border-radius:6px; padding:10px 14px; font-size:12px; white-space:nowrap; }
+.workspace-tabs button.active { background:#e4efec; color:#285e53; font-weight:600; }
+.workflow-handoff { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:12px 16px; margin-bottom:24px; background:#edf3f7; border:1px solid #dfe9ef; border-radius:8px; font-size:12px; color:#58707e; }
+.workflow-handoff button { flex-shrink:0; color:#2d675c; }
+.today-board { margin-bottom:32px; }
+.today-board h2 { font-size:18px; margin:8px 0 18px; }
+.today-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.today-grid button { position:relative; display:flex; align-items:flex-start; flex-direction:column; padding:20px; border:1px solid #dce6eb; border-radius:10px; background:#fff; color:#3e596a; text-align:left; gap:10px; }
+.today-grid strong { font-size:28px; line-height:1; }
+.today-grid small { color:#718693; font-size:11px; }
+.today-grid svg { position:absolute; top:20px; right:18px; color:#3e7b6c; }
+#workspace-title:focus { outline:none; }
+.restore-file { display:flex; flex-direction:column; gap:12px; border-top:1px solid #dce6eb; margin:24px 0; padding-top:24px; }
+.restore-file small { color:#718693; line-height:1.6; }
+.content > .page-title { margin-bottom:28px; }
+.content table { width:100%; }
+.content > .planning-workspace { min-width:0; }
+@media (max-width:850px) {
+ .workspace-guide,.workspace-local { display:none; }
+ .app > aside { padding-bottom:8px; }
+ .app > aside nav { margin-top:16px; }
+ .workspace-tabs { margin-top:0; }
+ .workflow-handoff { align-items:flex-start; flex-direction:column; gap:8px; }
+}
+@media (max-width:580px) {
+ .today-grid { grid-template-columns:1fr; gap:10px; }
+ .today-grid button { padding:16px 18px; display:grid; grid-template-columns:1fr auto; align-items:center; gap:10px; }
+ .today-grid button strong { grid-column:2; grid-row:1/3; padding-right:26px; font-size:26px; }
+ .today-grid button small { grid-column:1; }
+ .today-grid svg { top:24px; }
+ .workspace-tabs { width:100%; }
+}
+@media print { .workspace-tabs,.workflow-handoff,.today-board { display:none!important; } }
+.brand { color:inherit; text-decoration:none; }
+@media (max-width:580px) {
+ .app > aside nav { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; overflow:visible; }
+ .app > aside nav button { flex-direction:column; min-width:0; padding:9px 4px; gap:6px; font-size:10px; }
+}

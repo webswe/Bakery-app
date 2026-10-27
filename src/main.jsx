@@ -6,7 +6,14 @@ import BakeryTools from "./BakeryTools.jsx";
 import { persistWorkspace } from "./backupStorage.js";
 import { stockAlerts } from "./business.js";
 import PlanningWorkspace from "./PlanningWorkspace.jsx";
-import React, { useState } from "react";
+import {
+  sections,
+  pages,
+  sectionFor,
+  readRoute,
+  routeHash,
+} from "./workspaceNavigation.js";
+import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import {
   LayoutDashboard,
@@ -20,6 +27,7 @@ import {
   Trash2,
   ChefHat,
   TrendingUp,
+  Settings,
   Search,
   X,
 } from "lucide-react";
@@ -118,15 +126,45 @@ function App() {
       return migrateData(addPresets(initial));
     }
   });
-  const [page, setPage] = useState("Overview"),
+  const [page, setPage] = useState(() => readRoute(window.location.hash).page),
+    [routeContext, setRouteContext] = useState(
+      () => readRoute(window.location.hash).context,
+    ),
     [modal, setModal] = useState(null),
     [error, setError] = useState(""),
     [query, setQuery] = useState(""),
     [month, setMonth] = useState(today().slice(0, 7));
+  const section = sectionFor(page),
+    info = pages[page];
+  function navigate(nextPage, context = {}) {
+    setModal(null);
+    setPage(nextPage);
+    setRouteContext(context);
+    setQuery("");
+    setError("");
+    window.location.hash = routeHash(nextPage, context);
+  }
+  useEffect(() => {
+    const handle = () => {
+      const route = readRoute(window.location.hash);
+      setModal(null);
+      setPage(route.page);
+      setRouteContext(route.context);
+      setQuery("");
+      setError("");
+    };
+    window.addEventListener("hashchange", handle);
+    return () => window.removeEventListener("hashchange", handle);
+  }, []);
+  useEffect(() => {
+    document.getElementById("workspace-title")?.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }, [page]);
   function save(next, restoring = false) {
     try {
       persistWorkspace(localStorage, next, today(), restoring);
       setData(next);
+      setError("");
       return true;
     } catch {
       setError("Could not save. Export a backup and check available storage.");
@@ -144,6 +182,14 @@ function App() {
       return null;
     }
   }
+  useEffect(() => {
+    if (!modal) return;
+    const previous = document.activeElement;
+    document.querySelector(".modal button")?.focus();
+    return () => {
+      if (previous?.isConnected) previous.focus();
+    };
+  }, [modal]);
   const sales = data.sales.filter((s) => s.date.startsWith(month)),
     expenses = data.expenses.filter((s) => s.date.startsWith(month)),
     revenue = sales.reduce((s, x) => s + x.total, 0),
@@ -244,16 +290,6 @@ function App() {
       setError(err.message);
     }
   }
-  function backup() {
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
-    );
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `bakery-ledger-${today()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
   async function restore(e) {
     try {
       const d = JSON.parse(await e.target.files[0].text());
@@ -289,7 +325,14 @@ function App() {
   return (
     <div className="app">
       <aside>
-        <a className="brand">
+        <a
+          className="brand"
+          href="#page=Overview"
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("Overview");
+          }}
+        >
           <span className="brand-icon">
             <ChefHat />
           </span>
@@ -306,77 +349,44 @@ function App() {
           <span className="dot" />
         </div>
         <div className="nav-label">WORKSPACE</div>
-        <nav>
-          {[
-            ["Overview", LayoutDashboard],
-            ["Recipes", BookOpen],
-            ["Ingredients", ShoppingBasket],
-            ["Packaging", Package],
-            ["Inventory", ShoppingBasket],
-            ["Inventory dashboard", LayoutDashboard],
-            ["Quotes", BookOpen],
-            ["Daily planner", ChefHat],
-            ["Orders", BookOpen],
-            ["Shopping list", ShoppingBasket],
-            ["Waste & expiry", Package],
-            ["Recipe scaling", ChefHat],
-            ["Backups", Download],
-            ["Product stock", Package],
-            ["Can make", ChefHat],
-            ["Cost settings", TrendingUp],
-          ].map(([name, Icon]) => (
-            <button
-              className={page === name ? "active" : ""}
-              onClick={() => {
-                setPage(name);
-                setQuery("");
-              }}
-              key={name}
-            >
-              <Icon size={19} />
-              {name}
-              {name === "Recipes" && (
-                <span className="badge">{data.recipes.length}</span>
-              )}
-            </button>
-          ))}
+        <nav aria-label="Main workspace">
+          {sections.map((group, index) => {
+            const Icon = [
+              LayoutDashboard,
+              BookOpen,
+              ChefHat,
+              ShoppingBasket,
+              Settings,
+            ][index];
+            return (
+              <button
+                key={group.name}
+                className={section.name === group.name ? "active" : ""}
+                aria-current={section.name === group.name ? "true" : undefined}
+                onClick={() => navigate(group.pages[0])}
+              >
+                <Icon size={19} />
+                {group.name}
+              </button>
+            );
+          })}
         </nav>
-        <div className="sidebar-note">
-          <span>
-            Made with care.
-            <br />
-            Managed with confidence.
-          </span>
-          <p>
-            Know your costs.
-            <br />
-            Grow your sweet business.
-          </p>
-          <ChefHat size={36} />
+        <div className="workspace-guide">
+          <p>Quote → Order → Produce → Fulfill</p>
+          <small>One connected workflow for your bakery.</small>
         </div>
-        <button className="backup" onClick={() => open("tax")}>
-          Tax settings
-        </button>
-        <button className="backup" onClick={backup}>
-          <Download size={17} />
-          Export backup
-        </button>
-        <label className="backup">
-          <Upload size={17} />
-          Restore backup
-          <input
-            hidden
-            type="file"
-            accept="application/json"
-            onChange={restore}
-          />
-        </label>
-        <small className="local">Saved on this device · USD</small>
+        <div className="workspace-local">
+          <span className="status-dot" /> Saved on this device
+          <small>USD · Local workspace</small>
+          <button className="text-button" onClick={() => navigate("Backups")}>
+            Backups & recovery
+          </button>
+        </div>
       </aside>
       <main>
         <header>
           <span>
-            Workspace <span className="slash">/</span> <b>{page}</b>
+            Workspace <span className="slash">/</span> <b>{section.name}</b>
           </span>
           <div>
             <span className="status-dot" /> Local workspace{" "}
@@ -389,92 +399,143 @@ function App() {
               {error}
             </div>
           )}
-          {stockAlerts(data).length > 0 && (
-            <button
-              className="secondary stock-alert"
-              onClick={() => setPage("Waste & expiry")}
-            >
-              {stockAlerts(data).length} inventory alerts · Review low stock and
-              expiry
-            </button>
-          )}
           <div className="page-title">
             <div>
-              <div className="eyebrow">YOUR BAKERY, AT A GLANCE</div>
-              <h1>
-                {page === "Overview"
-                  ? "Business dashboard"
-                  : page === "Recipes"
-                    ? "A recipe for better margins."
-                    : page === "Ingredients"
-                      ? "Every ingredient accounted for."
-                      : page === "Packaging"
-                        ? "The finishing touches."
-                        : page}
+              <div className="eyebrow">{section.name.toUpperCase()}</div>
+              <h1 id="workspace-title" tabIndex={-1}>
+                {info.label}
               </h1>
-              <p>
-                {page === "Overview"
-                  ? "Track revenue, understand your costs, and make confident pricing decisions."
-                  : page === "Recipes"
-                    ? "Your creations, with every cost in the mix."
-                    : page === "Inventory dashboard"
-                      ? "See shared stock needs and what to buy before production."
-                      : page === "Quotes"
-                        ? "Turn your real production costs into saved customer quotes."
-                        : page === "Daily planner"
-                          ? "Organize dessert batches and keep the kitchen on track."
-                          : "Keep purchase sizes, prices, and taxes in one place."}
-              </p>
+              <p>{info.description}</p>
             </div>
-            {![
-              "Inventory dashboard",
-              "Quotes",
-              "Daily planner",
-              "Orders",
-              "Shopping list",
-              "Waste & expiry",
-              "Recipe scaling",
-              "Backups",
-            ].includes(page) && (
+            {info.action && (
               <button
                 className="primary"
                 onClick={() =>
                   open(
-                    page === "Overview" || page === "Product stock"
-                      ? "sale"
-                      : page === "Recipes" ||
-                          page === "Can make" ||
-                          page === "Cost settings"
-                        ? "recipe"
-                        : "item",
+                    info.modal,
                     page === "Packaging" ? { type: "packaging" } : undefined,
                   )
                 }
               >
                 <Plus size={17} />
-                {page === "Overview" || page === "Product stock"
-                  ? "Record a sale"
-                  : page === "Recipes" ||
-                      page === "Can make" ||
-                      page === "Cost settings"
-                    ? "New recipe"
-                    : "Add item"}
+                {info.action}
               </button>
             )}
           </div>
-          {[
-            "Orders",
-            "Shopping list",
-            "Waste & expiry",
-            "Recipe scaling",
-            "Backups",
-          ].includes(page) ? (
+          {section.pages.length > 1 && (
+            <nav
+              className="workspace-tabs"
+              aria-label={section.name + " pages"}
+            >
+              {section.pages.map((name) => (
+                <button
+                  key={name}
+                  aria-current={page === name ? "page" : undefined}
+                  className={page === name ? "active" : ""}
+                  onClick={() => navigate(name)}
+                >
+                  {pages[name].label}
+                </button>
+              ))}
+            </nav>
+          )}
+          {info.next && (
+            <div className="workflow-handoff">
+              <span>
+                {page === "Quotes"
+                  ? "Customer accepted a quote? Create an order from its saved card."
+                  : page === "Orders"
+                    ? "Accepted orders create production tasks automatically."
+                    : page === "Shopping list"
+                      ? "After shopping, receive packages to update on-hand stock."
+                      : "Continue your workflow"}
+              </span>
+              <button
+                className="text-button"
+                onClick={() => navigate(info.next)}
+              >
+                {info.nextLabel}
+                <ArrowUpRight size={15} />
+              </button>
+            </div>
+          )}
+          {page === "Overview" && (
+            <section className="today-board" aria-label="Today's work">
+              <div>
+                <span className="eyebrow">TODAY’S WORK</span>
+                <h2>Keep your bakery moving</h2>
+              </div>
+              <div className="today-grid">
+                {[
+                  [
+                    "Orders",
+                    data.orders.filter((o) => o.status === "open").length,
+                    "Open orders",
+                    "Review payments and pickups",
+                  ],
+                  [
+                    "Daily planner",
+                    data.productionPlans
+                      .filter(
+                        (p) => p.status === "planned" && p.date <= today(),
+                      )
+                      .reduce((n, p) => n + p.batches, 0),
+                    "Batches due",
+                    "Includes overdue production",
+                  ],
+                  [
+                    "Waste & expiry",
+                    stockAlerts(data).length,
+                    "Stock alerts",
+                    "Low stock and expiry",
+                  ],
+                ].map(([target, value, label, hint]) => (
+                  <button key={target} onClick={() => navigate(target)}>
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                    <small>{hint}</small>
+                    <ArrowUpRight size={17} />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+          {page === "Tax settings" ? (
+            <section className="panel planning-form">
+              <h2>Purchase tax defaults</h2>
+              <dl>
+                <dt>Food</dt>
+                <dd>{data.taxRates.food}%</dd>
+                <dt>Other</dt>
+                <dd>{data.taxRates.other}%</dd>
+              </dl>
+              <p>
+                Defaults apply to new purchases. Edit individual inventory items
+                to change their existing rates.
+              </p>
+              <button
+                className="secondary"
+                onClick={() => navigate("Ingredients")}
+              >
+                Manage purchase prices
+              </button>
+            </section>
+          ) : [
+              "Orders",
+              "Shopping list",
+              "Waste & expiry",
+              "Recipe scaling",
+              "Backups",
+            ].includes(page) ? (
             <BakeryTools
-              key={page}
+              key={page + (routeContext.quoteId || "")}
               data={data}
               save={save}
               page={page}
               open={open}
+              navigate={navigate}
+              context={routeContext}
+              restore={restore}
             />
           ) : ["Inventory dashboard", "Quotes", "Daily planner"].includes(
               page,
@@ -485,6 +546,7 @@ function App() {
               save={save}
               open={open}
               tab={page}
+              navigate={navigate}
             />
           ) : [
               "Inventory",
@@ -764,9 +826,31 @@ function App() {
       </main>
       {modal && (
         <div className="overlay">
-          <section className="modal">
+          <section
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setModal(null);
+              if (e.key === "Tab") {
+                const nodes = e.currentTarget.querySelectorAll(
+                  "button:not(:disabled), input:not([hidden]), select, textarea",
+                );
+                const first = nodes[0],
+                  last = nodes[nodes.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                  e.preventDefault();
+                  last?.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                  e.preventDefault();
+                  first?.focus();
+                }
+              }
+            }}
+          >
             <div className="panel-heading">
-              <h2>
+              <h2 id="modal-title">
                 {modal.type === "tax"
                   ? "Tax settings"
                   : modal.type === "item"
@@ -1143,8 +1227,8 @@ function RecipeFields({ recipe: r = {}, items }) {
       <div className="conversion-box">
         <h3>Batch labor & overhead</h3>
         <p>
-          Set wage and electricity rates in Cost settings. These allocations are
-          included in production cost.
+          Set wage and electricity rates in Settings → Production costs. These
+          allocations are included in production cost.
         </p>
         <div className="form-row">
           <label>

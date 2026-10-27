@@ -143,7 +143,7 @@ export function sell(data, f) {
   const stock = data.products[r.id] || { quantity: 0, value: 0 };
   if (quantity > stock.quantity)
     throw Error(
-      "Not enough finished product. Record production in Product stock first.",
+      "Not enough finished product. Complete production in the production plan first.",
     );
   const cost = (stock.value / stock.quantity) * quantity;
   return {

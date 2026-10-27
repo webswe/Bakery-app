@@ -89,7 +89,7 @@ export function SaleFields({ data }) {
       </div>
       <p className="hint">
         {stock} portions available. Recording a sale deducts finished stock and
-        uses its production cost. Record a batch in Product stock before
+        uses its production cost. Complete a batch in the production plan before
         selling.
       </p>
     </>
@@ -110,7 +110,13 @@ export default function Operations({ data, save, open, tab }) {
   return (
     <>
       <div className="section-top">
-        <h2>{tab}</h2>
+        <h2>
+          {tab === "Inventory"
+            ? "On-hand inventory"
+            : tab === "Cost settings"
+              ? "Cost assumptions"
+              : "Recipes & finished stock"}
+        </h2>
         <input
           placeholder="Search"
           aria-label="Search operations"
@@ -428,4 +434,3 @@ function StockForm({ item, apply }) {
     </form>
   );
 }
-

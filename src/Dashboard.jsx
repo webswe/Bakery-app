@@ -168,8 +168,9 @@ export default function Dashboard({ data, month }) {
             ))}
           </div>
           <p className="accounting-note">
-            Recipe costs are captured when a sale is recorded. Add labor, rent,
-            and utilities as expenses.
+            Production costs include allocated labor and utilities captured in
+            finished stock. Record only additional, unallocated operating
+            expenses.
           </p>
         </section>
       </div>
@@ -269,4 +270,3 @@ export default function Dashboard({ data, month }) {
     </>
   );
 }
-

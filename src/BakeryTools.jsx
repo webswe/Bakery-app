@@ -23,7 +23,15 @@ function download(name, text, type = "application/json") {
   a.click();
   URL.revokeObjectURL(url);
 }
-export default function BakeryTools({ data, save, page, open }) {
+export default function BakeryTools({
+  data,
+  save,
+  page,
+  open,
+  navigate,
+  context = {},
+  restore,
+}) {
   const [error, setError] = useState("");
   function act(fn, restoring = false) {
     try {
@@ -43,7 +51,12 @@ export default function BakeryTools({ data, save, page, open }) {
         </p>
       )}
       {page === "Orders" ? (
-        <Orders data={data} act={act} />
+        <Orders
+          data={data}
+          act={act}
+          navigate={navigate}
+          quoteId={context.quoteId}
+        />
       ) : page === "Shopping list" ? (
         <Shopping data={data} />
       ) : page === "Waste & expiry" ? (
@@ -51,15 +64,18 @@ export default function BakeryTools({ data, save, page, open }) {
       ) : page === "Recipe scaling" ? (
         <Scaling data={data} />
       ) : (
-        <Backups data={data} act={act} />
+        <Backups data={data} act={act} restore={restore} />
       )}
     </div>
   );
 }
-function Orders({ data, act }) {
-  const [quoteId, setQuote] = useState(""),
+function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
+  const [quoteId, setQuote] = useState(
+      data.quotes.some((q) => q.id === initialQuoteId) ? initialQuoteId : "",
+    ),
     [pickupDate, setDate] = useState(localDate),
-    [deposit, setDeposit] = useState(0);
+    [deposit, setDeposit] = useState(0),
+    [accepted, setAccepted] = useState(false);
   return (
     <>
       <section className="panel planning-form">
@@ -72,8 +88,12 @@ function Orders({ data, act }) {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (act(() => createOrder(data, { quoteId, pickupDate, deposit })))
+            if (
+              act(() => createOrder(data, { quoteId, pickupDate, deposit }))
+            ) {
               setDeposit(0);
+              setAccepted(true);
+            }
           }}
         >
           <label>
@@ -117,6 +137,19 @@ function Orders({ data, act }) {
           <button className="primary">Accept quote & plan production</button>
         </form>
       </section>
+      {accepted && (
+        <p className="positive" role="status">
+          Order accepted. Its production task is ready in the production plan.
+        </p>
+      )}
+      <div className="planning-actions">
+        <button className="secondary" onClick={() => navigate("Quotes")}>
+          Calculate a new quote
+        </button>
+        <button className="secondary" onClick={() => navigate("Daily planner")}>
+          View linked production tasks
+        </button>
+      </div>
       <div className="section-top">
         <h2>Customer orders</h2>
       </div>
@@ -545,7 +578,7 @@ function Scaling({ data }) {
     </section>
   );
 }
-function Backups({ data, act }) {
+function Backups({ data, act, restore }) {
   let history = [],
     problem;
   try {
@@ -572,6 +605,14 @@ function Backups({ data, act }) {
       >
         Download current workspace
       </button>
+      <label className="restore-file">
+        Restore a JSON backup
+        <input type="file" accept="application/json" onChange={restore} />
+        <small>
+          Choose a downloaded workspace. You will confirm before replacing
+          current records.
+        </small>
+      </label>
       {problem && <p className="error">{problem}</p>}
       {localStorage.getItem("bakery-ledger-unreadable-v1") && (
         <button

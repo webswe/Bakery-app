@@ -25,7 +25,7 @@ const nextWeek = () => {
   ].join("-");
 };
 
-export default function PlanningWorkspace({ data, save, tab, open }) {
+export default function PlanningWorkspace({ data, save, tab, open, navigate }) {
   const [error, setError] = useState("");
   function act(fn) {
     try {
@@ -48,7 +48,7 @@ export default function PlanningWorkspace({ data, save, tab, open }) {
       {tab === "Inventory dashboard" ? (
         <InventoryDashboard data={data} open={open} />
       ) : tab === "Quotes" ? (
-        <QuoteStudio data={data} act={act} />
+        <QuoteStudio data={data} act={act} navigate={navigate} />
       ) : (
         <DailyPlanner data={data} act={act} />
       )}
@@ -86,7 +86,7 @@ function InventoryDashboard({ data, open }) {
     <>
       <div className="planning-toolbar">
         <div>
-          <h2>Stock today. Clarity for the week.</h2>
+          <h2>Production demand & stock coverage</h2>
           <p>
             Combined ingredient and packaging needs from pending production,
             including overdue plans.
@@ -252,7 +252,7 @@ function RecipeSelect({ data, value, onChange }) {
     </label>
   );
 }
-function QuoteStudio({ data, act }) {
+function QuoteStudio({ data, act, navigate }) {
   const empty = () => ({
     recipeId: data.recipes[0]?.id || "",
     portions: 1,
@@ -408,7 +408,7 @@ function QuoteStudio({ data, act }) {
         </section>
         <section className="panel quote-preview">
           <span className="pill">LIVE ESTIMATE</span>
-          <h2>A price that covers your work.</h2>
+          <h2>Quote summary</h2>
           <strong className="quote-total">
             {quote ? money(quote.total) : "—"}
           </strong>
@@ -460,6 +460,13 @@ function QuoteStudio({ data, act }) {
               batch(es)
             </small>
             <div className="planning-actions">
+              <button
+                type="button"
+                className="primary"
+                onClick={() => navigate("Orders", { quoteId: q.id })}
+              >
+                Create order
+              </button>
               <button
                 className="secondary"
                 onClick={() => {
@@ -527,7 +534,7 @@ function DailyPlanner({ data, act }) {
     <>
       <div className="planning-toolbar">
         <div>
-          <h2>A calm start to a busy kitchen.</h2>
+          <h2>Daily production</h2>
           <p>
             Plan whole batches, review shared ingredients, then record completed
             production.
