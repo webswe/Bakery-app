@@ -1402,3 +1402,11 @@ nav button { flex-shrink:0; }
   .planning-actions > button { flex:1 1 auto; }
   .quote-total { font-size:38px; }
 }
+.stock-alert { margin-bottom:20px; }
+.planning-workspace > .planning-form { margin-bottom:24px; }
+.production-checklist { border:1px solid #d6e1e6; border-radius:8px; padding:12px; display:flex; flex-wrap:wrap; gap:14px; margin:20px 0; }
+.production-checklist label,.shopping-check { display:flex; align-items:center; gap:8px; }
+.planning-workspace input[type=checkbox] { width:18px; height:18px; accent-color:#2f6f62; }
+.saved-quote form { display:grid; gap:8px; margin:16px 0; }
+.saved-quote label { display:grid; gap:6px; }
+@media print { aside, header, .page-title, .no-print, .stock-alert {display:none!important;} .app > main {margin:0;width:100%;} .content {padding:0;} .panel {break-inside:avoid;} }

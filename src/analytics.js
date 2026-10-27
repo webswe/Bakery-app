@@ -22,6 +22,8 @@ export function previousMonth(month) {
 export function migrateData(data) {
   return {
     ...data,
+    orders: data.orders || [],
+    waste: data.waste || [],
     quotes: data.quotes || [],
     productionPlans: data.productionPlans || [],
     products: data.products || {},

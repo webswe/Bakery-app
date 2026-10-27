@@ -7,6 +7,7 @@ import {
   savePlan,
   completePlan,
 } from "./planning.js";
+import { checklistSteps, toggleChecklist } from "./business.js";
 import { fullCost } from "./operations.js";
 
 const money = (n) =>
@@ -206,7 +207,12 @@ function InventoryDashboard({ data, open }) {
                 <td>
                   <button
                     className="text-button"
-                    onClick={() => open("item", data.items.find(item => item.id === i.id))}
+                    onClick={() =>
+                      open(
+                        "item",
+                        data.items.find((item) => item.id === i.id),
+                      )
+                    }
                   >
                     Edit item
                   </button>
@@ -665,7 +671,13 @@ function DailyPlanner({ data, act }) {
               </span>
               <h3>{r?.name || p.recipeName || "Missing recipe"}</h3>
               <p>
-                {p.batches} batch(es) · {p.status === "completed" ? p.producedPortions : r ? p.batches * r.yield : "—"} portions
+                {p.batches} batch(es) ·{" "}
+                {p.status === "completed"
+                  ? p.producedPortions
+                  : r
+                    ? p.batches * r.yield
+                    : "—"}{" "}
+                portions
               </p>
               <p>{p.notes}</p>
               {p.status === "planned" ? (
@@ -675,6 +687,21 @@ function DailyPlanner({ data, act }) {
                       ? "Fix recipe conversions to calculate cost"
                       : "Estimated production cost " + money(cost)}
                   </small>
+                  <fieldset className="production-checklist">
+                    <legend>Kitchen checklist</legend>
+                    {checklistSteps.map((step) => (
+                      <label key={step}>
+                        <input
+                          type="checkbox"
+                          checked={!!p.checklist?.[step]}
+                          onChange={() =>
+                            act(() => toggleChecklist(data, p.id, step))
+                          }
+                        />
+                        {step}
+                      </label>
+                    ))}
+                  </fieldset>
                   <div className="planning-actions">
                     <button
                       className="primary"

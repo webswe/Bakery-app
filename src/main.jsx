@@ -2,6 +2,9 @@ import Operations, { SaleFields } from "./InventoryWorkspace.jsx";
 import { addPresets, sell, fullCost } from "./operations.js";
 import Dashboard from "./Dashboard.jsx";
 import { migrateData } from "./analytics.js";
+import BakeryTools from "./BakeryTools.jsx";
+import { persistWorkspace } from "./backupStorage.js";
+import { stockAlerts } from "./business.js";
 import PlanningWorkspace from "./PlanningWorkspace.jsx";
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -120,9 +123,9 @@ function App() {
     [error, setError] = useState(""),
     [query, setQuery] = useState(""),
     [month, setMonth] = useState(today().slice(0, 7));
-  function save(next) {
+  function save(next, restoring = false) {
     try {
-      localStorage.setItem("bakery-ledger-v1", JSON.stringify(next));
+      persistWorkspace(localStorage, next, today(), restoring);
       setData(next);
       return true;
     } catch {
@@ -150,8 +153,11 @@ function App() {
   function submit(e) {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
-    const persist = next => {
-      if (!save(next)) throw Error("Could not save. Check available storage and export a backup.");
+    const persist = (next) => {
+      if (!save(next))
+        throw Error(
+          "Could not save. Check available storage and export a backup.",
+        );
     };
     try {
       if (modal.type === "tax") {
@@ -172,6 +178,9 @@ function App() {
           gramsPerCup: +f.gramsPerCup || null,
           gramsPerEach: +f.gramsPerEach || null,
           gramsPerCan: +f.gramsPerCan || null,
+          supplier: f.supplier.trim(),
+          minStock: +f.minStock || 0,
+          expiryDate: f.expiryDate,
           density: +f.density || null,
           type: f.type,
         };
@@ -271,7 +280,7 @@ function App() {
         recipeCost(r, d.items);
       });
       if (confirm("Replace current records with this backup?"))
-        save(migrateData(d));
+        save(migrateData(d), true);
     } catch (err) {
       setError("Backup could not be imported: " + err.message);
     }
@@ -307,6 +316,11 @@ function App() {
             ["Inventory dashboard", LayoutDashboard],
             ["Quotes", BookOpen],
             ["Daily planner", ChefHat],
+            ["Orders", BookOpen],
+            ["Shopping list", ShoppingBasket],
+            ["Waste & expiry", Package],
+            ["Recipe scaling", ChefHat],
+            ["Backups", Download],
             ["Product stock", Package],
             ["Can make", ChefHat],
             ["Cost settings", TrendingUp],
@@ -370,7 +384,20 @@ function App() {
           </div>
         </header>
         <div className="content">
-          {error && !modal && <div className="error">{error}</div>}
+          {error && !modal && (
+            <div className="error" role="alert">
+              {error}
+            </div>
+          )}
+          {stockAlerts(data).length > 0 && (
+            <button
+              className="secondary stock-alert"
+              onClick={() => setPage("Waste & expiry")}
+            >
+              {stockAlerts(data).length} inventory alerts · Review low stock and
+              expiry
+            </button>
+          )}
           <div className="page-title">
             <div>
               <div className="eyebrow">YOUR BAKERY, AT A GLANCE</div>
@@ -399,9 +426,16 @@ function App() {
                           : "Keep purchase sizes, prices, and taxes in one place."}
               </p>
             </div>
-            {!["Inventory dashboard", "Quotes", "Daily planner"].includes(
-              page,
-            ) && (
+            {![
+              "Inventory dashboard",
+              "Quotes",
+              "Daily planner",
+              "Orders",
+              "Shopping list",
+              "Waste & expiry",
+              "Recipe scaling",
+              "Backups",
+            ].includes(page) && (
               <button
                 className="primary"
                 onClick={() =>
@@ -428,7 +462,23 @@ function App() {
               </button>
             )}
           </div>
-          {["Inventory dashboard", "Quotes", "Daily planner"].includes(page) ? (
+          {[
+            "Orders",
+            "Shopping list",
+            "Waste & expiry",
+            "Recipe scaling",
+            "Backups",
+          ].includes(page) ? (
+            <BakeryTools
+              key={page}
+              data={data}
+              save={save}
+              page={page}
+              open={open}
+            />
+          ) : ["Inventory dashboard", "Quotes", "Daily planner"].includes(
+              page,
+            ) ? (
             <PlanningWorkspace
               key={page}
               data={data}
@@ -536,6 +586,12 @@ function App() {
                           <td>
                             <button
                               aria-label="Delete transaction"
+                              disabled={!!(s.orderId || s.wasteId)}
+                              title={
+                                s.orderId || s.wasteId
+                                  ? "Linked order and waste records are retained for stock consistency"
+                                  : "Delete transaction"
+                              }
                               className="icon-button"
                               onClick={() => {
                                 if (confirm("Delete this transaction?"))
@@ -932,6 +988,37 @@ function ItemFields({ item: i = {}, taxRates }) {
         </label>
       )}
       <div className="conversion-box">
+        <h3>Stock planning</h3>
+        <label>
+          Supplier
+          <input
+            name="supplier"
+            defaultValue={i.supplier || ""}
+            placeholder="Supplier name"
+          />
+        </label>
+        <label>
+          Minimum on hand (purchase unit)
+          <input
+            name="minStock"
+            type="number"
+            min="0"
+            step="any"
+            defaultValue={i.minStock || 0}
+          />
+        </label>
+        <label>
+          Current stock expiry
+          <input
+            name="expiryDate"
+            type="date"
+            defaultValue={i.expiryDate || ""}
+          />
+        </label>
+        <p className="hint">
+          Expiry applies to the current stock as a whole; update it when
+          receiving new stock.
+        </p>
         <h3>Can size</h3>
         <p>
           Use “can” in purchases or recipes. Set the net weight from your

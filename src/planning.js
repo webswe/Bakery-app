@@ -92,6 +92,7 @@ export function savePlan(data, input, id) {
   )
     throw Error("Completed production cannot be edited.");
   const plan = {
+    ...(data.productionPlans || []).find((p) => p.id === id),
     ...input,
     batches,
     date: date(input.date),
