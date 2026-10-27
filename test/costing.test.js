@@ -1,4 +1,79 @@
-import{test}from'node:test';import assert from'node:assert/strict';import{convert,lineCost,recipeCost}from'../src/costing.js';
-test('two US cups calculate package count with density and tax',()=>{const r=lineCost({itemId:'milk',amount:2,unit:'cup'},[{id:'milk',amount:397,unit:'g',price:1.79,taxIncluded:false,tax:7,density:1.3}]);assert.equal(r.packs,2);assert.ok(Math.abs(r.cost-(2*236.5882365*1.3/397*1.79*1.07))<1e-9);assert.equal(r.purchase,2*1.79*1.07)});
-test('weight-volume conversion requires density',()=>{assert.throws(()=>convert(2,'cup','g'),/density/);assert.throws(()=>convert(2,'each','g',1),/density/)});
-test('same dimension conversions and packaging batch total',()=>{assert.equal(convert(2,'kg','g'),2000);assert.equal(convert(2,'cup','ml'),473.176473);const items=[{id:'box',amount:25,unit:'each',price:12,taxIncluded:true}];assert.equal(recipeCost({lines:[{itemId:'box',amount:6,unit:'each'}]},items),2.88)});
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { convert, lineCost, recipeCost } from "../src/costing.js";
+test("two US cups calculate package count with density and tax", () => {
+  const r = lineCost({ itemId: "milk", amount: 2, unit: "cup" }, [
+    {
+      id: "milk",
+      amount: 397,
+      unit: "g",
+      price: 1.79,
+      taxIncluded: false,
+      tax: 7,
+      density: 1.3,
+    },
+  ]);
+  assert.equal(r.packs, 2);
+  assert.ok(
+    Math.abs(r.cost - ((2 * 236.5882365 * 1.3) / 397) * 1.79 * 1.07) < 1e-9,
+  );
+  assert.equal(r.purchase, 2 * 1.79 * 1.07);
+});
+test("weight-volume conversion requires density", () => {
+  assert.throws(() => convert(2, "cup", "g"), /density/);
+  assert.throws(() => convert(2, "each", "g", 1), /density/);
+});
+test("same dimension conversions and packaging batch total", () => {
+  assert.equal(convert(2, "kg", "g"), 2000);
+  assert.equal(convert(2, "cup", "ml"), 473.176473);
+  const items = [
+    { id: "box", amount: 25, unit: "each", price: 12, taxIncluded: true },
+  ];
+  assert.equal(
+    recipeCost({ lines: [{ itemId: "box", amount: 6, unit: "each" }] }, items),
+    2.88,
+  );
+});
+test("two cups of flour are costed from a 2kg bag using grams per cup", () => {
+  const item = {
+    id: "flour",
+    amount: 2,
+    unit: "kg",
+    price: 5,
+    taxIncluded: true,
+    gramsPerCup: 120,
+  };
+  const r = lineCost({ itemId: "flour", amount: 2, unit: "cup" }, [item]);
+  assert.ok(Math.abs(r.needed - 0.24) < 1e-12);
+  assert.ok(Math.abs(r.cost - 0.6) < 1e-12);
+  assert.equal(r.packs, 1);
+  assert.equal(r.purchase, 5);
+});
+test("food and other purchase rates apply independently", () => {
+  const items = [
+    {
+      id: "food",
+      amount: 100,
+      unit: "g",
+      price: 10,
+      taxIncluded: false,
+      tax: 2,
+    },
+    {
+      id: "box",
+      amount: 10,
+      unit: "each",
+      price: 10,
+      taxIncluded: false,
+      tax: 8,
+    },
+  ];
+  assert.equal(
+    lineCost({ itemId: "food", amount: 100, unit: "g" }, items).cost,
+    10.2,
+  );
+  assert.equal(
+    lineCost({ itemId: "box", amount: 10, unit: "each" }, items).cost,
+    10.8,
+  );
+});
