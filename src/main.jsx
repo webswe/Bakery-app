@@ -1,7 +1,8 @@
 import Operations, { SaleFields } from "./InventoryWorkspace.jsx";
 import { addPresets, sell, fullCost } from "./operations.js";
-import Dashboard from "./Dashboard";
-import { migrateData } from "./analytics";
+import Dashboard from "./Dashboard.jsx";
+import { migrateData } from "./analytics.js";
+import PlanningWorkspace from "./PlanningWorkspace.jsx";
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -19,7 +20,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { units, lineCost, recipeCost, convert } from "./costing";
+import { units, lineCost, recipeCost, convertItem } from "./costing.js";
 import "./style.css";
 const uid = () => crypto.randomUUID();
 const money = (n) =>
@@ -40,6 +41,7 @@ const initial = {
       taxIncluded: false,
       tax: 7,
       density: 1.3,
+      gramsPerCan: 397,
       type: "ingredient",
     },
     {
@@ -122,8 +124,10 @@ function App() {
     try {
       localStorage.setItem("bakery-ledger-v1", JSON.stringify(next));
       setData(next);
+      return true;
     } catch {
       setError("Could not save. Export a backup and check available storage.");
+      return false;
     }
   }
   function open(type, value) {
@@ -146,9 +150,12 @@ function App() {
   function submit(e) {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
+    const persist = next => {
+      if (!save(next)) throw Error("Could not save. Check available storage and export a backup.");
+    };
     try {
       if (modal.type === "tax") {
-        save({ ...data, taxRates: { food: +f.food, other: +f.other } });
+        persist({ ...data, taxRates: { food: +f.food, other: +f.other } });
       }
       if (modal.type === "item") {
         const item = {
@@ -164,19 +171,20 @@ function App() {
           taxCategory: f.taxCategory,
           gramsPerCup: +f.gramsPerCup || null,
           gramsPerEach: +f.gramsPerEach || null,
+          gramsPerCan: +f.gramsPerCan || null,
           density: +f.density || null,
           type: f.type,
         };
         if (modal.value?.stock && modal.value.unit !== item.unit)
-          item.stock = convert(
+          item.stock = convertItem(
             modal.value.stock,
             modal.value.unit,
             item.unit,
-            item.gramsPerCup ? item.gramsPerCup / units.cup[1] : item.density,
+            { ...modal.value, ...item },
           );
         if (!(item.amount > 0) || item.price < 0 || item.tax < 0)
           throw Error("Enter valid quantities and prices.");
-        save({
+        persist({
           ...data,
           taxRates: item.taxIncluded
             ? data.taxRates
@@ -206,16 +214,16 @@ function App() {
           electricityKwh: +f.electricityKwh || 0,
           overheadPerBatch: +f.overheadPerBatch || 0,
         };
-        save({
+        persist({
           ...data,
           recipes: [...data.recipes.filter((x) => x.id !== r.id), r],
         });
       }
       if (modal.type === "sale") {
-        save(sell(data, f));
+        persist(sell(data, f));
       }
       if (modal.type === "expense")
-        save({
+        persist({
           ...data,
           expenses: [
             ...data.expenses,
@@ -296,6 +304,9 @@ function App() {
             ["Ingredients", ShoppingBasket],
             ["Packaging", Package],
             ["Inventory", ShoppingBasket],
+            ["Inventory dashboard", LayoutDashboard],
+            ["Quotes", BookOpen],
+            ["Daily planner", ChefHat],
             ["Product stock", Package],
             ["Can make", ChefHat],
             ["Cost settings", TrendingUp],
@@ -379,37 +390,58 @@ function App() {
                   ? "Track revenue, understand your costs, and make confident pricing decisions."
                   : page === "Recipes"
                     ? "Your creations, with every cost in the mix."
-                    : "Keep purchase sizes, prices, and taxes in one place."}
+                    : page === "Inventory dashboard"
+                      ? "See shared stock needs and what to buy before production."
+                      : page === "Quotes"
+                        ? "Turn your real production costs into saved customer quotes."
+                        : page === "Daily planner"
+                          ? "Organize dessert batches and keep the kitchen on track."
+                          : "Keep purchase sizes, prices, and taxes in one place."}
               </p>
             </div>
-            <button
-              className="primary"
-              onClick={() =>
-                open(
-                  page === "Overview" || page === "Product stock"
-                    ? "sale"
-                    : page === "Recipes" ||
-                        page === "Can make" ||
-                        page === "Cost settings"
-                      ? "recipe"
-                      : "item",
-                  page === "Packaging" ? { type: "packaging" } : undefined,
-                )
-              }
-            >
-              <Plus size={17} />
-              {page === "Overview" || page === "Product stock"
-                ? "Record a sale"
-                : page === "Recipes" ||
-                    page === "Can make" ||
-                    page === "Cost settings"
-                  ? "New recipe"
-                  : "Add item"}
-            </button>
+            {!["Inventory dashboard", "Quotes", "Daily planner"].includes(
+              page,
+            ) && (
+              <button
+                className="primary"
+                onClick={() =>
+                  open(
+                    page === "Overview" || page === "Product stock"
+                      ? "sale"
+                      : page === "Recipes" ||
+                          page === "Can make" ||
+                          page === "Cost settings"
+                        ? "recipe"
+                        : "item",
+                    page === "Packaging" ? { type: "packaging" } : undefined,
+                  )
+                }
+              >
+                <Plus size={17} />
+                {page === "Overview" || page === "Product stock"
+                  ? "Record a sale"
+                  : page === "Recipes" ||
+                      page === "Can make" ||
+                      page === "Cost settings"
+                    ? "New recipe"
+                    : "Add item"}
+              </button>
+            )}
           </div>
-          {["Inventory", "Product stock", "Can make", "Cost settings"].includes(
-            page,
-          ) ? (
+          {["Inventory dashboard", "Quotes", "Daily planner"].includes(page) ? (
+            <PlanningWorkspace
+              key={page}
+              data={data}
+              save={save}
+              open={open}
+              tab={page}
+            />
+          ) : [
+              "Inventory",
+              "Product stock",
+              "Can make",
+              "Cost settings",
+            ].includes(page) ? (
             <Operations data={data} save={save} open={open} tab={page} />
           ) : page === "Overview" ? (
             <>
@@ -509,7 +541,19 @@ function App() {
                                 if (confirm("Delete this transaction?"))
                                   save({
                                     ...data,
-                                    products: s.stockTracked ? {...data.products,[s.recipeId]:{quantity:(data.products[s.recipeId]?.quantity||0)+s.quantity,value:(data.products[s.recipeId]?.value||0)+s.cost}} : data.products,
+                                    products: s.stockTracked
+                                      ? {
+                                          ...data.products,
+                                          [s.recipeId]: {
+                                            quantity:
+                                              (data.products[s.recipeId]
+                                                ?.quantity || 0) + s.quantity,
+                                            value:
+                                              (data.products[s.recipeId]
+                                                ?.value || 0) + s.cost,
+                                          },
+                                        }
+                                      : data.products,
                                     sales: data.sales.filter(
                                       (x) => x.id !== s.id,
                                     ),
@@ -888,6 +932,23 @@ function ItemFields({ item: i = {}, taxRates }) {
         </label>
       )}
       <div className="conversion-box">
+        <h3>Can size</h3>
+        <p>
+          Use “can” in purchases or recipes. Set the net weight from your
+          brand’s label; condensed and evaporated milk often use different can
+          sizes.
+        </p>
+        <label>
+          Grams per can
+          <input
+            name="gramsPerCan"
+            type="number"
+            min="0.001"
+            step="any"
+            defaultValue={i.gramsPerCan}
+            placeholder="e.g. 397 condensed / 354 evaporated"
+          />
+        </label>
         <h3>Cup-to-weight conversion</h3>
         <p>
           How much does one US cup of this ingredient weigh? This lets us cost

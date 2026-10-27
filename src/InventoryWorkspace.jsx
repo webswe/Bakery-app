@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { addPresets, availability, produce, fullCost } from "./operations.js";
-import { units, convert } from "./costing.js";
 const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     n,
@@ -167,6 +166,7 @@ export default function Operations({ data, save, open, tab }) {
                         <small>{!i.stock ? "Out of stock" : ""}</small>
                       </td>
                       <td>
+                        {i.gramsPerCan ? `${i.gramsPerCan} g / can · ` : ""}
                         {i.gramsPerCup
                           ? `${i.gramsPerCup} g / US cup`
                           : i.density
@@ -428,3 +428,4 @@ function StockForm({ item, apply }) {
     </form>
   );
 }
+

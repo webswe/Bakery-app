@@ -9,6 +9,7 @@ export const units = {
   tbsp: ["volume", 14.7867648],
   tsp: ["volume", 4.92892159],
   each: ["count", 1],
+  can: ["can", 1],
 };
 export function convert(amount, from, to, density) {
   const a = units[from],
@@ -16,7 +17,13 @@ export function convert(amount, from, to, density) {
   if (!a || !b) throw Error("Unknown unit");
   let base = Number(amount) * a[1];
   if (a[0] !== b[0]) {
-    if (!density || a[0] === "count" || b[0] === "count")
+    if (
+      !density ||
+      a[0] === "count" ||
+      b[0] === "count" ||
+      a[0] === "can" ||
+      b[0] === "can"
+    )
       throw Error(
         "Add grams per cup, density (g/ml), or grams per piece for this conversion.",
       );
@@ -29,15 +36,7 @@ export function lineCost(line, items) {
   if (!item) throw Error("Ingredient or packaging item is missing.");
   if (!Number.isFinite(+line.amount) || +line.amount <= 0 || !(item.amount > 0))
     throw Error("Quantities must be positive.");
-  const density = item.gramsPerCup
-    ? item.gramsPerCup / units.cup[1]
-    : item.density;
-  let needed;
-  if (line.unit === "each" && item.unit !== "each" && item.gramsPerEach)
-    needed = convert(line.amount * item.gramsPerEach, "g", item.unit, density);
-  else if (item.unit === "each" && line.unit !== "each" && item.gramsPerEach)
-    needed = convert(line.amount, line.unit, "g", density) / item.gramsPerEach;
-  else needed = convert(line.amount, line.unit, item.unit, density);
+  const needed = convertItem(line.amount, line.unit, item.unit, item);
   const packs = needed / item.amount;
   const price = item.price * (item.taxIncluded ? 1 : 1 + item.tax / 100);
   return {
@@ -50,4 +49,42 @@ export function lineCost(line, items) {
 }
 export function recipeCost(recipe, items) {
   return recipe.lines.reduce((s, l) => s + lineCost(l, items).cost, 0);
+}
+
+export function convertItem(amount, from, to, item = {}) {
+  if (!Number.isFinite(+amount) || +amount < 0)
+    throw Error("Enter a nonnegative quantity.");
+  if (!units[from] || !units[to]) throw Error("Unknown unit");
+  if (from === to) return +amount;
+  const density = item.gramsPerCup
+    ? item.gramsPerCup / units.cup[1]
+    : item.density;
+  const weight = (unit) =>
+    unit === "can"
+      ? item.gramsPerCan
+      : unit === "each"
+        ? item.gramsPerEach
+        : null;
+  let source = from,
+    value = +amount;
+  if (from === "can" || from === "each") {
+    if (!(weight(from) > 0))
+      throw Error(
+        from === "can"
+          ? "Set grams per can for this ingredient."
+          : "Set grams per piece for this ingredient.",
+      );
+    source = "g";
+    value *= weight(from);
+  }
+  if (to === "can" || to === "each") {
+    if (!(weight(to) > 0))
+      throw Error(
+        to === "can"
+          ? "Set grams per can for this ingredient."
+          : "Set grams per piece for this ingredient.",
+      );
+    return convert(value, source, "g", density) / weight(to);
+  }
+  return convert(value, source, to, density);
 }

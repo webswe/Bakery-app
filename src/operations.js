@@ -1,4 +1,4 @@
-import { convert, units, lineCost, recipeCost } from "./costing.js";
+import { lineCost, recipeCost } from "./costing.js";
 export const presets = [
   ["All-purpose flour", 120],
   ["Bread flour", 120],
@@ -12,6 +12,7 @@ export const presets = [
   ["Milk", 244],
   ["Heavy cream", 238],
   ["Condensed milk", 306],
+  ["Evaporated milk", 252],
   ["Cocoa powder", 85],
   ["Chocolate chips", 170],
   ["Vegetable oil", 198],
@@ -42,6 +43,7 @@ export function addPresets(data) {
           id: crypto.randomUUID(),
           name,
           gramsPerCup,
+          gramsPerCan: name === "Condensed milk" ? 397 : name === "Evaporated milk" ? 354 : null,
           unit: name === "Eggs" ? "each" : "g",
           amount: name === "Eggs" ? 12 : 1000,
           price: 0,
@@ -170,3 +172,4 @@ export function sell(data, f) {
     ],
   };
 }
+

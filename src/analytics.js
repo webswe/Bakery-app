@@ -22,6 +22,8 @@ export function previousMonth(month) {
 export function migrateData(data) {
   return {
     ...data,
+    quotes: data.quotes || [],
+    productionPlans: data.productionPlans || [],
     products: data.products || {},
     movements: data.movements || [],
     settings: data.settings || { hourlyWage: 0, electricityRate: 0 },
@@ -32,3 +34,4 @@ export function migrateData(data) {
     })),
   };
 }
+

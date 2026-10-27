@@ -1,5 +1,5 @@
 import React from "react";
-import { monthlySummary, previousMonth } from "./analytics";
+import { monthlySummary, previousMonth } from "./analytics.js";
 const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     n,
@@ -269,3 +269,4 @@ export default function Dashboard({ data, month }) {
     </>
   );
 }
+
