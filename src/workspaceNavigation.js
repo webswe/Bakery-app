@@ -1,10 +1,12 @@
 export const sections = [
   { name: "Overview", pages: ["Overview"] },
-  { name: "Sales", pages: ["Orders", "Quotes"] },
+  { name: "Sales", pages: ["Orders", "Quotes", "Payments"] },
   {
     name: "Kitchen",
     pages: [
+      "Calendar",
       "Daily planner",
+      "Prep sheets",
       "Can make",
       "Product stock",
       "Recipes",
@@ -16,13 +18,22 @@ export const sections = [
     pages: [
       "Inventory dashboard",
       "Inventory",
+      "Inventory lots",
+      "Supplier prices",
       "Shopping list",
       "Ingredients",
       "Packaging",
       "Waste & expiry",
     ],
   },
-  { name: "Settings", pages: ["Cost settings", "Tax settings", "Backups"] },
+  {
+    name: "Reports",
+    pages: ["Owner forecast", "Tax report", "Waste analysis"],
+  },
+  {
+    name: "Settings",
+    pages: ["Cost settings", "Tax settings", "Backups", "Security"],
+  },
 ];
 export const pages = {
   Overview: {
@@ -46,12 +57,29 @@ export const pages = {
     next: "Orders",
     nextLabel: "View orders",
   },
+  Payments: {
+    label: "Payments",
+    description:
+      "Record deposits, partial payments and refunds, then print a customer receipt.",
+  },
+  Calendar: {
+    label: "Calendar",
+    description:
+      "See production work and customer pickups together on a monthly calendar.",
+    next: "Daily planner",
+    nextLabel: "Manage production",
+  },
   "Daily planner": {
     label: "Production plan",
     description:
       "Organize batches, follow kitchen checklists and record completed production.",
     next: "Shopping list",
     nextLabel: "Review shopping list",
+  },
+  "Prep sheets": {
+    label: "Prep sheets",
+    description:
+      "Print scaled ingredients, kitchen checks, allergens and batch labels for the day.",
   },
   "Can make": {
     label: "Batch availability",
@@ -101,6 +129,16 @@ export const pages = {
     next: "Inventory dashboard",
     nextLabel: "View stock forecast",
   },
+  "Inventory lots": {
+    label: "Inventory lots",
+    description:
+      "Review delivery dates, expiry dates and remaining quantities consumed in FEFO order.",
+  },
+  "Supplier prices": {
+    label: "Supplier prices",
+    description:
+      "Compare captured package costs across suppliers and export purchase history.",
+  },
   "Shopping list": {
     label: "Shopping list",
     description:
@@ -133,6 +171,21 @@ export const pages = {
     next: "Shopping list",
     nextLabel: "Replenish stock",
   },
+  "Owner forecast": {
+    label: "Owner forecast",
+    description:
+      "Plan the next seven days of order income, production cost and minimum-stock purchases.",
+  },
+  "Tax report": {
+    label: "Tax report",
+    description:
+      "Review customer tax collected and purchase tax paid, then export a filing worksheet.",
+  },
+  "Waste analysis": {
+    label: "Waste analysis",
+    description:
+      "See the cost of waste by item and reason and export the monthly detail.",
+  },
   "Cost settings": {
     label: "Production costs",
     description:
@@ -149,6 +202,11 @@ export const pages = {
     label: "Backups & recovery",
     description:
       "Download independent copies, restore a JSON file or recover a dated local snapshot.",
+  },
+  Security: {
+    label: "Security",
+    description:
+      "Optionally protect this local owner workspace with a PIN and inactivity lock.",
   },
 };
 export const sectionFor = (page) =>

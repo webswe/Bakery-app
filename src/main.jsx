@@ -7,6 +7,8 @@ import BakeryTools from "./BakeryTools.jsx";
 import { persistWorkspace } from "./backupStorage.js";
 import { stockAlerts } from "./business.js";
 import PlanningWorkspace from "./PlanningWorkspace.jsx";
+import OwnerWorkspace from "./OwnerWorkspace.jsx";
+import { verifyPin } from "./security.js";
 import {
   sections,
   pages,
@@ -35,6 +37,14 @@ import {
 import { units, lineCost, recipeCost, convertItem } from "./costing.js";
 import "./style.css";
 const uid = () => crypto.randomUUID();
+const lockKey = "bakery-ledger-lock-v1";
+const readLock = () => {
+  try {
+    return JSON.parse(localStorage.getItem(lockKey)) || null;
+  } catch {
+    return null;
+  }
+};
 const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     n,
@@ -127,6 +137,8 @@ function App() {
       return migrateData(addPresets(initial));
     }
   });
+  const [lockConfig, setLockState] = useState(readLock);
+  const [locked, setLocked] = useState(() => !!readLock());
   const [page, setPage] = useState(() => readRoute(window.location.hash).page),
     [routeContext, setRouteContext] = useState(
       () => readRoute(window.location.hash).context,
@@ -161,6 +173,30 @@ function App() {
     document.getElementById("workspace-title")?.focus({ preventScroll: true });
     window.scrollTo(0, 0);
   }, [page]);
+  useEffect(() => {
+    if (!lockConfig || locked) return;
+    let timer;
+    const reset = () => {
+      clearTimeout(timer);
+      timer = setTimeout(
+        () => setLocked(true),
+        Math.max(1, Number(lockConfig.minutes) || 5) * 60_000,
+      );
+    };
+    const events = ["pointerdown", "keydown", "touchstart"];
+    events.forEach((name) => window.addEventListener(name, reset));
+    reset();
+    return () => {
+      clearTimeout(timer);
+      events.forEach((name) => window.removeEventListener(name, reset));
+    };
+  }, [lockConfig, locked]);
+  function setLockConfig(next) {
+    if (next) localStorage.setItem(lockKey, JSON.stringify(next));
+    else localStorage.removeItem(lockKey);
+    setLockState(next);
+    setLocked(false);
+  }
   function save(next, restoring = false) {
     try {
       persistWorkspace(localStorage, next, today(), restoring);
@@ -243,12 +279,36 @@ function App() {
             item.unit,
             { ...modal.value, ...item },
           );
+        const inventoryLots =
+          modal.value && modal.value.unit !== item.unit
+            ? (data.inventoryLots || []).map((lot) =>
+                lot.itemId === item.id
+                  ? {
+                      ...lot,
+                      quantity: convertItem(
+                        lot.quantity,
+                        modal.value.unit,
+                        item.unit,
+                        { ...modal.value, ...item },
+                      ),
+                      remaining: convertItem(
+                        lot.remaining,
+                        modal.value.unit,
+                        item.unit,
+                        { ...modal.value, ...item },
+                      ),
+                      unit: item.unit,
+                    }
+                  : lot,
+              )
+            : data.inventoryLots;
         if (!(item.amount > 0) || item.price < 0 || item.tax < 0)
           throw Error("Enter valid quantities and prices.");
         purchaseTax(item);
         persist({
           ...data,
           items: [...data.items.filter((i) => i.id !== item.id), item],
+          inventoryLots,
         });
       }
       if (modal.type === "recipe") {
@@ -268,6 +328,7 @@ function App() {
           category: f.category,
           yield: +f.yield,
           price: +f.price,
+          allergens: f.allergens.trim(),
           lines,
           laborMinutes: +f.laborMinutes || 0,
           electricityKwh: +f.electricityKwh || 0,
@@ -326,6 +387,13 @@ function App() {
     }
     e.target.value = "";
   }
+  if (locked && lockConfig)
+    return (
+      <LockScreen
+        config={lockConfig}
+        onUnlock={() => setLocked(false)}
+      />
+    );
   return (
     <div className="app">
       <aside>
@@ -360,6 +428,7 @@ function App() {
               BookOpen,
               ChefHat,
               ShoppingBasket,
+              TrendingUp,
               Settings,
             ][index];
             return (
@@ -385,6 +454,11 @@ function App() {
           <button className="text-button" onClick={() => navigate("Backups")}>
             Backups & recovery
           </button>
+          {lockConfig && (
+            <button className="text-button" onClick={() => setLocked(true)}>
+              Lock workspace
+            </button>
+          )}
         </div>
       </aside>
       <main>
@@ -504,7 +578,27 @@ function App() {
               </div>
             </section>
           )}
-          {page === "Tax settings" ? (
+          {[
+            "Calendar",
+            "Prep sheets",
+            "Inventory lots",
+            "Supplier prices",
+            "Payments",
+            "Tax report",
+            "Waste analysis",
+            "Owner forecast",
+            "Security",
+          ].includes(page) ? (
+            <OwnerWorkspace
+              key={page}
+              data={data}
+              save={save}
+              page={page}
+              lockConfig={lockConfig}
+              setLockConfig={setLockConfig}
+              lockNow={() => setLocked(true)}
+            />
+          ) : page === "Tax settings" ? (
             <section className="panel planning-form">
               <h2>Purchase tax defaults</h2>
               <dl>
@@ -1334,6 +1428,14 @@ function RecipeFields({ recipe: r = {}, items }) {
           required
         />
       </label>
+      <label>
+        Allergens
+        <input
+          name="allergens"
+          defaultValue={r.allergens || ""}
+          placeholder="e.g. Milk, eggs, wheat, peanuts"
+        />
+      </label>
       <div className="conversion-box">
         <h3>Batch labor & overhead</h3>
         <p>
@@ -1457,6 +1559,49 @@ function RecipeFields({ recipe: r = {}, items }) {
         </span>
       </div>
     </>
+  );
+}
+function LockScreen({ config, onUnlock }) {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
+  return (
+    <main className="lock-screen">
+      <section className="panel lock-card">
+        <span className="brand-icon"><ChefHat /></span>
+        <span className="eyebrow">OWNER WORKSPACE</span>
+        <h1>Bakery Ledger is locked</h1>
+        <p>Enter your local PIN to continue.</p>
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault();
+            try {
+              if (await verifyPin(pin, config)) {
+                setError("");
+                onUnlock();
+              } else setError("Incorrect PIN.");
+            } catch (e) {
+              setError(e.message);
+            }
+          }}
+        >
+          <label>
+            PIN
+            <input
+              autoFocus
+              aria-label="Owner PIN"
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]{4,8}"
+              value={pin}
+              onChange={(event) => setPin(event.target.value)}
+              required
+            />
+          </label>
+          {error && <p className="error" role="alert">{error}</p>}
+          <button className="primary">Unlock workspace</button>
+        </form>
+      </section>
+    </main>
   );
 }
 createRoot(document.getElementById("root")).render(<App />);

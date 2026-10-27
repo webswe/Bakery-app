@@ -1,4 +1,5 @@
 import { directSaleTotals, purchaseTax } from "./taxation.js";
+import { receiveInventory, reconcileLots } from "./inventoryLots.js";
 import React, { useState } from "react";
 import { addPresets, availability, produce, fullCost } from "./operations.js";
 const money = (n) =>
@@ -221,32 +222,35 @@ export default function Operations({ data, save, open, tab }) {
                       <td>
                         <StockForm
                           item={i}
-                          apply={(n, kind) =>
-                            act(() => ({
-                              ...data,
-                              items: data.items.map((x) =>
-                                x.id === i.id
-                                  ? {
-                                      ...x,
-                                      stock:
-                                        kind === "receive"
-                                          ? (x.stock || 0) + n
-                                          : n,
-                                    }
-                                  : x,
-                              ),
-                              movements: [
-                                ...data.movements,
-                                {
-                                  id: crypto.randomUUID(),
-                                  date: new Date().toISOString(),
-                                  name: i.name,
-                                  kind,
-                                  quantity: n,
-                                  unit: i.unit,
-                                },
-                              ],
-                            }))
+                          apply={(form, kind) =>
+                            act(() =>
+                              kind === "receive"
+                                ? receiveInventory(data, i.id, form)
+                                : {
+                                    ...data,
+                                    inventoryLots: reconcileLots(
+                                      data.inventoryLots || [],
+                                      i.id,
+                                      +form.quantity,
+                                    ),
+                                    items: data.items.map((x) =>
+                                      x.id === i.id
+                                        ? { ...x, stock: +form.quantity }
+                                        : x,
+                                    ),
+                                    movements: [
+                                      ...data.movements,
+                                      {
+                                        id: crypto.randomUUID(),
+                                        date: new Date().toISOString(),
+                                        name: i.name,
+                                        kind: "Count",
+                                        quantity: +form.quantity,
+                                        unit: i.unit,
+                                      },
+                                    ],
+                                  },
+                            )
                           }
                         />
                         <button
@@ -437,13 +441,26 @@ export default function Operations({ data, save, open, tab }) {
 }
 function StockForm({ item, apply }) {
   const [n, setN] = useState(""),
-    [kind, setKind] = useState("receive");
+    [kind, setKind] = useState("receive"),
+    [details, setDetails] = useState(false);
   return (
     <form
       className="stock-form"
       onSubmit={(e) => {
         e.preventDefault();
-        apply(kind === "receive" ? +n * item.amount : +n, kind);
+        const fields = Object.fromEntries(new FormData(e.currentTarget));
+        apply(
+          kind === "receive"
+            ? {
+                packages: +n,
+                packagePrice: fields.packagePrice,
+                expiryDate: fields.expiryDate,
+                supplier: fields.supplier,
+                receivedAt: fields.receivedAt,
+              }
+            : { quantity: +n },
+          kind,
+        );
         setN("");
       }}
     >
@@ -468,8 +485,52 @@ function StockForm({ item, apply }) {
       <button className="secondary" type="submit">
         Save
       </button>
-      <input hidden readOnly value="" />
-      {/* Package receipts are converted to purchase units. */}
+      {kind === "receive" && (
+        <>
+          <button
+            className="text-button"
+            type="button"
+            onClick={() => setDetails(!details)}
+          >
+            {details ? "Hide lot details" : "Lot details"}
+          </button>
+          {details && (
+            <div className="stock-lot-fields">
+              <label>
+                Received
+                <input
+                  name="receivedAt"
+                  type="date"
+                  defaultValue={new Date().toLocaleDateString("en-CA")}
+                  required
+                />
+              </label>
+              <label>
+                Expiry
+                <input name="expiryDate" type="date" />
+              </label>
+              <label>
+                Package price
+                <input
+                  name="packagePrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  defaultValue={item.price}
+                  required
+                />
+              </label>
+              <label>
+                Supplier
+                <input
+                  name="supplier"
+                  defaultValue={item.supplier || ""}
+                />
+              </label>
+            </div>
+          )}
+        </>
+      )}
     </form>
   );
 }

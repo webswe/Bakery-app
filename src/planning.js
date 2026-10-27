@@ -84,7 +84,8 @@ export function saveQuote(data, input, id) {
   };
 }
 export function savePlan(data, input, id) {
-  if (!data.recipes.some((r) => r.id === input.recipeId))
+  const recipe = data.recipes.find((r) => r.id === input.recipeId);
+  if (!recipe)
     throw Error("Choose a recipe.");
   const batches = number(input.batches, "Batches", 1);
   if (!Number.isInteger(batches)) throw Error("Enter whole batches.");
@@ -101,6 +102,18 @@ export function savePlan(data, input, id) {
     date: date(input.date),
     id: id || crypto.randomUUID(),
     status: "planned",
+    recipeSnapshot:
+      input.recipeSnapshot ||
+      (data.productionPlans || []).find((p) => p.id === id)?.recipeSnapshot || {
+        capturedAt: new Date().toISOString(),
+        recipe: structuredClone(recipe),
+        items: recipe.lines.map((line) => {
+          const item = data.items.find((i) => i.id === line.itemId);
+          return item ? structuredClone(item) : null;
+        }),
+        batchCost: fullCost(recipe, data.items, data.settings),
+        settings: structuredClone(data.settings),
+      },
   };
   return {
     ...data,
@@ -114,8 +127,18 @@ export function completePlan(data, id) {
   const plan = (data.productionPlans || []).find((p) => p.id === id);
   if (!plan || plan.status !== "planned")
     throw Error("This plan is no longer pending.");
-  const recipe = data.recipes.find((r) => r.id === plan.recipeId);
-  const next = produce(data, plan.recipeId, plan.batches);
+  const recipe =
+    plan.recipeSnapshot?.recipe ||
+    data.recipes.find((r) => r.id === plan.recipeId);
+  const snapshotItems = plan.recipeSnapshot?.items?.filter(Boolean);
+  const next = produce(
+    data,
+    plan.recipeId,
+    plan.batches,
+    recipe,
+    snapshotItems,
+    plan.recipeSnapshot?.batchCost,
+  );
   return {
     ...next,
     productionPlans: data.productionPlans.map((p) =>
@@ -143,10 +166,20 @@ export function inventoryForecast(data, through = localDate()) {
       date(p.date);
       if (!Number.isInteger(p.batches) || p.batches < 1)
         throw Error("Invalid batch count");
-      const recipe = data.recipes.find((r) => r.id === p.recipeId);
+      const recipe =
+        p.recipeSnapshot?.recipe ||
+        data.recipes.find((r) => r.id === p.recipeId);
       if (!recipe || !recipe.lines.length)
         throw Error("Recipe is missing or empty");
-      const needs = requirements(recipe, data.items);
+      const snapshotItems = p.recipeSnapshot?.items?.filter(Boolean);
+      const planningItems = snapshotItems?.length
+        ? data.items.map((item) => ({
+            ...item,
+            ...(snapshotItems.find((snap) => snap.id === item.id) || {}),
+            stock: item.stock,
+          }))
+        : data.items;
+      const needs = requirements(recipe, planningItems);
       for (const [id, n] of Object.entries(needs)) {
         const item = data.items.find((i) => i.id === id);
         const d = demand[id] || { needed: 0, shortageDate: null };

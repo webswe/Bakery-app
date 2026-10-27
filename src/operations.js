@@ -1,4 +1,5 @@
 import { directSaleTotals } from "./taxation.js";
+import { consumeManyLots } from "./inventoryLots.js";
 import { lineCost, recipeCost } from "./costing.js";
 export const presets = [
   ["All-purpose flour", 120],
@@ -100,20 +101,46 @@ export function fullCost(recipe, items, settings = {}) {
     (recipe.overheadPerBatch || 0)
   );
 }
-export function produce(data, id, batches) {
+export function produce(
+  data,
+  id,
+  batches,
+  recipeOverride,
+  itemSnapshots,
+  snapshotBatchCost,
+) {
   if (!Number.isInteger(batches) || batches < 1)
     throw Error("Enter a whole number of batches.");
-  const r = data.recipes.find((x) => x.id === id);
+  const r = recipeOverride || data.recipes.find((x) => x.id === id);
   if (!r) throw Error("Recipe missing");
-  const a = availability(r, data.items);
+  const costingItems = itemSnapshots?.length
+    ? data.items.map(
+        (item) => itemSnapshots.find((snap) => snap.id === item.id) || item,
+      )
+    : data.items;
+  const availabilityItems = itemSnapshots?.length
+    ? data.items.map((item) => ({
+        ...item,
+        ...(itemSnapshots.find((snap) => snap.id === item.id) || {}),
+        stock: item.stock,
+        needsPrice: item.needsPrice,
+      }))
+    : data.items;
+  const a = availability(r, availabilityItems);
   if (a.error) throw Error(a.error);
   if (a.batches < batches)
     throw Error("Insufficient ingredients or packaging.");
-  if (r.lines.some((l) => data.items.find((i) => i.id === l.itemId).needsPrice))
+  if (
+    r.lines.some(
+      (l) => data.items.find((i) => i.id === l.itemId)?.needsPrice,
+    )
+  )
     throw Error("Set purchase prices for all recipe items first.");
   const quantity = batches * r.yield,
-    cost = fullCost(r, data.items, data.settings) * batches,
+    cost =
+      (snapshotBatchCost ?? fullCost(r, costingItems, data.settings)) * batches,
     old = data.products[id] || { quantity: 0, value: 0 };
+  const lotResult = consumeManyLots(data, a.needs, batches);
   return {
     ...data,
     items: data.items.map((i) => ({
@@ -124,6 +151,7 @@ export function produce(data, id, batches) {
       ...data.products,
       [id]: { quantity: old.quantity + quantity, value: old.value + cost },
     },
+    inventoryLots: lotResult.lots,
     movements: [
       ...(data.movements || []),
       {
@@ -132,6 +160,7 @@ export function produce(data, id, batches) {
         name: r.name,
         quantity,
         kind: "Production",
+        lotUsage: lotResult.usage,
       },
     ],
   };

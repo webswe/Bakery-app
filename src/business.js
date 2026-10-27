@@ -1,6 +1,7 @@
 import { purchaseTax } from "./taxation.js";
 import { inventoryForecast, savePlan, localDate } from "./planning.js";
 import { sell, fullCost } from "./operations.js";
+import { consumeLots } from "./inventoryLots.js";
 export const checklistSteps = ["Bake", "Chill", "Decorate", "Pack"];
 const positive = (v, label, zero = false) => {
   const n = Number(v);
@@ -25,6 +26,16 @@ export function createOrder(data, input) {
     paid = positive(input.deposit, "deposit", true);
   if (paid > total) throw Error("Deposit exceeds order total.");
   const recipe = data.recipes.find((r) => r.id === quote.recipeId);
+  const snapshot = {
+    capturedAt: new Date().toISOString(),
+    recipe: structuredClone(recipe),
+    items: recipe.lines.map((line) => {
+      const item = data.items.find((i) => i.id === line.itemId);
+      return item ? structuredClone(item) : null;
+    }),
+    batchCost: fullCost(recipe, data.items, data.settings),
+    settings: structuredClone(data.settings),
+  };
   const batches = Math.ceil(quote.snapshot.portions / recipe.yield);
   if (!Number.isInteger(batches) || batches < 1)
     throw Error("Invalid recipe yield or quote portions.");
@@ -35,7 +46,22 @@ export function createOrder(data, input) {
     batches,
     notes: quote.customer + ": " + (quote.notes || ""),
     orderId: id,
+    recipeSnapshot: snapshot,
   });
+  const depositPayment =
+    paid > 0
+      ? [
+          {
+            id: crypto.randomUUID(),
+            orderId: id,
+            date: localDate(),
+            amount: paid,
+            kind: "payment",
+            method: input.paymentMethod || "Deposit",
+            note: "Opening deposit",
+          },
+        ]
+      : [];
   return {
     ...next,
     orders: [
@@ -62,9 +88,11 @@ export function createOrder(data, input) {
         paid,
         pickupDate: input.pickupDate,
         status: "open",
+        recipeSnapshot: snapshot,
         createdAt: new Date().toISOString(),
       },
     ],
+    payments: [...(data.payments || []), ...depositPayment],
   };
 }
 export function updateOrder(data, id, action, input = {}) {
@@ -75,6 +103,32 @@ export function updateOrder(data, id, action, input = {}) {
   if (action === "payment") {
     const paid = positive(input.paid, "total paid", true);
     if (paid > o.total) throw Error("Payment exceeds order total.");
+    const entries = (data.payments || []).filter((p) => p.orderId === id);
+    const current = entries.length
+      ? entries.reduce(
+          (sum, payment) =>
+            sum +
+            (payment.kind === "refund" ? -payment.amount : payment.amount),
+          0,
+        )
+      : Number(o.paid) || 0;
+    const adjustment = paid - current;
+    if (Math.abs(adjustment) > 0.005)
+      next = {
+        ...data,
+        payments: [
+          ...(data.payments || []),
+          {
+            id: crypto.randomUUID(),
+            orderId: id,
+            date: localDate(),
+            amount: Math.abs(adjustment),
+            kind: adjustment < 0 ? "refund" : "payment",
+            method: "Legacy order adjustment",
+            note: "Adjusted from the order card",
+          },
+        ],
+      };
     patch = { paid };
   } else if (action === "reschedule") {
     const pickupDate = validDate(input.pickupDate);
@@ -96,7 +150,14 @@ export function updateOrder(data, id, action, input = {}) {
       ),
     };
   } else if (action === "fulfill") {
-    if (o.paid < o.total - 0.005)
+    const ledger = (data.payments || []).filter((p) => p.orderId === o.id);
+    const ledgerPaid = ledger.length
+      ? ledger.reduce(
+          (n, p) => n + (p.kind === "refund" ? -p.amount : p.amount),
+          0,
+        )
+      : o.paid;
+    if (ledgerPaid < o.total - 0.005)
       throw Error("Record the full payment before fulfillment.");
     next = sell(data, {
       recipe: o.recipeId,
@@ -147,10 +208,19 @@ export function shoppingList(data, through) {
   return { ...f, rows };
 }
 export function stockAlerts(data, day = localDate()) {
+  const expiredLots = new Set(
+    (data.inventoryLots || [])
+      .filter(
+        (lot) =>
+          lot.remaining > 0 && lot.expiryDate && lot.expiryDate <= day,
+      )
+      .map((lot) => lot.itemId),
+  );
   return data.items.filter(
     (i) =>
       (i.stock || 0) <= (i.minStock || 0) ||
-      ((i.stock || 0) > 0 && i.expiryDate && i.expiryDate <= day),
+      ((i.stock || 0) > 0 && i.expiryDate && i.expiryDate <= day) ||
+      expiredLots.has(i.id),
   );
 }
 export function recordWaste(data, input) {
@@ -169,8 +239,10 @@ export function recordWaste(data, input) {
     cost = (amount / item.amount) * purchaseTax(item).total;
     name = item.name;
     unit = item.unit;
+    const lotResult = consumeLots(data.inventoryLots || [], item.id, amount);
     next = {
       ...data,
+      inventoryLots: lotResult.lots,
       items: data.items.map((i) =>
         i.id === item.id ? { ...i, stock: i.stock - amount } : i,
       ),

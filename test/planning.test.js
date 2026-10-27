@@ -165,7 +165,12 @@ test("forecasts aggregate repeated ingredients and shared plans, including overd
   assert.equal(box.shortageDate, "2026-10-28");
   assert.equal(data.items[0].stock, 2);
   const bad = { ...data, recipes: [] };
-  assert.equal(inventoryForecast(bad, "2026-10-28").errors.length, 2);
+  assert.equal(inventoryForecast(bad, "2026-10-28").errors.length, 0);
+  assert.equal(
+    inventoryForecast(bad, "2026-10-28").items.find((i) => i.id === "milk")
+      .needed,
+    3,
+  );
 });
 test("completion consumes inventory once, preserves history, and excludes completed work from forecasts", () => {
   const data = savePlan(

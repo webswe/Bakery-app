@@ -10,6 +10,7 @@ import {
 import { localDate } from "./planning.js";
 import { readBackups } from "./backupStorage.js";
 import { migrateData } from "./analytics.js";
+import { orderPaid } from "./ownerOps.js";
 const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     n,
@@ -156,7 +157,13 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
       </div>
       <div className="recipe-grid">
         {[...data.orders].reverse().map((o) => (
-          <OrderCard key={o.id} order={o} act={act} data={data} />
+          <OrderCard
+            key={o.id}
+            order={o}
+            act={act}
+            data={data}
+            navigate={navigate}
+          />
         ))}
       </div>
       {!data.orders.length && (
@@ -167,9 +174,9 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
     </>
   );
 }
-function OrderCard({ order: o, act, data }) {
-  const [paid, setPaid] = useState(o.paid),
-    [day, setDay] = useState(o.pickupDate);
+function OrderCard({ order: o, act, data, navigate }) {
+  const [day, setDay] = useState(o.pickupDate);
+  const paid = orderPaid(data, o);
   return (
     <section className="panel saved-quote">
       <span className="pill">{o.status}</span>
@@ -190,33 +197,15 @@ function OrderCard({ order: o, act, data }) {
         <dt>Order total</dt>
         <dd>{money(o.total)}</dd>
         <dt>Received</dt>
-        <dd>{money(o.paid)}</dd>
+        <dd>{money(paid)}</dd>
         <dt>Balance due</dt>
-        <dd>{money(o.total - o.paid)}</dd>
+        <dd>{money(o.total - paid)}</dd>
       </dl>
       {o.status === "open" && (
         <>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              act(() => updateOrder(data, o.id, "payment", { paid }));
-            }}
-          >
-            <label>
-              Total paid to date ($)
-              <input
-                required
-                aria-label={"Total paid for " + o.customer}
-                type="number"
-                min="0"
-                max={o.total}
-                step="0.01"
-                value={paid}
-                onChange={(e) => setPaid(e.target.value)}
-              />
-            </label>
-            <button className="secondary">Update payment</button>
-          </form>
+          <button className="secondary" onClick={() => navigate("Payments")}>
+            Record payment or refund
+          </button>
           <form
             onSubmit={(e) => {
               e.preventDefault();
