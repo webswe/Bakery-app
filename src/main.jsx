@@ -1,3 +1,5 @@
+import Operations, { SaleFields } from "./Operations";
+import { addPresets, sell, fullCost } from "./operations";
 import Dashboard from "./Dashboard";
 import { migrateData } from "./analytics";
 import React, { useState } from "react";
@@ -17,7 +19,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { units, lineCost, recipeCost } from "./costing";
+import { units, lineCost, recipeCost, convert } from "./costing";
 import "./style.css";
 const uid = () => crypto.randomUUID();
 const money = (n) =>
@@ -104,10 +106,11 @@ function App() {
   const [data, setData] = useState(() => {
     try {
       return migrateData(
-        JSON.parse(localStorage.getItem("bakery-ledger-v1")) || initial,
+        JSON.parse(localStorage.getItem("bakery-ledger-v1")) ||
+          addPresets(initial),
       );
     } catch {
-      return migrateData(initial);
+      return migrateData(addPresets(initial));
     }
   });
   const [page, setPage] = useState("Overview"),
@@ -129,7 +132,7 @@ function App() {
   }
   function cost(r) {
     try {
-      return recipeCost(r, data.items);
+      return fullCost(r, data.items, data.settings);
     } catch {
       return null;
     }
@@ -149,6 +152,8 @@ function App() {
       }
       if (modal.type === "item") {
         const item = {
+          ...modal.value,
+          needsPrice: false,
           id: modal.value?.id || uid(),
           name: f.name,
           amount: +f.amount,
@@ -158,9 +163,17 @@ function App() {
           tax: +f.tax || 0,
           taxCategory: f.taxCategory,
           gramsPerCup: +f.gramsPerCup || null,
+          gramsPerEach: +f.gramsPerEach || null,
           density: +f.density || null,
           type: f.type,
         };
+        if (modal.value?.stock && modal.value.unit !== item.unit)
+          item.stock = convert(
+            modal.value.stock,
+            modal.value.unit,
+            item.unit,
+            item.gramsPerCup ? item.gramsPerCup / units.cup[1] : item.density,
+          );
         if (!(item.amount > 0) || item.price < 0 || item.tax < 0)
           throw Error("Enter valid quantities and prices.");
         save({
@@ -189,6 +202,9 @@ function App() {
           yield: +f.yield,
           price: +f.price,
           lines,
+          laborMinutes: +f.laborMinutes || 0,
+          electricityKwh: +f.electricityKwh || 0,
+          overheadPerBatch: +f.overheadPerBatch || 0,
         };
         save({
           ...data,
@@ -196,23 +212,7 @@ function App() {
         });
       }
       if (modal.type === "sale") {
-        const r = data.recipes.find((r) => r.id === f.recipe);
-        const c = (recipeCost(r, data.items) / r.yield) * +f.quantity;
-        save({
-          ...data,
-          sales: [
-            ...data.sales,
-            {
-              id: uid(),
-              date: f.date,
-              recipeId: r.id,
-              name: r.name,
-              quantity: +f.quantity,
-              total: +f.total,
-              cost: c,
-            },
-          ],
-        });
+        save(sell(data, f));
       }
       if (modal.type === "expense")
         save({
@@ -295,6 +295,10 @@ function App() {
             ["Recipes", BookOpen],
             ["Ingredients", ShoppingBasket],
             ["Packaging", Package],
+            ["Inventory", ShoppingBasket],
+            ["Product stock", Package],
+            ["Can make", ChefHat],
+            ["Cost settings", TrendingUp],
           ].map(([name, Icon]) => (
             <button
               className={page === name ? "active" : ""}
@@ -366,7 +370,9 @@ function App() {
                     ? "A recipe for better margins."
                     : page === "Ingredients"
                       ? "Every ingredient accounted for."
-                      : "The finishing touches."}
+                      : page === "Packaging"
+                        ? "The finishing touches."
+                        : page}
               </h1>
               <p>
                 {page === "Overview"
@@ -380,9 +386,11 @@ function App() {
               className="primary"
               onClick={() =>
                 open(
-                  page === "Overview"
+                  page === "Overview" || page === "Product stock"
                     ? "sale"
-                    : page === "Recipes"
+                    : page === "Recipes" ||
+                        page === "Can make" ||
+                        page === "Cost settings"
                       ? "recipe"
                       : "item",
                   page === "Packaging" ? { type: "packaging" } : undefined,
@@ -390,14 +398,20 @@ function App() {
               }
             >
               <Plus size={17} />
-              {page === "Overview"
+              {page === "Overview" || page === "Product stock"
                 ? "Record a sale"
-                : page === "Recipes"
+                : page === "Recipes" ||
+                    page === "Can make" ||
+                    page === "Cost settings"
                   ? "New recipe"
                   : "Add item"}
             </button>
           </div>
-          {page === "Overview" ? (
+          {["Inventory", "Product stock", "Can make", "Cost settings"].includes(
+            page,
+          ) ? (
+            <Operations data={data} save={save} open={open} tab={page} />
+          ) : page === "Overview" ? (
             <>
               <div className="section-top">
                 <h2>
@@ -418,7 +432,12 @@ function App() {
                     "From your recorded sales",
                     "green",
                   ],
-                  ["Cost of goods", cogs, "Ingredients & packaging", ""],
+                  [
+                    "Cost of goods",
+                    cogs,
+                    "Production incl. labor & overhead",
+                    "",
+                  ],
                   [
                     "Operating expenses",
                     overhead,
@@ -490,6 +509,7 @@ function App() {
                                 if (confirm("Delete this transaction?"))
                                   save({
                                     ...data,
+                                    products: s.stockTracked ? {...data.products,[s.recipeId]:{quantity:(data.products[s.recipeId]?.quantity||0)+s.quantity,value:(data.products[s.recipeId]?.value||0)+s.cost}} : data.products,
                                     sales: data.sales.filter(
                                       (x) => x.id !== s.id,
                                     ),
@@ -561,7 +581,7 @@ function App() {
                         <h2>{r.name}</h2>
                         <p>Makes {r.yield} sellable portions</p>
                         <dl>
-                          <dt>Batch cost</dt>
+                          <dt>Full batch cost</dt>
                           <dd>
                             {cost(r) === null
                               ? "Needs conversion"
@@ -702,52 +722,7 @@ function App() {
               ) : modal.type === "recipe" ? (
                 <RecipeFields recipe={modal.value} items={data.items} />
               ) : modal.type === "sale" ? (
-                <>
-                  <label>
-                    Recipe
-                    <select name="recipe" required>
-                      {data.recipes.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name} · suggested {money(r.price)}/portion
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Portions sold
-                    <input
-                      name="quantity"
-                      type="number"
-                      min="1"
-                      step="1"
-                      required
-                      defaultValue="1"
-                    />
-                  </label>
-                  <label>
-                    Total sale amount ($)
-                    <input
-                      name="total"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      required
-                    />
-                  </label>
-                  <label>
-                    Date
-                    <input
-                      name="date"
-                      type="date"
-                      defaultValue={today()}
-                      required
-                    />
-                  </label>
-                  <p className="hint">
-                    Ingredient and packaging costs are captured at the time of
-                    sale. Include sales tax consistently in your records.
-                  </p>
-                </>
+                <SaleFields data={data} />
               ) : (
                 <>
                   <label>
@@ -935,7 +910,18 @@ function ItemFields({ item: i = {}, taxRates }) {
           accurate result.
         </p>
         <details>
-          <summary>Advanced: density</summary>
+          <summary>Advanced: density and individual pieces</summary>
+          <label>
+            Grams per piece (optional)
+            <input
+              name="gramsPerEach"
+              type="number"
+              min="0.001"
+              step="any"
+              defaultValue={i.gramsPerEach}
+              placeholder="e.g. 50 for a shelled egg"
+            />
+          </label>
           <label>
             Density (g/ml), optional
             <input
@@ -1006,6 +992,45 @@ function RecipeFields({ recipe: r = {}, items }) {
           required
         />
       </label>
+      <div className="conversion-box">
+        <h3>Batch labor & overhead</h3>
+        <p>
+          Set wage and electricity rates in Cost settings. These allocations are
+          included in production cost.
+        </p>
+        <div className="form-row">
+          <label>
+            Labor minutes
+            <input
+              name="laborMinutes"
+              type="number"
+              min="0"
+              step="any"
+              defaultValue={r.laborMinutes || 0}
+            />
+          </label>
+          <label>
+            Electricity (kWh)
+            <input
+              name="electricityKwh"
+              type="number"
+              min="0"
+              step="any"
+              defaultValue={r.electricityKwh || 0}
+            />
+          </label>
+          <label>
+            Other overhead ($/batch)
+            <input
+              name="overheadPerBatch"
+              type="number"
+              min="0"
+              step="0.01"
+              defaultValue={r.overheadPerBatch || 0}
+            />
+          </label>
+        </div>
+      </div>
       <h3>Ingredients & packaging</h3>
       <p className="hint">
         Enter quantities for the whole batch, including boxes, utensils, and
@@ -1083,7 +1108,7 @@ function RecipeFields({ recipe: r = {}, items }) {
       </button>
       <div className="cost-summary">
         <span>
-          Batch cost <b>{money(total)}</b>
+          Ingredients & packaging <b>{money(total)}</b>
         </span>
         <span>
           Per portion <b>{yieldN > 0 ? money(total / yieldN) : "—"}</b>

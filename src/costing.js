@@ -18,7 +18,7 @@ export function convert(amount, from, to, density) {
   if (a[0] !== b[0]) {
     if (!density || a[0] === "count" || b[0] === "count")
       throw Error(
-        "Add ingredient density (g/ml) to convert weight and volume.",
+        "Add grams per cup, density (g/ml), or grams per piece for this conversion.",
       );
     base = a[0] === "volume" ? base * density : base / density;
   }
@@ -27,12 +27,17 @@ export function convert(amount, from, to, density) {
 export function lineCost(line, items) {
   const item = items.find((i) => i.id === line.itemId);
   if (!item) throw Error("Ingredient or packaging item is missing.");
-  const needed = convert(
-    line.amount,
-    line.unit,
-    item.unit,
-    item.gramsPerCup ? item.gramsPerCup / units.cup[1] : item.density,
-  );
+  if (!Number.isFinite(+line.amount) || +line.amount <= 0 || !(item.amount > 0))
+    throw Error("Quantities must be positive.");
+  const density = item.gramsPerCup
+    ? item.gramsPerCup / units.cup[1]
+    : item.density;
+  let needed;
+  if (line.unit === "each" && item.unit !== "each" && item.gramsPerEach)
+    needed = convert(line.amount * item.gramsPerEach, "g", item.unit, density);
+  else if (item.unit === "each" && line.unit !== "each" && item.gramsPerEach)
+    needed = convert(line.amount, line.unit, "g", density) / item.gramsPerEach;
+  else needed = convert(line.amount, line.unit, item.unit, density);
   const packs = needed / item.amount;
   const price = item.price * (item.taxIncluded ? 1 : 1 + item.tax / 100);
   return {

@@ -22,6 +22,9 @@ export function previousMonth(month) {
 export function migrateData(data) {
   return {
     ...data,
+    products: data.products || {},
+    movements: data.movements || [],
+    settings: data.settings || { hourlyWage: 0, electricityRate: 0 },
     taxRates: data.taxRates || { food: data.tax ?? 0, other: data.tax ?? 0 },
     items: data.items.map((i) => ({
       ...i,

@@ -153,7 +153,7 @@ export default function Dashboard({ data, month }) {
           <div className="pl-table">
             {[
               ["Sales revenue", s.revenue],
-              ["Ingredients & packaging", -s.costs],
+              ["Production costs", -s.costs],
               ["Gross profit", s.revenue - s.costs],
               ["Operating expenses", -s.overhead],
               ["Net profit / loss", s.profit],

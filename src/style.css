@@ -1245,3 +1245,102 @@ th {
     font-size: 9px;
   }
 }
+.operations-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+  padding: 22px;
+  background: #eaf2f2;
+  border: 1px solid #d4e3e4;
+  border-radius: 8px;
+}
+.stock-form {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.stock-form input {
+  width: 85px;
+}
+.stock-form input,
+.stock-form select,
+.production-form input,
+.operations-settings input {
+  padding: 8px;
+  border: 1px solid #d6e1e6;
+  border-radius: 5px;
+  background: white;
+  color: #385564;
+  font: inherit;
+  font-size: 12px;
+}
+.production-form {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0;
+}
+.production-form input {
+  width: 65px;
+}
+.operations-settings {
+  max-width: 760px;
+  padding: 28px;
+}
+.operations-settings form {
+  max-width: 400px;
+  margin: 25px 0;
+}
+.operations-settings label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 12px;
+}
+.requirements {
+  border-top: 1px solid #e3e9ec;
+  padding-top: 10px;
+}
+.requirements p {
+  font-size: 11px;
+}
+.recipe-card dl {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+.recipe-card dd {
+  max-width: 160px;
+  text-align: right;
+}
+aside {
+  overflow-y: auto;
+}
+.sidebar-note {
+  padding-top: 20px;
+}
+nav {
+  gap: 2px;
+}
+nav button {
+  padding-block: 10px;
+}
+.sidebar-note {
+  display: none;
+}
+.backup:first-of-type {
+  margin-top: auto;
+}
+@media (max-width: 600px) {
+  .operations-banner {
+    display: block;
+  }
+  .stock-form {
+    min-width: 190px;
+  }
+  .recipe-card dl {
+    font-size: 10px;
+  }
+}
