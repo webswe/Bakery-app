@@ -10,6 +10,7 @@ import {
 import { lotAlerts } from "./inventoryLots.js";
 import { localDate } from "./planning.js";
 import { createLock, verifyPin } from "./security.js";
+import { addDays } from "./productLots.js";
 
 const money = (n) =>
   new Intl.NumberFormat("en-US", {
@@ -195,9 +196,19 @@ function PrepSheets({ data }) {
                   </b>
                 </div>
               ))}
+              <div className="prep-method">
+                <h3>Method & timing</h3>
+                <p>
+                  Prep {recipe?.prepMinutes || 0} min · Bake {recipe?.bakeMinutes || 0} min · Cooling {recipe?.coolingMinutes || 0} min
+                  {recipe?.bakeTemperature ? ` · ${recipe.bakeTemperature}` : ""}
+                </p>
+                {recipe?.equipment && <p><b>Equipment:</b> {recipe.equipment}</p>}
+                <div className="method-steps">{recipe?.method || "No method saved."}</div>
+              </div>
               <p>
                 <b>Allergens:</b> {recipe?.allergens || "Not specified"}
               </p>
+              <p><b>Storage:</b> {recipe?.storageInstructions || "Not specified"} · Shelf life {recipe?.shelfLifeDays || "not set"}{recipe?.shelfLifeDays ? " day(s)" : ""}</p>
               <p>
                 <b>Kitchen notes:</b> {plan.notes || "—"}
               </p>
@@ -211,6 +222,8 @@ function PrepSheets({ data }) {
                 <span>{order?.customer || "Bakery stock"}</span>
                 <span>{order ? "Pickup " + order.pickupDate : date}</span>
                 <span>Allergens: {recipe?.allergens || "Not specified"}</span>
+                <span>Best before: {addDays(date, recipe?.shelfLifeDays) || "Not set"}</span>
+                <span>Storage: {recipe?.storageInstructions || "Not specified"}</span>
               </div>
             </article>
           );

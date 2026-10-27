@@ -1,5 +1,5 @@
 import { purchaseTax } from "./taxation.js";
-import React, { useState } from "react";
+import React, { useDeferredValue, useMemo, useState } from "react";
 import {
   localDate,
   inventoryForecast,
@@ -26,7 +26,7 @@ const nextWeek = () => {
   ].join("-");
 };
 
-export default function PlanningWorkspace({ data, save, tab, open, navigate }) {
+export default function PlanningWorkspace({ data, save, tab, open, navigate, context = {} }) {
   const [error, setError] = useState("");
   function act(fn) {
     try {
@@ -49,7 +49,7 @@ export default function PlanningWorkspace({ data, save, tab, open, navigate }) {
       {tab === "Inventory dashboard" ? (
         <InventoryDashboard data={data} open={open} />
       ) : tab === "Quotes" ? (
-        <QuoteStudio data={data} act={act} navigate={navigate} />
+        <QuoteStudio data={data} act={act} navigate={navigate} customerId={context.customerId} />
       ) : (
         <DailyPlanner data={data} act={act} />
       )}
@@ -61,12 +61,16 @@ function InventoryDashboard({ data, open }) {
   const [through, setThrough] = useState(nextWeek),
     [search, setSearch] = useState(""),
     [filter, setFilter] = useState("all");
-  const forecast = inventoryForecast(data, through || localDate());
+  const deferredSearch = useDeferredValue(search).toLocaleLowerCase();
+  const forecast = useMemo(
+    () => inventoryForecast(data, through || localDate()),
+    [data, through],
+  );
   const shortageCount = forecast.items.filter((i) => i.shortage > 1e-9).length;
   const items = forecast.items
     .filter(
       (i) =>
-        i.name.toLowerCase().includes(search.toLowerCase()) &&
+        i.name.toLocaleLowerCase().includes(deferredSearch) &&
         (filter === "all" ||
           (filter === "shortage" ? i.shortage > 1e-9 : i.stock <= 0)),
     )
@@ -249,20 +253,23 @@ function RecipeSelect({ data, value, onChange }) {
     </label>
   );
 }
-function QuoteStudio({ data, act, navigate }) {
+function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
+  const initialCustomer = data.customers?.find((customer) => customer.id === initialCustomerId);
   const empty = () => ({
     recipeId: data.recipes[0]?.id || "",
     portions: 1,
     margin: 30,
     extraCost: 0,
     taxRate: data.salesTaxRate ?? 0,
-    customer: "",
+    customer: initialCustomer?.name || "",
+    customerId: initialCustomer?.id || "",
     notes: "",
     date: localDate(),
   });
   const [form, setForm] = useState(empty),
     [editing, setEditing] = useState(null),
-    [notice, setNotice] = useState("");
+    [notice, setNotice] = useState(""),
+    [visibleQuotes, setVisibleQuotes] = useState(30);
   const change = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
     setNotice("");
@@ -301,12 +308,42 @@ function QuoteStudio({ data, act, navigate }) {
               value={form.recipeId}
               onChange={(v) => change("recipeId", v)}
             />
+            {!!data.customers?.length && (
+              <label>
+                Customer book
+                <select
+                  value={form.customerId || ""}
+                  onChange={(event) => {
+                    const customer = data.customers.find((item) => item.id === event.target.value);
+                    setForm((current) => ({
+                      ...current,
+                      customerId: customer?.id || "",
+                      customer: customer?.name || current.customer,
+                    }));
+                  }}
+                >
+                  <option value="">New or unlinked customer</option>
+                  {data.customers.map((customer) => (
+                    <option value={customer.id} key={customer.id}>{customer.name}</option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label>
-              Customer / reference
+              Customer name
               <input
                 value={form.customer}
-                onChange={(e) => change("customer", e.target.value)}
-                placeholder="e.g. Emma’s birthday"
+                onChange={(e) =>
+                  setForm((current) => ({
+                    ...current,
+                    customer: e.target.value,
+                    customerId:
+                      data.customers?.find((item) => item.id === current.customerId)?.name === e.target.value
+                        ? current.customerId
+                        : "",
+                  }))
+                }
+                placeholder="e.g. Emma Rivera"
               />
             </label>
             <div className="form-row">
@@ -443,9 +480,9 @@ function QuoteStudio({ data, act, navigate }) {
         </h2>
       </div>
       <div className="recipe-grid">
-        {[...data.quotes].reverse().map((q) => (
+        {[...data.quotes].reverse().slice(0, visibleQuotes).map((q) => (
           <section className="panel saved-quote" key={q.id}>
-            <span className="pill">{q.date}</span>
+            <span className="pill">{q.quoteNumber || q.date}</span>
             <h3>{q.customer || "Untitled customer"}</h3>
             <p>
               {q.snapshot.recipeName} · {q.snapshot.portions} portions
@@ -476,6 +513,12 @@ function QuoteStudio({ data, act, navigate }) {
                 Edit & recalculate
               </button>
               <button
+                className="secondary"
+                onClick={() => navigate("Documents", { quoteId: q.id })}
+              >
+                Print quote
+              </button>
+              <button
                 className="text-button"
                 onClick={() => {
                   if (confirm("Delete this saved quote?")) {
@@ -496,6 +539,11 @@ function QuoteStudio({ data, act, navigate }) {
           </section>
         ))}
       </div>
+      {data.quotes.length > visibleQuotes && (
+        <button className="secondary load-more" onClick={() => setVisibleQuotes((count) => count + 30)}>
+          Show older quotes
+        </button>
+      )}
       {!data.quotes.length && (
         <div className="panel empty">
           <h3>Your next order starts here</h3>

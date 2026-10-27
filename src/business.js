@@ -2,6 +2,8 @@ import { purchaseTax } from "./taxation.js";
 import { inventoryForecast, savePlan, localDate } from "./planning.js";
 import { sell, fullCost } from "./operations.js";
 import { consumeLots } from "./inventoryLots.js";
+import { allocateDocumentNumber } from "./documentOps.js";
+import { consumeProductLots } from "./productLots.js";
 export const checklistSteps = ["Bake", "Chill", "Decorate", "Pack"];
 const positive = (v, label, zero = false) => {
   const n = Number(v);
@@ -40,7 +42,22 @@ export function createOrder(data, input) {
   if (!Number.isInteger(batches) || batches < 1)
     throw Error("Invalid recipe yield or quote portions.");
   const id = crypto.randomUUID();
-  const next = savePlan(data, {
+  const orderNumber = allocateDocumentNumber(data, "order", input.pickupDate);
+  const invoiceNumber = allocateDocumentNumber(
+    { ...data, documentCounters: orderNumber.documentCounters },
+    "invoice",
+    input.pickupDate,
+  );
+  const pickupNumber = allocateDocumentNumber(
+    { ...data, documentCounters: invoiceNumber.documentCounters },
+    "pickup",
+    input.pickupDate,
+  );
+  const numberedData = {
+    ...data,
+    documentCounters: pickupNumber.documentCounters,
+  };
+  const next = savePlan(numberedData, {
     recipeId: quote.recipeId,
     date: validDate(input.pickupDate),
     batches,
@@ -69,12 +86,16 @@ export function createOrder(data, input) {
       {
         id,
         quoteId: quote.id,
+        customerId: quote.customerId || "",
         recipeId: quote.recipeId,
         recipeName: quote.snapshot.recipeName,
         customer: quote.customer,
         notes: quote.notes,
         portions: quote.snapshot.portions,
         total,
+        orderNumber: orderNumber.number,
+        invoiceNumber: invoiceNumber.number,
+        pickupNumber: pickupNumber.number,
         ...(Number.isFinite(quote.snapshot.subtotal) &&
         Number.isFinite(quote.snapshot.tax)
           ? {
@@ -166,6 +187,7 @@ export function updateOrder(data, id, action, input = {}) {
       taxSnapshot: o.taxSnapshot,
       date: localDate(),
       customer: o.customer,
+      customerId: o.customerId || "",
       payment: "Order payments",
     });
     const sale = next.sales.at(-1);
@@ -229,7 +251,8 @@ export function recordWaste(data, input) {
   let cost,
     name,
     next = data,
-    unit;
+    unit,
+    productLotUsage = [];
   if (input.kind === "ingredient") {
     const item = data.items.find((i) => i.id === input.itemId);
     if (!item) throw Error("Choose an inventory item.");
@@ -255,8 +278,15 @@ export function recordWaste(data, input) {
     cost = (stock.value / stock.quantity) * amount;
     name = r.name;
     unit = "portions";
+    const productLotResult = consumeProductLots(
+      data.productLots || [],
+      r.id,
+      amount,
+    );
+    productLotUsage = productLotResult.usage;
     next = {
       ...data,
+      productLots: productLotResult.lots,
       products: {
         ...data.products,
         [r.id]: {
@@ -277,6 +307,7 @@ export function recordWaste(data, input) {
       cost,
       reason: input.reason || "Waste",
       kind: input.kind,
+      productLotUsage,
     };
   return {
     ...next,

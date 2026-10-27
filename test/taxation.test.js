@@ -7,6 +7,7 @@ import {
   directSaleTotals,
   saleRevenue,
   taxRate,
+  applyPurchaseTaxRates,
 } from "../src/taxation.js";
 import { lineCost } from "../src/costing.js";
 import { migrateData, monthlySummary } from "../src/analytics.js";
@@ -64,6 +65,19 @@ test("added, included and exempt taxes have distinct transparent breakdowns", ()
   assert.throws(() => taxRate(-1));
   assert.throws(() => taxRate(""));
   assert.equal(taxRate(0), 0);
+});
+test("purchase-tax defaults can update existing rates without changing treatment", () => {
+  const items = applyPurchaseTaxRates(
+    [
+      { id: "food", type: "ingredient", taxMode: "added", tax: 1, price: 10 },
+      { id: "box", type: "packaging", taxMode: "included", tax: 2, price: 10 },
+      { id: "gift", taxCategory: "other", taxMode: "exempt", tax: 0, price: 10 },
+    ],
+    { food: 5, other: 9 },
+  );
+  assert.deepEqual(items.map((item) => item.tax), [5, 9, 9]);
+  assert.deepEqual(items.map((item) => item.taxMode), ["added", "included", "exempt"]);
+  assert.equal(purchaseTax(items[2]).tax, 0);
 });
 test("legacy tax flags keep exact historical package and proportional costs", () => {
   for (const included of [true, false]) {

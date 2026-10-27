@@ -65,3 +65,16 @@ export function directSaleTotals(price, quantity, discount, rate) {
   };
 }
 export const saleRevenue = (sale) => sale.net ?? sale.total;
+
+export function applyPurchaseTaxRates(items, rates) {
+  const food = taxRate(rates.food);
+  const other = taxRate(rates.other);
+  return items.map((item) => ({
+    ...item,
+    tax:
+      (item.taxCategory || (item.type === "packaging" ? "other" : "food")) ===
+      "other"
+        ? other
+        : food,
+  }));
+}

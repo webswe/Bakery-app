@@ -1,12 +1,13 @@
 export const sections = [
   { name: "Overview", pages: ["Overview"] },
-  { name: "Sales", pages: ["Orders", "Quotes", "Payments"] },
+  { name: "Sales", pages: ["Orders", "Quotes", "Customers", "Documents", "Payments"] },
   {
     name: "Kitchen",
     pages: [
       "Calendar",
       "Daily planner",
       "Prep sheets",
+      "Batch traceability",
       "Can make",
       "Product stock",
       "Recipes",
@@ -32,7 +33,7 @@ export const sections = [
   },
   {
     name: "Settings",
-    pages: ["Tutorial", "Cost settings", "Tax settings", "Backups", "Security"],
+    pages: ["Tutorial", "Business profile", "Cost settings", "Tax settings", "Backups", "Security"],
   },
 ];
 export const pages = {
@@ -62,6 +63,16 @@ export const pages = {
     description:
       "Record deposits, partial payments and refunds, then print a customer receipt.",
   },
+  Customers: {
+    label: "Customers",
+    description:
+      "Keep customer contact details, preferences, allergy notes and order history together.",
+  },
+  Documents: {
+    label: "Documents",
+    description:
+      "Print numbered quotes, invoices and pickup slips using your bakery profile.",
+  },
   Calendar: {
     label: "Calendar",
     description:
@@ -80,6 +91,11 @@ export const pages = {
     label: "Prep sheets",
     description:
       "Print scaled ingredients, kitchen checks, allergens and batch labels for the day.",
+  },
+  "Batch traceability": {
+    label: "Batch traceability",
+    description:
+      "Trace finished batches to ingredient delivery lots, shelf life and captured production cost.",
   },
   "Can make": {
     label: "Batch availability",
@@ -196,6 +212,11 @@ export const pages = {
     description:
       "Follow the owner workflow from initial setup through production, fulfillment and monthly review.",
   },
+  "Business profile": {
+    label: "Business profile",
+    description:
+      "Set the bakery contact and registration details shown on printed customer documents.",
+  },
   "Tax settings": {
     label: "Tax settings",
     description:
@@ -221,7 +242,11 @@ export function readRoute(hash = "") {
   const page = params.get("page");
   return {
     page: Object.hasOwn(pages, page) ? page : "Overview",
-    context: { quoteId: params.get("quote") || "" },
+    context: {
+      quoteId: params.get("quote") || "",
+      orderId: params.get("order") || "",
+      customerId: params.get("customer") || "",
+    },
   };
 }
 export function routeHash(page, context = {}) {
@@ -229,5 +254,7 @@ export function routeHash(page, context = {}) {
     page: Object.hasOwn(pages, page) ? page : "Overview",
   });
   if (context.quoteId) params.set("quote", context.quoteId);
+  if (context.orderId) params.set("order", context.orderId);
+  if (context.customerId) params.set("customer", context.customerId);
   return "#" + params.toString();
 }

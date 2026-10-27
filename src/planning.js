@@ -1,5 +1,7 @@
 import { customerTax } from "./taxation.js";
 import { requirements, fullCost, produce } from "./operations.js";
+import { ensureCustomer } from "./customerOps.js";
+import { allocateDocumentNumber } from "./documentOps.js";
 
 export const localDate = () => {
   const d = new Date();
@@ -71,16 +73,29 @@ export function quoteCalculation(data, input) {
 }
 export function saveQuote(data, input, id) {
   const snapshot = quoteCalculation(data, input);
+  const quoteDate = date(input.date);
+  const customerResult = ensureCustomer(data, input);
+  const previous = (data.quotes || []).find((quote) => quote.id === id);
+  const allocation = previous?.quoteNumber
+    ? { number: previous.quoteNumber, documentCounters: customerResult.data.documentCounters }
+    : allocateDocumentNumber(customerResult.data, "quote", quoteDate);
   const quote = {
     ...input,
-    date: date(input.date),
+    customer: String(input.customer || "").trim(),
+    customerId: customerResult.customerId,
+    date: quoteDate,
     id: id || crypto.randomUUID(),
+    quoteNumber: allocation.number,
     snapshot,
     updatedAt: new Date().toISOString(),
   };
   return {
-    ...data,
-    quotes: [...(data.quotes || []).filter((q) => q.id !== quote.id), quote],
+    ...customerResult.data,
+    documentCounters: allocation.documentCounters,
+    quotes: [
+      ...(customerResult.data.quotes || []).filter((q) => q.id !== quote.id),
+      quote,
+    ],
   };
 }
 export function savePlan(data, input, id) {
@@ -138,6 +153,11 @@ export function completePlan(data, id) {
     recipe,
     snapshotItems,
     plan.recipeSnapshot?.batchCost,
+    {
+      productionDate: plan.date,
+      productionPlanId: plan.id,
+      orderId: plan.orderId || "",
+    },
   );
   return {
     ...next,

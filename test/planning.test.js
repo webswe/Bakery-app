@@ -111,9 +111,12 @@ test("quotes charge whole batches and snapshot full costs, true margin and tax",
   assert.equal(q.total, 65.63);
   const saved = saveQuote(data, input),
     original = structuredClone(saved.quotes[0].snapshot);
+  assert.equal(saved.quotes[0].quoteNumber, "Q-2026-0001");
   saved.items[0].price = 20;
   assert.deepEqual(saved.quotes[0].snapshot, original);
-  assert.equal(saveQuote(saved, input, saved.quotes[0].id).quotes.length, 1);
+  const edited = saveQuote(saved, input, saved.quotes[0].id);
+  assert.equal(edited.quotes.length, 1);
+  assert.equal(edited.quotes[0].quoteNumber, "Q-2026-0001");
   assert.throws(
     () => quoteCalculation(data, { ...input, margin: 100 }),
     /Margin/,

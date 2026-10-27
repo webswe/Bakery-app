@@ -1,6 +1,7 @@
 import { directSaleTotals, purchaseTax } from "./taxation.js";
 import { receiveInventory, reconcileLots } from "./inventoryLots.js";
-import React, { useState } from "react";
+import { finishedProductAlerts } from "./productLots.js";
+import React, { useDeferredValue, useState } from "react";
 import { addPresets, availability, produce, fullCost } from "./operations.js";
 const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
@@ -10,7 +11,9 @@ export function SaleFields({ data }) {
   const [id, setId] = useState(data.recipes[0]?.id || ""),
     [qty, setQty] = useState(1),
     [discount, setDiscount] = useState(0),
-    [rate, setRate] = useState(data.salesTaxRate ?? 0);
+    [rate, setRate] = useState(data.salesTaxRate ?? 0),
+    [customerId, setCustomerId] = useState(""),
+    [customerName, setCustomerName] = useState("");
   const r = data.recipes.find((x) => x.id === id),
     stock = data.products[id]?.quantity || 0;
   let totals, issue;
@@ -103,9 +106,35 @@ export function SaleFields({ data }) {
       )}
       <input type="hidden" name="total" value={total} />
       <input type="hidden" name="discount" value={discount} />
+      {!!data.customers?.length && (
+        <label>
+          Customer book
+          <select
+            name="customerId"
+            value={customerId}
+            onChange={(event) => {
+              const customer = data.customers.find((item) => item.id === event.target.value);
+              setCustomerId(customer?.id || "");
+              if (customer) setCustomerName(customer.name);
+            }}
+          >
+            <option value="">New or walk-in customer</option>
+            {data.customers.map((customer) => <option value={customer.id} key={customer.id}>{customer.name}</option>)}
+          </select>
+        </label>
+      )}
       <label>
-        Customer / order reference
-        <input name="customer" placeholder="Optional" />
+        Customer name
+        <input
+          name="customer"
+          value={customerName}
+          onChange={(event) => {
+            setCustomerName(event.target.value);
+            const selected = data.customers?.find((item) => item.id === customerId);
+            if (selected?.name !== event.target.value) setCustomerId("");
+          }}
+          placeholder="Optional for walk-in sales"
+        />
       </label>
       <div className="form-row">
         <label>
@@ -138,6 +167,7 @@ export function SaleFields({ data }) {
 export default function Operations({ data, save, open, tab }) {
   const [error, setError] = useState(""),
     [q, setQ] = useState("");
+  const deferredQuery = useDeferredValue(q).toLocaleLowerCase();
   function act(fn) {
     try {
       const next = fn();
@@ -194,7 +224,8 @@ export default function Operations({ data, save, open, tab }) {
               </thead>
               <tbody>
                 {data.items
-                  .filter((i) => i.name.toLowerCase().includes(q.toLowerCase()))
+                  .filter((i) => i.name.toLocaleLowerCase().includes(deferredQuery))
+                  .slice(0, 100)
                   .map((i) => (
                     <tr key={i.id}>
                       <td>
@@ -344,10 +375,16 @@ export default function Operations({ data, save, open, tab }) {
       ) : (
         <div className="recipe-grid">
           {data.recipes
-            .filter((r) => r.name.toLowerCase().includes(q.toLowerCase()))
+            .filter((r) => r.name.toLocaleLowerCase().includes(deferredQuery))
+            .slice(0, 60)
             .map((r) => {
               const a = availability(r, data.items),
-                stock = data.products[r.id] || { quantity: 0, value: 0 };
+                stock = data.products[r.id] || { quantity: 0, value: 0 },
+                productLots = (data.productLots || [])
+                  .filter((lot) => lot.recipeId === r.id && lot.remaining > 0)
+                  .sort((x, y) => (x.bestBefore || "9999").localeCompare(y.bestBefore || "9999")),
+                expiryAlerts = finishedProductAlerts(data, new Date().toLocaleDateString("en-CA"))
+                  .filter((lot) => lot.recipeId === r.id);
               let cost;
               try {
                 cost = fullCost(r, data.items, data.settings);
@@ -382,7 +419,21 @@ export default function Operations({ data, save, open, tab }) {
                     <dd>{cost === undefined ? "—" : money(cost / r.yield)}</dd>
                     <dt>Stock value</dt>
                     <dd>{money(stock.value)}</dd>
+                    <dt>Finished lots</dt>
+                    <dd>{productLots.length || (stock.quantity ? "Legacy stock" : 0)}</dd>
                   </dl>
+                  {tab === "Product stock" && productLots.length > 0 && (
+                    <div className="finished-lot-list">
+                      {productLots.slice(0, 4).map((lot) => (
+                        <div className={lot.bestBefore && lot.bestBefore < new Date().toLocaleDateString("en-CA") ? "negative" : ""} key={lot.id}>
+                          <span>{lot.remaining} portions · made {lot.producedAt}</span>
+                          <b>{lot.bestBefore ? `Best before ${lot.bestBefore}` : "No shelf life set"}</b>
+                        </div>
+                      ))}
+                      {expiryAlerts.some((lot) => lot.expired) && <p className="negative">Expired finished stock needs review.</p>}
+                      {r.storageInstructions && <p>{r.storageInstructions}</p>}
+                    </div>
+                  )}
                   {a.error && <div className="error">{a.error}</div>}
                   {tab === "Can make" && (
                     <div className="requirements">

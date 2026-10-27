@@ -67,6 +67,9 @@ test("orders retain quoted prices, create linked tasks, track deposits and fulfi
   });
   const id = d.orders[0].id;
   assert.equal(d.productionPlans[0].orderId, id);
+  assert.match(d.orders[0].orderNumber, /^O-2026-/);
+  assert.match(d.orders[0].invoiceNumber, /^INV-2026-/);
+  assert.match(d.orders[0].pickupNumber, /^PU-2026-/);
   assert.equal(d.sales.length, 0);
   assert.throws(() => updateOrder(d, id, "payment", { paid: 51 }), /exceeds/);
   assert.throws(() => updateOrder(d, id, "fulfill"), /full payment/);

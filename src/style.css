@@ -297,6 +297,7 @@ h3 {
   font-size: 11px;
   padding: 3px;
 }
+.danger-button { background:#fff; border:1px solid #e5c7c1; color:#a64f43; padding:10px 14px; border-radius:5px; font-size:11px; margin-right:auto; }
 .section-top {
   display: flex;
   justify-content: space-between;
@@ -681,7 +682,8 @@ td small {
   margin-bottom: 17px;
 }
 .modal input,
-.modal select {
+.modal select,
+.modal textarea {
   width: 100%;
   border: 1px solid #dce3d4;
   border-radius: 5px;
@@ -690,6 +692,11 @@ td small {
   color: #4b5942;
   min-width: 0;
 }
+.modal textarea { min-height:110px; resize:vertical; }
+.modal .tax-apply-check { flex-direction:row; align-items:flex-start; gap:10px; padding:13px; border-radius:7px; background:#f1f6f7; }
+.modal .tax-apply-check input { width:18px; height:18px; flex:0 0 auto; margin-top:2px; accent-color:#2f6f62; }
+.tax-apply-check span { display:grid; gap:5px; }
+.tax-apply-check small { color:#718690; line-height:1.5; }
 .form-row {
   display: flex;
   gap: 15px;
@@ -722,6 +729,16 @@ td small {
   padding: 12px;
   margin-bottom: 12px;
 }
+.recipe-modal { max-width:920px; }
+.recipe-modal > .panel-heading { position:sticky; top:0; z-index:4; background:#fff; }
+.recipe-editor-intro { display:flex; align-items:center; justify-content:space-between; gap:20px; margin:-4px 0 22px; padding:18px; border-radius:8px; background:linear-gradient(135deg,#edf5f2,#f8fafb); }
+.recipe-editor-intro h3 { margin:7px 0 0; }
+.recipe-line { display:grid; grid-template-columns:minmax(180px,1.25fr) minmax(260px,1fr); gap:8px 15px; align-items:center; }
+.recipe-line > select { grid-row:1; }
+.recipe-line .line-amount { grid-column:2; grid-row:1; margin:0; }
+.recipe-line > small { grid-column:1/-1; }
+.recipe-card-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.load-more { display:flex; margin:20px auto; }
 .line-amount {
   display: flex;
   gap: 10px;
@@ -1409,7 +1426,7 @@ nav button { flex-shrink:0; }
 .planning-workspace input[type=checkbox] { width:18px; height:18px; accent-color:#2f6f62; }
 .saved-quote form { display:grid; gap:8px; margin:16px 0; }
 .saved-quote label { display:grid; gap:6px; }
-@media print { aside, header, .page-title, .no-print, .stock-alert {display:none!important;} .app > main {margin:0;width:100%;} .content {padding:0;} .panel {break-inside:avoid;} }
+@media print { .app > aside, .app > main > header, .page-title, .no-print, .stock-alert {display:none!important;} .app > main {margin:0;width:100%;} .content {padding:0;} .panel {break-inside:avoid;} }
 /* Shared workspace structure */
 .workspace-guide { margin:28px 4px; padding-top:20px; border-top:1px solid #36515b; color:#c7d6d9; line-height:1.6; }
 .workspace-guide p { font-size:11px; margin:0 0 8px; }
@@ -1554,6 +1571,82 @@ nav button { flex-shrink:0; }
   .tutorial-actions .text-button { width:100%; order:4; }
 }
 @media print { .tutorial-overlay { display:none!important; } }
+
+/* Customer records, documents and traceability */
+.customer-layout { grid-template-columns:minmax(300px,.75fr) minmax(0,1.35fr); align-items:start; }
+.customer-layout > .planning-form { position:sticky; top:90px; }
+.customer-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.customer-card { padding:22px; }
+.customer-card h3 { margin:0 0 6px; }
+.customer-card dl { display:grid; grid-template-columns:1fr auto; gap:9px; margin:18px 0; color:#6b808b; font-size:11px; }
+.customer-card dd { margin:0; color:#345766; font-weight:600; text-align:right; }
+.customer-card p { overflow-wrap:anywhere; }
+.customer-alert { padding:10px 12px; border-radius:6px; background:#fff3eb; color:#8b5944; }
+.business-profile { max-width:760px; }
+.document-controls { max-width:900px; margin-bottom:24px; }
+.business-document { max-width:900px; margin:0 auto; padding:46px; color:#2e4653; }
+.document-header { height:auto; margin:0 0 34px; padding:0 0 25px; border-bottom:2px solid #315f68; color:inherit; }
+.document-header h1 { margin:8px 0; }
+.document-header p { max-width:620px; margin:0; }
+.document-number { display:grid; gap:8px; text-align:right; }
+.document-number b { color:#2c5963; font-size:18px; }
+.document-customer { margin-bottom:28px; }
+.document-customer h2 { margin:8px 0; font-size:20px; }
+.document-lines { min-width:0!important; margin:10px 0 24px; }
+.document-lines th:first-child,.document-lines td:first-child { padding-left:0; }
+.document-lines th:last-child,.document-lines td:last-child { padding-right:0; text-align:right; }
+.document-totals { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:11px; width:min(380px,100%); margin:0 0 30px auto; padding-top:18px; border-top:1px solid #dce5e8; }
+.document-totals dd { margin:0; text-align:right; font-weight:600; }
+.document-totals dt:last-of-type,.document-totals dd:last-of-type { padding-top:11px; border-top:2px solid #b9cbd0; color:#285e53; font-size:16px; }
+.document-notes,.document-payments,.pickup-details { padding:20px; border-radius:7px; background:#f5f8f9; }
+.document-payments h3 { margin-top:0; }
+.business-document footer { margin-top:38px; padding-top:20px; border-top:1px solid #dce5e8; text-align:center; }
+.pickup-details { display:grid; gap:0; }
+.pickup-details > div { display:grid; grid-template-columns:150px 1fr; gap:20px; padding:14px 0; border-bottom:1px solid #dfe7e9; }
+.pickup-details span { color:#748793; }
+.pickup-check { margin-top:25px; padding-top:18px; color:#345766; }
+.trace-list { display:grid; gap:18px; }
+.trace-card { padding:24px; }
+.trace-card > header { height:auto; display:flex; align-items:flex-start; justify-content:space-between; padding:0 0 18px; border-bottom:1px solid #e1e9ec; color:inherit; }
+.trace-card > header h2 { margin:12px 0 4px; font-size:20px; }
+.trace-card > header > div:last-child { display:grid; text-align:right; }
+.trace-card > header > div:last-child b { font-size:20px; }
+.trace-card h3 { margin:22px 0 8px; font-size:14px; }
+.trace-product-lot { display:grid; grid-template-columns:130px 1fr; gap:7px 20px; margin-top:18px; padding:15px; border-radius:7px; background:#edf5f2; }
+.trace-product-lot small { grid-column:2; color:#668078; }
+.trace-ingredients > div { display:flex; justify-content:space-between; gap:20px; padding:13px 0; border-bottom:1px solid #e7edef; color:#55707e; font-size:12px; }
+.trace-ingredients span { display:grid; gap:5px; }
+.trace-ingredients span:last-child { text-align:right; }
+.trace-ingredients small { color:#83939b; }
+.finished-lot-list { display:grid; gap:8px; margin:18px 0; padding:14px; border-radius:7px; background:#f4f8f8; }
+.finished-lot-list > div { display:grid; gap:4px; font-size:10px; }
+.finished-lot-list b { color:#476675; font-weight:600; }
+.prep-method { margin:18px 0; padding:16px; border-radius:7px; background:#f4f7f8; }
+.prep-method h3 { margin-top:0; }
+.method-steps { white-space:pre-wrap; color:#405e6c; font-size:12px; line-height:1.8; }
+
+@media (max-width:1100px) {
+  .customer-layout { grid-template-columns:1fr; }
+  .customer-layout > .planning-form { position:static; }
+}
+@media (max-width:700px) {
+  .customer-list { grid-template-columns:1fr; }
+  .business-document { padding:26px 20px; }
+  .document-header,.trace-card > header { align-items:flex-start; flex-direction:column; gap:18px; }
+  .document-number,.trace-card > header > div:last-child { text-align:left; }
+  .pickup-details > div,.trace-product-lot { grid-template-columns:1fr; gap:5px; }
+  .trace-product-lot small { grid-column:1; }
+  .trace-ingredients > div { align-items:flex-start; flex-direction:column; gap:8px; }
+  .trace-ingredients span:last-child { text-align:left; }
+  .recipe-line { grid-template-columns:1fr; }
+  .recipe-line .line-amount,.recipe-line > select,.recipe-line > small { grid-column:1; grid-row:auto; }
+  .recipe-editor-intro { align-items:flex-start; flex-direction:column; }
+}
+@media print {
+  .document-workspace > :not(.business-document),.document-workspace ~ * { display:none!important; }
+  .business-document { max-width:none; border:0; box-shadow:none; padding:0; }
+  .business-document footer { break-inside:avoid; }
+}
 
 /* Responsive quality-of-life controls */
 .header-tools { min-width:0; }

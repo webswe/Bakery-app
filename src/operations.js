@@ -1,5 +1,6 @@
 import { directSaleTotals } from "./taxation.js";
 import { consumeManyLots } from "./inventoryLots.js";
+import { createProductLot, consumeProductLots } from "./productLots.js";
 import { lineCost, recipeCost } from "./costing.js";
 export const presets = [
   ["All-purpose flour", 120],
@@ -108,6 +109,7 @@ export function produce(
   recipeOverride,
   itemSnapshots,
   snapshotBatchCost,
+  context = {},
 ) {
   if (!Number.isInteger(batches) || batches < 1)
     throw Error("Enter a whole number of batches.");
@@ -141,6 +143,31 @@ export function produce(
       (snapshotBatchCost ?? fullCost(r, costingItems, data.settings)) * batches,
     old = data.products[id] || { quantity: 0, value: 0 };
   const lotResult = consumeManyLots(data, a.needs, batches);
+  const batchId = crypto.randomUUID();
+  const producedAt =
+    context.productionDate || new Date().toLocaleDateString("en-CA");
+  const productLot = createProductLot(
+    r,
+    quantity,
+    cost,
+    batchId,
+    producedAt,
+  );
+  const productionBatch = {
+    id: batchId,
+    batchCode: `B-${producedAt.replaceAll("-", "")}-${batchId.slice(0, 6).toUpperCase()}`,
+    recipeId: r.id,
+    recipeName: r.name,
+    producedAt,
+    batches,
+    quantity,
+    cost,
+    ingredientLotUsage: lotResult.usage,
+    productLotId: productLot.id,
+    productionPlanId: context.productionPlanId || "",
+    orderId: context.orderId || "",
+    recipeSnapshot: recipeOverride ? structuredClone(r) : null,
+  };
   return {
     ...data,
     items: data.items.map((i) => ({
@@ -152,6 +179,8 @@ export function produce(
       [id]: { quantity: old.quantity + quantity, value: old.value + cost },
     },
     inventoryLots: lotResult.lots,
+    productLots: [...(data.productLots || []), productLot],
+    productionBatches: [...(data.productionBatches || []), productionBatch],
     movements: [
       ...(data.movements || []),
       {
@@ -161,6 +190,7 @@ export function produce(
         quantity,
         kind: "Production",
         lotUsage: lotResult.usage,
+        batchId,
       },
     ],
   };
@@ -202,6 +232,11 @@ export function sell(data, f) {
       f.taxRate,
     );
   const cost = (stock.value / stock.quantity) * quantity;
+  const productLotResult = consumeProductLots(
+    data.productLots || [],
+    r.id,
+    quantity,
+  );
   return {
     ...data,
     products: {
@@ -211,6 +246,7 @@ export function sell(data, f) {
         value: Math.max(0, stock.value - cost),
       },
     },
+    productLots: productLotResult.lots,
     sales: [
       ...data.sales,
       {
@@ -224,7 +260,9 @@ export function sell(data, f) {
         cost,
         stockTracked: true,
         customer: f.customer || "",
+        customerId: f.customerId || "",
         payment: f.payment || "Cash",
+        productLotUsage: productLotResult.usage,
       },
     ],
   };

@@ -54,6 +54,31 @@ test("production consumes stock and captures labor and electricity", () => {
   assert.equal(d.items[0].stock, 1);
   assert.throws(() => produce(d, "cake", 5), /Insufficient/);
 });
+test("production creates a traceable finished lot and sales consume it", () => {
+  const data = fixture();
+  data.recipes[0].shelfLifeDays = 4;
+  data.recipes[0].storageInstructions = "Keep refrigerated";
+  const made = produce(
+    data,
+    "cake",
+    1,
+    undefined,
+    undefined,
+    undefined,
+    { productionDate: "2026-10-27", productionPlanId: "plan" },
+  );
+  assert.equal(made.productLots[0].bestBefore, "2026-10-31");
+  assert.equal(made.productionBatches[0].productionPlanId, "plan");
+  assert.equal(made.productionBatches[0].productLotId, made.productLots[0].id);
+  const sold = sell(made, {
+    recipe: "cake",
+    quantity: 2,
+    total: 10,
+    date: "2026-10-28",
+  });
+  assert.equal(sold.productLots[0].remaining, 2);
+  assert.equal(sold.sales.at(-1).productLotUsage[0].amount, 2);
+});
 test("sales consume weighted finished cost and prevent overselling", () => {
   const d = produce(fixture(), "cake", 1);
   const n = sell(d, {

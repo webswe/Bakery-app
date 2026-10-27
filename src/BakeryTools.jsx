@@ -76,7 +76,8 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
     ),
     [pickupDate, setDate] = useState(localDate),
     [deposit, setDeposit] = useState(0),
-    [accepted, setAccepted] = useState(false);
+    [accepted, setAccepted] = useState(false),
+    [visibleOrders, setVisibleOrders] = useState(30);
   return (
     <>
       <section className="panel planning-form">
@@ -156,7 +157,7 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
         <h2>Customer orders</h2>
       </div>
       <div className="recipe-grid">
-        {[...data.orders].reverse().map((o) => (
+        {[...data.orders].reverse().slice(0, visibleOrders).map((o) => (
           <OrderCard
             key={o.id}
             order={o}
@@ -166,6 +167,11 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
           />
         ))}
       </div>
+      {data.orders.length > visibleOrders && (
+        <button className="secondary load-more" onClick={() => setVisibleOrders((count) => count + 30)}>
+          Show older orders
+        </button>
+      )}
       {!data.orders.length && (
         <p className="panel empty">
           Save a quote, then accept it here to start an order.
@@ -205,6 +211,9 @@ function OrderCard({ order: o, act, data, navigate }) {
         <>
           <button className="secondary" onClick={() => navigate("Payments")}>
             Record payment or refund
+          </button>
+          <button className="secondary" onClick={() => navigate("Documents", { orderId: o.id })}>
+            Print invoice or pickup slip
           </button>
           <form
             onSubmit={(e) => {

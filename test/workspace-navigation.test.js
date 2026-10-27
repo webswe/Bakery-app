@@ -18,7 +18,11 @@ test("all workspace routes are reachable once, and handoffs stay inside the app"
   }
 });
 test("quote handoffs round trip safely and invalid addresses recover to Overview", () => {
-  const context = { quoteId: "order&special?#=1" };
+  const context = {
+    quoteId: "order&special?#=1",
+    orderId: "invoice&1",
+    customerId: "customer&1",
+  };
   assert.deepEqual(readRoute(routeHash("Orders", context)), {
     page: "Orders",
     context,

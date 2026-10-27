@@ -33,15 +33,15 @@ export const tutorialSteps = [
     title: "Quote, accept and collect",
     page: "Quotes",
     button: "Create a quote",
-    text: "Choose a recipe and portions, set the target margin, extra costs and customer tax, then save the quote.",
-    tip: "Accept it under Orders to create a production task. Record deposits, later payments or refunds under Payments.",
+    text: "Choose a customer and recipe, set portions, target margin, extra costs and customer tax, then save the numbered quote.",
+    tip: "Accept it under Orders to create a production task. Print the invoice or pickup slip under Documents and record money under Payments.",
   },
   {
     title: "Plan and complete production",
     page: "Daily planner",
     button: "Open production plan",
     text: "Schedule whole batches, use the kitchen checklist and complete the task when the desserts are made.",
-    tip: "Completion deducts ingredients using earliest-expiry lots and adds portions to Finished stock. Prep sheets print scaled quantities and labels.",
+    tip: "Completion deducts earliest-expiry ingredient lots, creates a traceable finished lot, and adds portions to Finished stock. Prep sheets include the saved method and labels.",
   },
   {
     title: "Buy and receive what you need",
@@ -55,7 +55,7 @@ export const tutorialSteps = [
     page: "Owner forecast",
     button: "Open owner forecast",
     text: "Use Calendar and Prep sheets for today, Payments and Orders for pickups, and the seven-day forecast for upcoming cash and production needs.",
-    tip: "Review Tax report and Waste analysis monthly. Export a backup regularly and optionally enable the local PIN lock.",
+    tip: "Review finished-product expiry, Batch traceability, Tax report and Waste analysis. Export a backup regularly and optionally enable the local PIN lock.",
   },
 ];
 

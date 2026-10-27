@@ -28,4 +28,7 @@ test("old backups retain purchase rates and gain tax categories", () => {
   assert.deepEqual(d.taxRates, { food: 7, other: 7 });
   assert.equal(d.items[0].tax, 9);
   assert.equal(d.items[0].taxCategory, "other");
+  assert.deepEqual(d.customers, []);
+  assert.deepEqual(d.productLots, []);
+  assert.deepEqual(d.productionBatches, []);
 });

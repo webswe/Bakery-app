@@ -1,4 +1,10 @@
-import { purchaseTax, purchaseMode, taxRate, saleRevenue } from "./taxation.js";
+import {
+  applyPurchaseTaxRates,
+  purchaseTax,
+  purchaseMode,
+  taxRate,
+  saleRevenue,
+} from "./taxation.js";
 import Operations, { SaleFields } from "./InventoryWorkspace.jsx";
 import { addPresets, sell, fullCost } from "./operations.js";
 import Dashboard from "./Dashboard.jsx";
@@ -9,7 +15,15 @@ import { stockAlerts } from "./business.js";
 import PlanningWorkspace from "./PlanningWorkspace.jsx";
 import OwnerWorkspace from "./OwnerWorkspace.jsx";
 import TutorialWorkspace, { GuidedTutorial } from "./TutorialWorkspace.jsx";
+import CustomerWorkspace from "./CustomerWorkspace.jsx";
+import DocumentWorkspace, { BusinessProfileWorkspace } from "./DocumentWorkspace.jsx";
+import TraceabilityWorkspace from "./TraceabilityWorkspace.jsx";
+import CatalogWorkspace from "./CatalogWorkspace.jsx";
 import { verifyPin } from "./security.js";
+import { ensureCustomer } from "./customerOps.js";
+import { parseQuantity } from "./quantity.js";
+import { removeInventoryItem } from "./inventoryCatalog.js";
+import { restoreProductLots } from "./productLots.js";
 import {
   sections,
   pages,
@@ -32,7 +46,6 @@ import {
   ChefHat,
   TrendingUp,
   Settings,
-  Search,
   X,
 } from "lucide-react";
 import { units, lineCost, recipeCost, convertItem } from "./costing.js";
@@ -152,7 +165,6 @@ function App() {
     ),
     [modal, setModal] = useState(null),
     [error, setError] = useState(""),
-    [query, setQuery] = useState(""),
     [month, setMonth] = useState(today().slice(0, 7));
   const section = sectionFor(page),
     info = pages[page];
@@ -160,7 +172,6 @@ function App() {
     setModal(null);
     setPage(nextPage);
     setRouteContext(context);
-    setQuery("");
     setError("");
     window.location.hash = routeHash(nextPage, context);
   }
@@ -170,7 +181,6 @@ function App() {
       setModal(null);
       setPage(route.page);
       setRouteContext(route.context);
-      setQuery("");
       setError("");
     };
     window.addEventListener("hashchange", handle);
@@ -242,6 +252,25 @@ function App() {
     setError("");
     setModal({ type, value });
   }
+  function deleteInventoryItem(item) {
+    let next;
+    try {
+      next = removeInventoryItem(data, item.id);
+    } catch (e) {
+      setError(e.message);
+      return;
+    }
+    if (
+      !confirm(
+        `Delete ${item.name} from the inventory catalog? Historical purchases and batch trace records will be retained.`,
+      )
+    )
+      return;
+    if (
+      save(next)
+    )
+      setModal(null);
+  }
   function cost(r) {
     try {
       return fullCost(r, data.items, data.settings);
@@ -274,10 +303,15 @@ function App() {
     };
     try {
       if (modal.type === "tax") {
+        const taxRates = { food: taxRate(f.food), other: taxRate(f.other) };
         persist({
           ...data,
-          taxRates: { food: taxRate(f.food), other: taxRate(f.other) },
+          taxRates,
           salesTaxRate: taxRate(f.salesTaxRate),
+          items:
+            f.applyPurchaseRates === "on"
+              ? applyPurchaseTaxRates(data.items, taxRates)
+              : data.items,
         });
       }
       if (modal.type === "item") {
@@ -345,7 +379,7 @@ function App() {
         const lines = [...e.target.querySelectorAll("[data-line]")].map(
           (row) => ({
             itemId: row.querySelector('[name="itemId"]').value,
-            amount: +row.querySelector('[name="quantity"]').value,
+            amount: parseQuantity(row.querySelector('[name="quantity"]').value),
             unit: row.querySelector('[name="lineUnit"]').value,
           }),
         );
@@ -359,6 +393,14 @@ function App() {
           yield: +f.yield,
           price: +f.price,
           allergens: f.allergens.trim(),
+          equipment: f.equipment.trim(),
+          method: f.method.trim(),
+          prepMinutes: +f.prepMinutes || 0,
+          bakeMinutes: +f.bakeMinutes || 0,
+          coolingMinutes: +f.coolingMinutes || 0,
+          bakeTemperature: f.bakeTemperature.trim(),
+          shelfLifeDays: +f.shelfLifeDays || 0,
+          storageInstructions: f.storageInstructions.trim(),
           lines,
           laborMinutes: +f.laborMinutes || 0,
           electricityKwh: +f.electricityKwh || 0,
@@ -370,7 +412,13 @@ function App() {
         });
       }
       if (modal.type === "sale") {
-        persist(sell(data, f));
+        const customerResult = ensureCustomer(data, f);
+        persist(
+          sell(customerResult.data, {
+            ...f,
+            customerId: customerResult.customerId,
+          }),
+        );
       }
       if (modal.type === "expense")
         persist({
@@ -636,6 +684,14 @@ function App() {
               navigate={navigate}
               startTour={() => setShowTutorial(true)}
             />
+          ) : page === "Customers" ? (
+            <CustomerWorkspace data={data} save={save} navigate={navigate} />
+          ) : page === "Documents" ? (
+            <DocumentWorkspace data={data} context={routeContext} />
+          ) : page === "Batch traceability" ? (
+            <TraceabilityWorkspace data={data} />
+          ) : page === "Business profile" ? (
+            <BusinessProfileWorkspace data={data} save={save} />
           ) : [
             "Calendar",
             "Prep sheets",
@@ -710,6 +766,7 @@ function App() {
               open={open}
               tab={page}
               navigate={navigate}
+              context={routeContext}
             />
           ) : [
               "Inventory",
@@ -852,6 +909,12 @@ function App() {
                                           },
                                         }
                                       : data.products,
+                                    productLots: s.stockTracked
+                                      ? restoreProductLots(
+                                          data.productLots || [],
+                                          s.productLotUsage,
+                                        )
+                                      : data.productLots,
                                     sales: data.sales.filter(
                                       (x) => x.id !== s.id,
                                     ),
@@ -884,144 +947,19 @@ function App() {
               </div>
             </>
           ) : (
-            <>
-              <div className="section-top">
-                <h2>
-                  {page}{" "}
-                  <span className="pill">
-                    {page === "Recipes"
-                      ? data.recipes.length
-                      : data.items.filter(
-                          (i) =>
-                            i.type ===
-                            (page === "Packaging" ? "packaging" : "ingredient"),
-                        ).length}{" "}
-                    ITEMS
-                  </span>
-                </h2>
-                <div className="search">
-                  <Search size={16} />
-                  <input
-                    placeholder="Search your collection"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-              {page === "Recipes" ? (
-                <div className="recipe-grid">
-                  {data.recipes
-                    .filter((r) =>
-                      r.name.toLowerCase().includes(query.toLowerCase()),
-                    )
-                    .map((r) => (
-                      <section className="panel recipe-card" key={r.id}>
-                        <div className="recipe-symbol">
-                          <ChefHat size={40} />
-                          <span>{r.category}</span>
-                        </div>
-                        <h2>{r.name}</h2>
-                        <p>Makes {r.yield} sellable portions</p>
-                        <dl>
-                          <dt>Full batch cost</dt>
-                          <dd>
-                            {cost(r) === null
-                              ? "Needs conversion"
-                              : money(cost(r))}
-                          </dd>
-                          <dt>Cost per portion</dt>
-                          <dd>
-                            {cost(r) === null ? "—" : money(cost(r) / r.yield)}
-                          </dd>
-                          <dt>Selling price / portion</dt>
-                          <dd>{money(r.price)}</dd>
-                          <dt>Profit / portion</dt>
-                          <dd>
-                            {cost(r) === null
-                              ? "—"
-                              : money(r.price - cost(r) / r.yield)}
-                          </dd>
-                        </dl>
-                        <button
-                          className="secondary"
-                          onClick={() => open("recipe", r)}
-                        >
-                          View & edit recipe <ArrowUpRight size={16} />
-                        </button>
-                      </section>
-                    ))}
-                </div>
-              ) : (
-                <section className="panel">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>ITEM</th>
-                        <th>PACKAGE SIZE</th>
-                        <th>PACKAGE TOTAL</th>
-                        <th>TAX</th>
-                        <th />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.items
-                        .filter(
-                          (i) =>
-                            i.type ===
-                              (page === "Packaging"
-                                ? "packaging"
-                                : "ingredient") &&
-                            i.name.toLowerCase().includes(query.toLowerCase()),
-                        )
-                        .map((i) => (
-                          <tr key={i.id}>
-                            <td>
-                              <b>{i.name}</b>
-                            </td>
-                            <td>
-                              {i.amount} {i.unit}
-                            </td>
-                            <td>
-                              {money(purchaseTax(i).total)}
-                              <small>
-                                Entered {money(i.price)} ·{" "}
-                                {purchaseMode(i) === "legacy"
-                                  ? "No extra tax (legacy)"
-                                  : purchaseMode(i) === "exempt"
-                                    ? "Tax exempt"
-                                    : `${money(purchaseTax(i).tax)} tax ${purchaseMode(i) === "included" ? "included" : "added"}`}
-                              </small>
-                            </td>
-                            <td>
-                              {i.taxCategory === "other" ? "Other" : "Food"} ·{" "}
-                              {purchaseMode(i) === "legacy"
-                                ? "Legacy treatment"
-                                : purchaseMode(i) === "exempt"
-                                  ? "Exempt"
-                                  : `${i.tax}% ${purchaseMode(i) === "included" ? "included" : "added"}`}
-                            </td>
-                            <td>
-                              <button
-                                className="text-button"
-                                onClick={() => open("item", i)}
-                              >
-                                Edit <ArrowUpRight size={15} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </section>
-              )}
-            </>
+            <CatalogWorkspace
+              data={data}
+              page={page}
+              open={open}
+              recipeCost={cost}
+            />
           )}
         </div>
       </main>
       {modal && (
         <div className="overlay">
           <section
-            className="modal"
+            className={`modal ${modal.type === "recipe" ? "recipe-modal" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -1095,6 +1033,13 @@ function App() {
                       required
                     />
                   </label>
+                  <label className="tax-apply-check">
+                    <input name="applyPurchaseRates" type="checkbox" />
+                    <span>
+                      Update the saved rate on existing inventory items
+                      <small>Each item keeps its current Added, Included, or Exempt treatment. Exempt items remain exempt.</small>
+                    </span>
+                  </label>
                   <div className="conversion-box">
                     <h3>Customer sales tax</h3>
                     <p>
@@ -1159,6 +1104,15 @@ function App() {
               )}
               {error && <div className="error">{error}</div>}
               <div className="modal-actions">
+                {modal.type === "item" && modal.value?.id && (
+                  <button
+                    type="button"
+                    className="danger-button"
+                    onClick={() => deleteInventoryItem(modal.value)}
+                  >
+                    Delete item
+                  </button>
+                )}
                 <button
                   type="button"
                   className="secondary"
@@ -1465,6 +1419,13 @@ function RecipeFields({ recipe: r = {}, items }) {
   let total = 0;
   return (
     <>
+      <div className="recipe-editor-intro">
+        <div>
+          <span className="eyebrow">{r.id ? "EDITING SAVED RECIPE" : "NEW RECIPE"}</span>
+          <h3>{r.name || "Build a complete batch"}</h3>
+        </div>
+        <span className="pill">{lines.length} RECIPE ITEMS</span>
+      </div>
       <label>
         Recipe name
         <input
@@ -1516,6 +1477,49 @@ function RecipeFields({ recipe: r = {}, items }) {
         />
       </label>
       <div className="conversion-box">
+        <h3>Method & timing</h3>
+        <div className="form-row">
+          <label>
+            Prep minutes
+            <input name="prepMinutes" type="number" min="0" step="1" defaultValue={r.prepMinutes || 0} />
+          </label>
+          <label>
+            Bake minutes
+            <input name="bakeMinutes" type="number" min="0" step="1" defaultValue={r.bakeMinutes || 0} />
+          </label>
+          <label>
+            Cooling minutes
+            <input name="coolingMinutes" type="number" min="0" step="1" defaultValue={r.coolingMinutes || 0} />
+          </label>
+        </div>
+        <div className="form-row">
+          <label>
+            Bake temperature
+            <input name="bakeTemperature" defaultValue={r.bakeTemperature || ""} placeholder="e.g. 350°F / 175°C" />
+          </label>
+          <label>
+            Equipment
+            <input name="equipment" defaultValue={r.equipment || ""} placeholder="Mixer, 2 sheet pans" />
+          </label>
+        </div>
+        <label>
+          Step-by-step method
+          <textarea name="method" defaultValue={r.method || ""} placeholder={"1. Prepare pans\n2. Mix batter\n3. Bake and cool"} />
+        </label>
+        <h3>Finished-product shelf life</h3>
+        <div className="form-row">
+          <label>
+            Best within (days)
+            <input name="shelfLifeDays" type="number" min="0" step="1" defaultValue={r.shelfLifeDays || 0} />
+          </label>
+          <label>
+            Storage instructions
+            <input name="storageInstructions" defaultValue={r.storageInstructions || ""} placeholder="Refrigerate at or below 40°F" />
+          </label>
+        </div>
+        <p className="hint">A value of 0 leaves best-before dates unset. New production captures these details as a snapshot.</p>
+      </div>
+      <div className="conversion-box">
         <h3>Batch labor & overhead</h3>
         <p>
           Set wage and electricity rates in Settings → Production costs. These
@@ -1557,13 +1561,13 @@ function RecipeFields({ recipe: r = {}, items }) {
       <h3>Ingredients & packaging</h3>
       <p className="hint">
         Enter quantities for the whole batch, including boxes, utensils, and
-        napkins. Cost reflects the amount used; packages show what you need to
-        buy.
+        napkins. Decimals and fractions such as 0.5, 1/2, 1 1/2, and ½ are
+        accepted. Cost reflects the amount used; packages show what you need to buy.
       </p>
       {lines.map((l, index) => {
         let result, err;
         try {
-          result = lineCost(l, items);
+          result = lineCost({ ...l, amount: parseQuantity(l.amount) }, items);
           total += result.cost;
         } catch (e) {
           err = e.message;
@@ -1587,11 +1591,11 @@ function RecipeFields({ recipe: r = {}, items }) {
               <input
                 aria-label="Recipe quantity"
                 name="quantity"
-                type="number"
-                min="0.001"
-                step="any"
+                type="text"
+                inputMode="decimal"
                 value={l.amount}
-                onChange={(e) => update({ amount: +e.target.value })}
+                onChange={(e) => update({ amount: e.target.value })}
+                placeholder="e.g. 1/2"
                 required
               />
               <UnitSelect
