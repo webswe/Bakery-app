@@ -83,7 +83,8 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
         <p>
           Accept a saved quote and create a linked production task. Deposits
           track money received; revenue is recorded once, when fulfilled. Quote
-          totals include any quote tax: use a consistent tax basis in reports.
+          totals retain the saved quote tax. New orders carry that breakdown
+          into the sale; historical orders keep their original totals.
         </p>
         <form
           onSubmit={(e) => {
@@ -178,6 +179,14 @@ function OrderCard({ order: o, act, data }) {
       </p>
       <p>{o.notes}</p>
       <dl>
+        {o.taxSnapshot && (
+          <>
+            <dt>Before sales tax</dt>
+            <dd>{money(o.taxSnapshot.net)}</dd>
+            <dt>Customer sales tax</dt>
+            <dd>{money(o.taxSnapshot.tax)}</dd>
+          </>
+        )}
         <dt>Order total</dt>
         <dd>{money(o.total)}</dd>
         <dt>Received</dt>

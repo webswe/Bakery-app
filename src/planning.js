@@ -1,3 +1,4 @@
+import { customerTax } from "./taxation.js";
 import { requirements, fullCost, produce } from "./operations.js";
 
 export const localDate = () => {
@@ -52,7 +53,8 @@ export function quoteCalculation(data, input) {
       batches +
     number(input.extraCost, "Extra cost");
   const subtotal = Math.round((cost / (1 - margin / 100)) * 100) / 100;
-  const tax = Math.round(subtotal * taxRate) / 100;
+  const taxDetails = customerTax(subtotal, taxRate);
+  const tax = taxDetails.tax;
   return {
     recipeName: recipe.name,
     portions,
@@ -61,7 +63,8 @@ export function quoteCalculation(data, input) {
     cost,
     subtotal,
     tax,
-    total: Math.round((subtotal + tax) * 100) / 100,
+    taxRate,
+    total: taxDetails.total,
     unitPrice: subtotal / portions,
     profit: subtotal - cost,
   };

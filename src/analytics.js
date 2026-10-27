@@ -1,7 +1,8 @@
+import { saleRevenue } from "./taxation.js";
 export function monthlySummary(data, month) {
   const sales = data.sales.filter((s) => s.date.startsWith(month));
   const expenses = data.expenses.filter((e) => e.date.startsWith(month));
-  const revenue = sales.reduce((n, s) => n + s.total, 0),
+  const revenue = sales.reduce((n, s) => n + saleRevenue(s), 0),
     costs = sales.reduce((n, s) => n + s.cost, 0),
     overhead = expenses.reduce((n, e) => n + e.amount, 0);
   return {
@@ -9,6 +10,10 @@ export function monthlySummary(data, month) {
     expenses,
     revenue,
     costs,
+    collectedTax: sales.reduce(
+      (n, s) => n + (s.net != null ? s.tax || 0 : 0),
+      0,
+    ),
     overhead,
     profit: revenue - costs - overhead,
     orders: sales.length,
@@ -22,6 +27,7 @@ export function previousMonth(month) {
 export function migrateData(data) {
   return {
     ...data,
+    salesTaxRate: data.salesTaxRate ?? 0,
     orders: data.orders || [],
     waste: data.waste || [],
     quotes: data.quotes || [],
@@ -36,4 +42,3 @@ export function migrateData(data) {
     })),
   };
 }
-

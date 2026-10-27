@@ -1,3 +1,4 @@
+import { directSaleTotals, purchaseTax } from "./taxation.js";
 import React, { useState } from "react";
 import { addPresets, availability, produce, fullCost } from "./operations.js";
 const money = (n) =>
@@ -7,10 +8,17 @@ const money = (n) =>
 export function SaleFields({ data }) {
   const [id, setId] = useState(data.recipes[0]?.id || ""),
     [qty, setQty] = useState(1),
-    [discount, setDiscount] = useState(0);
+    [discount, setDiscount] = useState(0),
+    [rate, setRate] = useState(data.salesTaxRate ?? 0);
   const r = data.recipes.find((x) => x.id === id),
-    stock = data.products[id]?.quantity || 0,
-    total = Math.max(0, (r?.price || 0) * qty - discount);
+    stock = data.products[id]?.quantity || 0;
+  let totals, issue;
+  try {
+    totals = directSaleTotals(r?.price || 0, qty, discount, rate);
+  } catch (e) {
+    issue = e.message;
+  }
+  const total = totals?.total || 0;
   return (
     <>
       <label>
@@ -54,15 +62,46 @@ export function SaleFields({ data }) {
           />
         </label>
       </div>
-      <div className="cost-summary">
-        <span>
-          Unit price <b>{money(r?.price || 0)}</b>
-        </span>
-        <span>
-          Total <b>{money(total)}</b>
-        </span>
-      </div>
+      <label>
+        Customer sales tax (%)
+        <input
+          name="taxRate"
+          type="number"
+          min="0"
+          max="100"
+          step="any"
+          value={rate}
+          onChange={(e) => setRate(e.target.value)}
+          required
+        />
+      </label>
+      <p className="hint">
+        Added after discounts. Recipe selling prices are before customer sales
+        tax. Use 0% for a sale with no tax; purchase-tax defaults do not apply
+        here.
+      </p>
+      {issue ? (
+        <p className="error" role="alert">
+          {issue}
+        </p>
+      ) : (
+        <div className="tax-breakdown">
+          <dl>
+            <dt>Subtotal</dt>
+            <dd>{money(totals.subtotal)}</dd>
+            <dt>Discount</dt>
+            <dd>−{money(totals.discount)}</dd>
+            <dt>Before sales tax</dt>
+            <dd>{money(totals.net)}</dd>
+            <dt>Sales tax ({rate}%)</dt>
+            <dd>{money(totals.tax)}</dd>
+            <dt>Customer total</dt>
+            <dd>{money(total)}</dd>
+          </dl>
+        </div>
+      )}
       <input type="hidden" name="total" value={total} />
+      <input type="hidden" name="discount" value={discount} />
       <label>
         Customer / order reference
         <input name="customer" placeholder="Optional" />
@@ -162,7 +201,7 @@ export default function Operations({ data, save, open, tab }) {
                         <small>
                           {i.needsPrice
                             ? "Purchase price required"
-                            : `${money(i.price)} / ${i.amount} ${i.unit}`}
+                            : `${money(purchaseTax(i).total)} / ${i.amount} ${i.unit} (final cost)`}
                         </small>
                       </td>
                       <td>

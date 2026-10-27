@@ -1,3 +1,4 @@
+import { saleRevenue } from "./taxation.js";
 import React from "react";
 import { monthlySummary, previousMonth } from "./analytics.js";
 const money = (n) =>
@@ -14,7 +15,7 @@ export default function Dashboard({ data, month }) {
       expenses = s.expenses.filter((x) => x.date === date);
     return {
       day: i + 1,
-      revenue: sales.reduce((n, x) => n + x.total, 0),
+      revenue: sales.reduce((n, x) => n + saleRevenue(x), 0),
       cost:
         sales.reduce((n, x) => n + x.cost, 0) +
         expenses.reduce((n, x) => n + x.amount, 0),
@@ -26,7 +27,7 @@ export default function Dashboard({ data, month }) {
       const key = x.recipeId || x.name;
       a[key] ??= { name: x.name, quantity: 0, revenue: 0, cost: 0 };
       a[key].quantity += x.quantity;
-      a[key].revenue += x.total;
+      a[key].revenue += saleRevenue(x);
       a[key].cost += x.cost;
       return a;
     }, {}),

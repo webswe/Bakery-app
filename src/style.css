@@ -1456,3 +1456,8 @@ nav button { flex-shrink:0; }
  .app > aside nav { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; overflow:visible; }
  .app > aside nav button { flex-direction:column; min-width:0; padding:9px 4px; gap:6px; font-size:10px; }
 }
+.tax-breakdown { background:#edf4f5; border:1px solid #d6e5e7; padding:18px; border-radius:8px; margin:18px 0; }
+.tax-breakdown h3 { margin:0 0 14px; }
+.tax-breakdown dl { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; margin:0 0 12px; font-size:13px; }
+.tax-breakdown dd { margin:0; font-weight:600; text-align:right; }
+.tax-breakdown small { color:#5f7885; font-size:11px; }

@@ -1,3 +1,4 @@
+import { purchaseTax } from "./taxation.js";
 import { inventoryForecast, savePlan, localDate } from "./planning.js";
 import { sell, fullCost } from "./operations.js";
 export const checklistSteps = ["Bake", "Chill", "Decorate", "Pack"];
@@ -48,6 +49,16 @@ export function createOrder(data, input) {
         notes: quote.notes,
         portions: quote.snapshot.portions,
         total,
+        ...(Number.isFinite(quote.snapshot.subtotal) &&
+        Number.isFinite(quote.snapshot.tax)
+          ? {
+              taxSnapshot: {
+                net: quote.snapshot.subtotal,
+                tax: quote.snapshot.tax,
+                taxRate: Number(quote.snapshot.taxRate ?? quote.taxRate ?? 0),
+              },
+            }
+          : {}),
         paid,
         pickupDate: input.pickupDate,
         status: "open",
@@ -91,6 +102,7 @@ export function updateOrder(data, id, action, input = {}) {
       recipe: o.recipeId,
       quantity: o.portions,
       total: o.total,
+      taxSnapshot: o.taxSnapshot,
       date: localDate(),
       customer: o.customer,
       payment: "Order payments",
@@ -127,9 +139,7 @@ export function shoppingList(data, through) {
         ...i,
         packages,
         buyQuantity: packages * i.amount,
-        estimate: i.needsPrice
-          ? null
-          : packages * i.price * (i.taxIncluded ? 1 : 1 + (i.tax || 0) / 100),
+        estimate: i.needsPrice ? null : packages * purchaseTax(i).total,
         supplier: i.supplier?.trim() || "Unassigned supplier",
       };
     })
@@ -156,10 +166,7 @@ export function recordWaste(data, input) {
     if (amount > (item.stock || 0)) throw Error("Waste exceeds stock.");
     if (item.needsPrice)
       throw Error("Set the purchase price before recording waste.");
-    cost =
-      (amount / item.amount) *
-      item.price *
-      (item.taxIncluded ? 1 : 1 + (item.tax || 0) / 100);
+    cost = (amount / item.amount) * purchaseTax(item).total;
     name = item.name;
     unit = item.unit;
     next = {

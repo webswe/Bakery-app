@@ -1,3 +1,4 @@
+import { purchaseTax } from "./taxation.js";
 export const units = {
   g: ["mass", 1],
   kg: ["mass", 1000],
@@ -38,7 +39,7 @@ export function lineCost(line, items) {
     throw Error("Quantities must be positive.");
   const needed = convertItem(line.amount, line.unit, item.unit, item);
   const packs = needed / item.amount;
-  const price = item.price * (item.taxIncluded ? 1 : 1 + item.tax / 100);
+  const price = purchaseTax(item).total;
   return {
     needed,
     unit: item.unit,

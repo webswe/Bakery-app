@@ -1,3 +1,4 @@
+import { purchaseTax, purchaseMode, taxRate, saleRevenue } from "./taxation.js";
 import Operations, { SaleFields } from "./InventoryWorkspace.jsx";
 import { addPresets, sell, fullCost } from "./operations.js";
 import Dashboard from "./Dashboard.jsx";
@@ -192,7 +193,7 @@ function App() {
   }, [modal]);
   const sales = data.sales.filter((s) => s.date.startsWith(month)),
     expenses = data.expenses.filter((s) => s.date.startsWith(month)),
-    revenue = sales.reduce((s, x) => s + x.total, 0),
+    revenue = sales.reduce((s, x) => s + saleRevenue(x), 0),
     cogs = sales.reduce((s, x) => s + x.cost, 0),
     overhead = expenses.reduce((s, x) => s + x.amount, 0),
     profit = revenue - cogs - overhead;
@@ -207,7 +208,11 @@ function App() {
     };
     try {
       if (modal.type === "tax") {
-        persist({ ...data, taxRates: { food: +f.food, other: +f.other } });
+        persist({
+          ...data,
+          taxRates: { food: taxRate(f.food), other: taxRate(f.other) },
+          salesTaxRate: taxRate(f.salesTaxRate),
+        });
       }
       if (modal.type === "item") {
         const item = {
@@ -218,7 +223,8 @@ function App() {
           amount: +f.amount,
           unit: f.unit,
           price: +f.price,
-          taxIncluded: f.taxIncluded === "yes",
+          taxMode: f.taxMode,
+          taxIncluded: f.taxMode !== "added",
           tax: +f.tax || 0,
           taxCategory: f.taxCategory,
           gramsPerCup: +f.gramsPerCup || null,
@@ -239,11 +245,9 @@ function App() {
           );
         if (!(item.amount > 0) || item.price < 0 || item.tax < 0)
           throw Error("Enter valid quantities and prices.");
+        purchaseTax(item);
         persist({
           ...data,
-          taxRates: item.taxIncluded
-            ? data.taxRates
-            : { ...data.taxRates, [item.taxCategory]: item.tax },
           items: [...data.items.filter((i) => i.id !== item.id), item],
         });
       }
@@ -509,9 +513,16 @@ function App() {
                 <dt>Other</dt>
                 <dd>{data.taxRates.other}%</dd>
               </dl>
+              <h2>Customer sales tax</h2>
               <p>
-                Defaults apply to new purchases. Edit individual inventory items
-                to change their existing rates.
+                Default for new quotes and direct sales:{" "}
+                <b>{data.salesTaxRate}%</b>. Recipe selling prices are treated
+                as before-tax prices for new direct sales.
+              </p>
+              <p>
+                Purchase defaults apply to new items. Customer sales tax is
+                separate. Existing items, quotes, orders and sales retain their
+                saved treatment.
               </p>
               <button
                 className="secondary"
@@ -573,7 +584,7 @@ function App() {
                   [
                     "Total revenue",
                     revenue,
-                    "From your recorded sales",
+                    "Excludes separately recorded sales tax",
                     "green",
                   ],
                   [
@@ -600,6 +611,17 @@ function App() {
                   </div>
                 ))}
               </div>
+              <p className="accounting-note">
+                Customer sales tax collected:{" "}
+                {money(
+                  sales.reduce(
+                    (n, s) => n + (s.net != null ? s.tax || 0 : 0),
+                    0,
+                  ),
+                )}
+                . Excluded from revenue when separately recorded; historical
+                sales without a breakdown keep their original totals.
+              </p>
               <Dashboard data={data} month={month} />
               <section className="panel transactions">
                 <div className="panel-heading">
@@ -633,6 +655,12 @@ function App() {
                           <td>
                             <b>{s.name}</b>
                             {s.quantity && <small>{s.quantity} sold</small>}
+                            {s.net != null && (
+                              <small>
+                                Before tax {money(s.net)} · Sales tax{" "}
+                                {money(s.tax || 0)}
+                              </small>
+                            )}
                           </td>
                           <td>{s.date}</td>
                           <td>
@@ -778,7 +806,7 @@ function App() {
                       <tr>
                         <th>ITEM</th>
                         <th>PACKAGE SIZE</th>
-                        <th>PRICE</th>
+                        <th>PACKAGE TOTAL</th>
                         <th>TAX</th>
                         <th />
                       </tr>
@@ -801,10 +829,24 @@ function App() {
                             <td>
                               {i.amount} {i.unit}
                             </td>
-                            <td>{money(i.price)}</td>
+                            <td>
+                              {money(purchaseTax(i).total)}
+                              <small>
+                                Entered {money(i.price)} ·{" "}
+                                {purchaseMode(i) === "legacy"
+                                  ? "No extra tax (legacy)"
+                                  : purchaseMode(i) === "exempt"
+                                    ? "Tax exempt"
+                                    : `${money(purchaseTax(i).tax)} tax ${purchaseMode(i) === "included" ? "included" : "added"}`}
+                              </small>
+                            </td>
                             <td>
                               {i.taxCategory === "other" ? "Other" : "Food"} ·{" "}
-                              {i.taxIncluded ? "Included" : `${i.tax}% extra`}
+                              {purchaseMode(i) === "legacy"
+                                ? "Legacy treatment"
+                                : purchaseMode(i) === "exempt"
+                                  ? "Exempt"
+                                  : `${i.tax}% ${purchaseMode(i) === "included" ? "included" : "added"}`}
                             </td>
                             <td>
                               <button
@@ -876,8 +918,9 @@ function App() {
                     Saved defaults for new purchases. Existing items and sales
                     retain their rates; edit an item to change its purchase tax.
                   </p>
+                  <h3>Purchase-tax defaults</h3>
                   <label>
-                    Food tax (%)
+                    Food purchase tax (%)
                     <input
                       name="food"
                       type="number"
@@ -889,7 +932,7 @@ function App() {
                     />
                   </label>
                   <label>
-                    Other tax (%)
+                    Other purchase tax (%)
                     <input
                       name="other"
                       type="number"
@@ -900,6 +943,30 @@ function App() {
                       required
                     />
                   </label>
+                  <div className="conversion-box">
+                    <h3>Customer sales tax</h3>
+                    <p>
+                      Separate from tax paid on ingredients. Used for new quotes
+                      and direct sales. Recipe selling prices are treated as
+                      before-tax prices for new direct sales.
+                    </p>
+                    <label>
+                      Default customer sales tax (%)
+                      <input
+                        name="salesTaxRate"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="any"
+                        defaultValue={data.salesTaxRate}
+                        required
+                      />
+                    </label>
+                    <p className="hint">
+                      This does not change saved quotes, accepted orders,
+                      historical sales or finished-stock costs.
+                    </p>
+                  </div>
                 </>
               ) : modal.type === "item" ? (
                 <ItemFields item={modal.value} taxRates={data.taxRates} />
@@ -968,13 +1035,18 @@ function UnitSelect({ name, value, onChange }) {
   );
 }
 function ItemFields({ item: i = {}, taxRates }) {
-  const [included, setIncluded] = useState(i.taxIncluded ?? true),
+  const [mode, setMode] = useState(i.id ? purchaseMode(i) : "added"),
+    [price, setPrice] = useState(i.price ?? ""),
     [category, setCategory] = useState(
       i.taxCategory || (i.type === "packaging" ? "other" : "food"),
     ),
     [rate, setRate] = useState(
       i.tax ?? taxRates[i.type === "packaging" ? "other" : "food"],
     );
+  let taxDetails;
+  try {
+    taxDetails = purchaseTax({ price, tax: rate, taxMode: mode });
+  } catch {}
   function chooseTax(value) {
     setCategory(value);
     setRate(taxRates[value]);
@@ -1027,7 +1099,8 @@ function ItemFields({ item: i = {}, taxRates }) {
           type="number"
           min="0"
           step="0.01"
-          defaultValue={i.price}
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
           required
         />
       </label>
@@ -1044,21 +1117,30 @@ function ItemFields({ item: i = {}, taxRates }) {
           </select>
         </label>
         <label>
-          Price includes tax?
+          Purchase tax treatment
           <select
-            name="taxIncluded"
-            value={included ? "yes" : "no"}
-            onChange={(e) => setIncluded(e.target.value === "yes")}
+            name="taxMode"
+            value={mode}
+            onChange={(e) => setMode(e.target.value)}
           >
-            <option value="yes">Yes / tax exempt</option>
-            <option value="no">No, add tax</option>
+            <option value="added">Add tax to this price</option>
+            <option value="included">Tax already included</option>
+            <option value="exempt">Tax exempt / no tax</option>
+            {mode === "legacy" && (
+              <option value="legacy">Previously saved: no extra tax</option>
+            )}
           </select>
         </label>
       </div>
-      {!included && (
+      {mode === "legacy" && (
+        <p className="hint">
+          This older item did not distinguish included tax from exemption. Its
+          cost stays unchanged until you choose a treatment.
+        </p>
+      )}
+      {mode === "added" || mode === "included" ? (
         <label>
-          {category === "food" ? "Food" : "Other"} tax rate (%) · remembered for
-          future purchases
+          Purchase tax rate (%)
           <input
             name="tax"
             type="number"
@@ -1070,6 +1152,34 @@ function ItemFields({ item: i = {}, taxRates }) {
             required
           />
         </label>
+      ) : (
+        <input type="hidden" name="tax" value={rate} />
+      )}
+      <p className="hint">
+        Food and Other rates are purchase defaults only. Editing this item does
+        not change those defaults or customer sales tax.
+      </p>
+      {taxDetails && (
+        <div className="tax-breakdown" role="status">
+          <h3>Package cost breakdown</h3>
+          <dl>
+            <dt>{mode === "legacy" ? "Entered price" : "Before-tax price"}</dt>
+            <dd>{money(taxDetails.base)}</dd>
+            <dt>
+              {mode === "legacy"
+                ? "Additional tax"
+                : mode === "exempt"
+                  ? "Tax (exempt)"
+                  : `Purchase tax (${rate}%)`}
+            </dt>
+            <dd>{money(taxDetails.tax)}</dd>
+            <dt>Final package cost</dt>
+            <dd>{money(taxDetails.total)}</dd>
+          </dl>
+          <small>
+            Used in recipe costs, stock value and purchase estimates.
+          </small>
+        </div>
       )}
       <div className="conversion-box">
         <h3>Stock planning</h3>

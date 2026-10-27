@@ -1,3 +1,4 @@
+import { purchaseTax } from "./taxation.js";
 import React, { useState } from "react";
 import {
   localDate,
@@ -75,11 +76,7 @@ function InventoryDashboard({ data, open }) {
         a.name.localeCompare(b.name),
     );
   const value = forecast.items.reduce(
-    (n, i) =>
-      n +
-      (i.stock / i.amount) *
-        i.price *
-        (i.taxIncluded ? 1 : 1 + (i.tax || 0) / 100),
+    (n, i) => n + (i.stock / i.amount) * purchaseTax(i).total,
     0,
   );
   return (
@@ -258,7 +255,7 @@ function QuoteStudio({ data, act, navigate }) {
     portions: 1,
     margin: 30,
     extraCost: 0,
-    taxRate: 0,
+    taxRate: data.salesTaxRate ?? 0,
     customer: "",
     notes: "",
     date: localDate(),
@@ -350,7 +347,7 @@ function QuoteStudio({ data, act, navigate }) {
                 />
               </label>
               <label>
-                Quote tax (%)
+                Customer sales tax (%)
                 <input
                   type="number"
                   min="0"
@@ -412,7 +409,7 @@ function QuoteStudio({ data, act, navigate }) {
           <strong className="quote-total">
             {quote ? money(quote.total) : "—"}
           </strong>
-          <p>Customer total, including quote tax</p>
+          <p>Customer total, including customer sales tax</p>
           {quote && (
             <dl>
               <dt>Whole batches</dt>
@@ -427,7 +424,7 @@ function QuoteStudio({ data, act, navigate }) {
               <dd>{money(quote.subtotal)}</dd>
               <dt>Before-tax price / requested portion</dt>
               <dd>{money(quote.unitPrice)}</dd>
-              <dt>Quote tax</dt>
+              <dt>Customer sales tax</dt>
               <dd>{money(quote.tax)}</dd>
               <dt>Estimated profit</dt>
               <dd>{money(quote.profit)}</dd>

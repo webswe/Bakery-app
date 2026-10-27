@@ -1,3 +1,4 @@
+import { directSaleTotals } from "./taxation.js";
 import { lineCost, recipeCost } from "./costing.js";
 export const presets = [
   ["All-purpose flour", 120],
@@ -43,13 +44,19 @@ export function addPresets(data) {
           id: crypto.randomUUID(),
           name,
           gramsPerCup,
-          gramsPerCan: name === "Condensed milk" ? 397 : name === "Evaporated milk" ? 354 : null,
+          gramsPerCan:
+            name === "Condensed milk"
+              ? 397
+              : name === "Evaporated milk"
+                ? 354
+                : null,
           unit: name === "Eggs" ? "each" : "g",
           amount: name === "Eggs" ? 12 : 1000,
           price: 0,
           needsPrice: true,
-          taxIncluded: true,
-          tax: 0,
+          taxMode: "added",
+          taxIncluded: false,
+          tax: data.taxRates?.food ?? 0,
           taxCategory: "food",
           type: "ingredient",
           stock: 0,
@@ -145,6 +152,26 @@ export function sell(data, f) {
     throw Error(
       "Not enough finished product. Complete production in the production plan first.",
     );
+  let breakdown;
+  if (f.taxSnapshot) {
+    const t = f.taxSnapshot;
+    if (
+      ![t.net, t.tax, t.taxRate].every(Number.isFinite) ||
+      t.net < 0 ||
+      t.tax < 0 ||
+      t.taxRate < 0 ||
+      t.taxRate > 100 ||
+      Math.abs(t.net + t.tax - Number(f.total)) > 0.005
+    )
+      throw Error("Invalid saved order tax breakdown.");
+    breakdown = { ...t, total: +f.total };
+  } else if (f.taxRate !== undefined)
+    breakdown = directSaleTotals(
+      r.price,
+      quantity,
+      Number(f.discount || 0),
+      f.taxRate,
+    );
   const cost = (stock.value / stock.quantity) * quantity;
   return {
     ...data,
@@ -164,6 +191,7 @@ export function sell(data, f) {
         name: r.name,
         quantity,
         total: +f.total,
+        ...breakdown,
         cost,
         stockTracked: true,
         customer: f.customer || "",
@@ -172,4 +200,3 @@ export function sell(data, f) {
     ],
   };
 }
-

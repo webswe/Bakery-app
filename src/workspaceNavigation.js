@@ -139,9 +139,9 @@ export const pages = {
       "Set wage and electricity assumptions for future production and quotes.",
   },
   "Tax settings": {
-    label: "Purchase taxes",
+    label: "Tax settings",
     description:
-      "Set food and other tax defaults for future purchases. Existing records retain their rates.",
+      "Manage purchase-tax defaults separately from customer sales tax. Existing records retain their saved rates.",
     action: "Edit tax defaults",
     modal: "tax",
   },
