@@ -272,6 +272,12 @@ function Shopping({ data }) {
     [checked, setChecked] = useState({});
   const list = shoppingList(data, day || localDate());
   const suppliers = [...new Set(list.rows.map((i) => i.supplier))].sort();
+  const estimatedTotal = list.rows.reduce(
+    (sum, item) => sum + (item.estimate || 0),
+    0,
+  );
+  const unpricedCount = list.rows.filter((item) => item.estimate === null).length;
+  const profile = data.businessProfile || {};
   const csv = () => {
     const cell = (v) => '"' + String(v).replaceAll('"', '""') + '"';
     download(
@@ -293,8 +299,8 @@ function Shopping({ data }) {
     );
   };
   return (
-    <>
-      <div className="planning-toolbar">
+    <div className="shopping-workspace">
+      <div className="planning-toolbar no-print">
         <div>
           <h2>Your supplier shopping list</h2>
           <p>
@@ -315,8 +321,19 @@ function Shopping({ data }) {
           />
         </label>
       </div>
+      <header className="shopping-print-header print-only">
+        <div>
+          <span className="shopping-print-brand">{profile.name || "My Bakery"}</span>
+          <h1>Supplier Shopping List</h1>
+          <p>{[profile.address, profile.phone].filter(Boolean).join(" · ")}</p>
+        </div>
+        <dl>
+          <dt>Plan through</dt><dd>{day}</dd>
+          <dt>Printed</dt><dd>{localDate()}</dd>
+        </dl>
+      </header>
       {list.errors.map((e) => (
-        <p className="error" key={e.id}>
+        <p className="error shopping-warning" key={e.id}>
           Incomplete forecast: {e.message}
         </p>
       ))}
@@ -328,18 +345,25 @@ function Shopping({ data }) {
           Print list
         </button>
       </div>
-      <h3>
-        Estimated total:{" "}
-        {money(list.rows.reduce((n, i) => n + (i.estimate || 0), 0))}
-        {list.rows.some((i) => i.estimate === null) ? " + unpriced items" : ""}
-      </h3>
+      <section className="shopping-summary">
+        <div><span>Suppliers</span><b>{suppliers.length}</b></div>
+        <div><span>Items</span><b>{list.rows.length}</b></div>
+        <div><span>Estimated total</span><b>{money(estimatedTotal)}</b></div>
+        <div><span>Prices needed</span><b>{unpricedCount}</b></div>
+      </section>
       {suppliers.map((s) => (
-        <section className="panel planning-form" key={s}>
-          <h2>{s}</h2>
+        <section className="panel planning-form shopping-supplier" key={s}>
+          <header>
+            <h2>{s}</h2>
+            <span>{list.rows.filter((item) => item.supplier === s).length} item(s)</span>
+          </header>
+          <div className="shopping-column-headings print-only">
+            <span>ITEM</span><span>PACKAGES</span><span>BUY QUANTITY</span><span>ESTIMATE</span>
+          </div>
           {list.rows
             .filter((i) => i.supplier === s)
             .map((i) => (
-              <div className="legend" key={i.id}>
+              <div className="shopping-row" key={i.id}>
                 <label className="shopping-check">
                   <input
                     type="checkbox"
@@ -350,11 +374,11 @@ function Shopping({ data }) {
                   />
                   <span>
                     {i.name}
-                    <small>
-                      {i.packages} package(s) · {qty(i.buyQuantity)} {i.unit}
-                    </small>
+                    <small className="no-print">{i.packages} package(s) · {qty(i.buyQuantity)} {i.unit}</small>
                   </span>
                 </label>
+                <span className="shopping-packages">{i.packages}</span>
+                <span className="shopping-quantity">{qty(i.buyQuantity)} {i.unit}</span>
                 <b>
                   {i.estimate === null ? "Price needed" : money(i.estimate)}
                 </b>
@@ -368,7 +392,14 @@ function Shopping({ data }) {
           date.
         </p>
       )}
-    </>
+      {!!list.rows.length && (
+        <footer className="shopping-print-footer print-only">
+          <div><b>Purchase notes</b><span /></div>
+          <div><b>Substitutions / unavailable items</b><span /></div>
+          <p>After shopping, receive each package in Bakery Ledger with its actual supplier price and expiry date.</p>
+        </footer>
+      )}
+    </div>
   );
 }
 function Waste({ data, act, open }) {
