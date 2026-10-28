@@ -191,6 +191,7 @@ export default function Operations({ data, save, open, tab }) {
           placeholder="Search"
           aria-label="Search operations"
           value={q}
+          onPointerDown={(event) => event.currentTarget.focus()}
           onChange={(e) => setQ(e.target.value)}
         />
       </div>
@@ -529,6 +530,7 @@ function StockForm({ item, apply }) {
         min="0"
         step="any"
         value={n}
+        onPointerDown={(event) => event.currentTarget.focus()}
         onChange={(e) => setN(e.target.value)}
         placeholder={kind === "receive" ? "Packages" : item.unit}
         required

@@ -25,7 +25,7 @@ function CatalogWorkspace({ data, page, open, recipeCost }) {
         <h2>{page} <span className="pill">{rows.length} ITEMS</span></h2>
         <div className="search">
           <Search size={16} />
-          <input aria-label={`Search ${page}`} placeholder="Search your collection" value={query} onChange={(event) => setQuery(event.target.value)} />
+          <input aria-label={`Search ${page}`} placeholder="Search your collection" value={query} onPointerDown={(event) => event.currentTarget.focus()} onChange={(event) => setQuery(event.target.value)} />
         </div>
       </div>
       {page === "Recipes" ? (

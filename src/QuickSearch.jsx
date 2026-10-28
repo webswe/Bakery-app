@@ -1,11 +1,20 @@
-import React, { forwardRef, useDeferredValue, useMemo, useState } from "react";
+import React, { forwardRef, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { pages } from "./workspaceNavigation.js";
 
 const QuickSearch = forwardRef(function QuickSearch({ data, navigate }, ref) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const container = useRef(null);
   const deferred = useDeferredValue(query.trim().toLocaleLowerCase());
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOutside = (event) => {
+      if (!container.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside, true);
+    return () => document.removeEventListener("pointerdown", closeOutside, true);
+  }, [open]);
   const results = useMemo(() => {
     const rows = [
       ...Object.entries(pages).map(([page, info]) => ({ type: "Page", label: info.label, detail: info.description, page })),
@@ -23,9 +32,9 @@ const QuickSearch = forwardRef(function QuickSearch({ data, navigate }, ref) {
     setOpen(false);
   };
   return (
-    <div className="quick-search" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
+    <div className="quick-search" ref={container}>
       <Search size={16} />
-      <input ref={ref} value={query} onFocus={() => setOpen(true)} onChange={(event) => { setQuery(event.target.value); setOpen(true); }} onKeyDown={(event) => { if (event.key === "Escape") { setOpen(false); event.currentTarget.blur(); } if (event.key === "Enter" && results[0]) choose(results[0]); }} placeholder="Find anything…" aria-label="Search pages, recipes, inventory, customers and orders" aria-expanded={open} />
+      <input ref={ref} value={query} onPointerDown={(event) => event.currentTarget.focus()} onFocus={() => setOpen(true)} onChange={(event) => { setQuery(event.target.value); setOpen(true); }} onKeyDown={(event) => { if (event.key === "Escape") { setOpen(false); event.currentTarget.blur(); } if (event.key === "Enter" && results[0]) choose(results[0]); }} placeholder="Find anything…" aria-label="Search pages, recipes, inventory, customers and orders" aria-expanded={open} />
       {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")}><X size={14} /></button>}
       <kbd>⌘/Ctrl K</kbd>
       {open && <div className="quick-search-results" role="listbox">

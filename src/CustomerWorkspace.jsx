@@ -65,7 +65,7 @@ export default function CustomerWorkspace({ data, save, navigate }) {
         <section>
           <div className="section-top">
             <h2>Customer book <span className="pill">{data.customers.length}</span></h2>
-            <input aria-label="Search customers" placeholder="Search customers" value={query} onChange={(event) => setQuery(event.target.value)} />
+            <input aria-label="Search customers" placeholder="Search customers" value={query} onPointerDown={(event) => event.currentTarget.focus()} onChange={(event) => setQuery(event.target.value)} />
           </div>
           <div className="customer-list">
             {customers.map((customer) => {

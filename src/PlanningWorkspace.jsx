@@ -140,6 +140,7 @@ function InventoryDashboard({ data, open }) {
             aria-label="Search inventory forecast"
             placeholder="Find an item…"
             value={search}
+            onPointerDown={(event) => event.currentTarget.focus()}
             onChange={(e) => setSearch(e.target.value)}
           />
           <select

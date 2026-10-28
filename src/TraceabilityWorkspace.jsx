@@ -33,7 +33,7 @@ export default function TraceabilityWorkspace({ data }) {
           <h2>Batch and lot traceability</h2>
           <p>Follow each finished batch back to the ingredient delivery lots consumed during production.</p>
         </div>
-        <label>Find a batch<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Batch, recipe or date" /></label>
+        <label>Find a batch<input value={query} onPointerDown={(event) => event.currentTarget.focus()} onChange={(event) => setQuery(event.target.value)} placeholder="Batch, recipe or date" /></label>
       </div>
       <div className="stats planning-stats">
         <div className="stat"><div>Production batches</div><strong>{data.productionBatches.length}</strong></div>
