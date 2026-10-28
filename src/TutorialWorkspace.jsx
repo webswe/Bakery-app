@@ -52,10 +52,24 @@ export const tutorialSteps = [
   },
   {
     title: "Run the owner routine",
-    page: "Owner forecast",
-    button: "Open owner forecast",
-    text: "Use Calendar and Prep sheets for today, Payments and Orders for pickups, and the seven-day forecast for upcoming cash and production needs.",
-    tip: "Review finished-product expiry, Batch traceability, Tax report and Waste analysis. Export a backup regularly and optionally enable the local PIN lock.",
+    page: "Daily snapshot",
+    button: "Open daily snapshot",
+    text: "Use the Daily snapshot for sales, profit, cash and kitchen output; use the seven-day Owner forecast for upcoming commitments.",
+    tip: "Press Ctrl or Command + K anywhere to find a page, recipe, ingredient, customer or order.",
+  },
+  {
+    title: "Learn from every batch",
+    page: "Batch yields",
+    button: "Track actual yields",
+    text: "Record the portions each completed batch actually produced, then use Packing to finish a consistent customer handoff checklist.",
+    tip: "Check Use soon before planning production. It links expiring delivery lots with recipes that consume them.",
+  },
+  {
+    title: "Plan ahead and protect the records",
+    page: "Seasonal plans",
+    button: "Plan a season",
+    text: "Save holiday menus, market targets and expected batches, then turn the target into daily production tasks as dates approach.",
+    tip: "Review supplier price alerts, tax and waste monthly. Export a backup regularly and optionally enable the local PIN lock.",
   },
 ];
 
@@ -151,10 +165,10 @@ export default function TutorialWorkspace({ navigate, startTour }) {
       <section className="panel tutorial-rhythm">
         <h2>A simple owner rhythm</h2>
         <div>
-          <p><b>Every morning</b> Overview, Calendar, Prep sheets and stock shortages.</p>
-          <p><b>For every order</b> Save quote, accept order, record payments, complete production, then fulfill.</p>
-          <p><b>After shopping</b> Receive each delivery lot with its current price and expiry date.</p>
-          <p><b>Every month</b> Review profit, tax, waste and supplier prices; then export a backup.</p>
+          <p><b>Every morning</b> Daily snapshot, Calendar, Prep sheets, Use soon and stock shortages.</p>
+          <p><b>For every order</b> Save quote, accept order, record payments, complete production, finish Packing, then fulfill.</p>
+          <p><b>After production</b> Record actual yield. After shopping, receive each lot with its current price and expiry date.</p>
+          <p><b>Every month</b> Review profit, tax, waste, supplier price alerts and seasonal targets; then export a backup.</p>
         </div>
       </section>
     </div>

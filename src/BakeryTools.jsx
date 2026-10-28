@@ -11,6 +11,12 @@ import { localDate } from "./planning.js";
 import { readBackups } from "./backupStorage.js";
 import { migrateData } from "./analytics.js";
 import { orderPaid } from "./ownerOps.js";
+import {
+  removePurchaseOrder,
+  removeScalingPreset,
+  savePurchaseOrder,
+  saveScalingPreset,
+} from "./ownerFeatures.js";
 const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     n,
@@ -59,11 +65,11 @@ export default function BakeryTools({
           quoteId={context.quoteId}
         />
       ) : page === "Shopping list" ? (
-        <Shopping data={data} />
+        <Shopping data={data} act={act} />
       ) : page === "Waste & expiry" ? (
         <Waste data={data} act={act} open={open} />
       ) : page === "Recipe scaling" ? (
-        <Scaling data={data} />
+        <Scaling data={data} act={act} />
       ) : (
         <Backups data={data} act={act} restore={restore} />
       )}
@@ -267,7 +273,7 @@ function OrderCard({ order: o, act, data, navigate }) {
     </section>
   );
 }
-function Shopping({ data }) {
+function Shopping({ data, act }) {
   const [day, setDay] = useState(localDate),
     [checked, setChecked] = useState({});
   const list = shoppingList(data, day || localDate());
@@ -338,6 +344,9 @@ function Shopping({ data }) {
         </p>
       ))}
       <div className="planning-actions no-print">
+        <button className="primary" onClick={() => act(() => savePurchaseOrder(data, day, list.rows))}>
+          Save purchase order
+        </button>
         <button className="secondary" onClick={csv}>
           Export CSV
         </button>
@@ -399,6 +408,11 @@ function Shopping({ data }) {
           <p>After shopping, receive each package in Bakery Ledger with its actual supplier price and expiry date.</p>
         </footer>
       )}
+      {!!data.purchaseOrders.length && <section className="panel planning-form no-print">
+        <h2>Saved supplier orders</h2>
+        <p>Keep a dated copy of what you planned to buy for price and vendor reference.</p>
+        {[...data.purchaseOrders].reverse().slice(0, 12).map((order) => <div className="legend" key={order.id}><span><b>Plan through {order.throughDate}</b><small>{order.rows.length} item(s) · {[...new Set(order.rows.map((row) => row.supplier))].join(", ")}</small></span><span><b>{money(order.estimatedTotal)}</b><button className="text-button" onClick={() => { if (confirm("Delete this saved supplier order?")) act(() => removePurchaseOrder(data, order.id)); }}>Delete</button></span></div>)}
+      </section>}
     </div>
   );
 }
@@ -550,9 +564,10 @@ function Waste({ data, act, open }) {
     </>
   );
 }
-function Scaling({ data }) {
+function Scaling({ data, act }) {
   const [id, setId] = useState(data.recipes[0]?.id || ""),
-    [target, setTarget] = useState(12);
+    [target, setTarget] = useState(12),
+    [presetName, setPresetName] = useState("");
   let scaled, error;
   try {
     scaled = scaleRecipe(data, id, target);
@@ -587,6 +602,18 @@ function Scaling({ data }) {
           onChange={(e) => setTarget(e.target.value)}
         />
       </label>
+      <div className="scaling-presets" aria-label="Scaling presets">
+        {[{ id: "half", name: "Half batch", portions: Math.max(1, Math.ceil((data.recipes.find((recipe) => recipe.id === id)?.yield || 1) / 2)) }, { id: "one", name: "1 batch", portions: data.recipes.find((recipe) => recipe.id === id)?.yield || 1 }, { id: "two", name: "2 batches", portions: (data.recipes.find((recipe) => recipe.id === id)?.yield || 1) * 2 }, ...(data.scalingPresets || [])].map((preset) => (
+          <span className="preset-chip" key={preset.id}>
+            <button type="button" onClick={() => setTarget(preset.portions)}>{preset.name} · {preset.portions}</button>
+            {!['half', 'one', 'two'].includes(preset.id) && <button type="button" aria-label={`Delete ${preset.name} preset`} onClick={() => act(() => removeScalingPreset(data, preset.id))}>×</button>}
+          </span>
+        ))}
+      </div>
+      <form className="inline-preset-form" onSubmit={(event) => { event.preventDefault(); if (act(() => saveScalingPreset(data, { name: presetName, portions: target }))) setPresetName(""); }}>
+        <label>Save current target as a preset<input value={presetName} onChange={(event) => setPresetName(event.target.value)} placeholder="Market day" /></label>
+        <button className="secondary">Save preset</button>
+      </form>
       {error ? (
         <p className="error">{error}</p>
       ) : (

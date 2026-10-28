@@ -19,6 +19,8 @@ import CustomerWorkspace from "./CustomerWorkspace.jsx";
 import DocumentWorkspace, { BusinessProfileWorkspace } from "./DocumentWorkspace.jsx";
 import TraceabilityWorkspace from "./TraceabilityWorkspace.jsx";
 import CatalogWorkspace from "./CatalogWorkspace.jsx";
+import OwnerEnhancements from "./OwnerEnhancements.jsx";
+import QuickSearch from "./QuickSearch.jsx";
 import { verifyPin } from "./security.js";
 import { ensureCustomer } from "./customerOps.js";
 import { parseQuantity } from "./quantity.js";
@@ -548,26 +550,7 @@ function App() {
             Workspace <span className="slash">/</span> <b>{section.name}</b>
           </span>
           <div className="header-tools">
-            <label className="quick-nav-label">
-              <span>Jump to</span>
-              <select
-                ref={quickNav}
-                className="quick-nav"
-                value={page}
-                onChange={(event) => navigate(event.target.value)}
-                aria-label="Jump to a workspace page"
-                title="Quick page switcher (Ctrl or Command + K)"
-              >
-                {sections.map((group) => (
-                  <optgroup label={group.name} key={group.name}>
-                    {group.pages.map((name) => (
-                      <option value={name} key={name}>{pages[name].label}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              <kbd>⌘/Ctrl K</kbd>
-            </label>
+            <QuickSearch ref={quickNav} data={data} navigate={navigate} />
             <span className="save-indicator"><span className="status-dot" /> Saved locally</span>
             <span className="header-avatar">B</span>
           </div>
@@ -692,6 +675,8 @@ function App() {
             <TraceabilityWorkspace data={data} />
           ) : page === "Business profile" ? (
             <BusinessProfileWorkspace data={data} save={save} />
+          ) : ["Daily snapshot", "Use soon", "Packing", "Batch yields", "Seasonal plans"].includes(page) ? (
+            <OwnerEnhancements data={data} save={save} page={page} navigate={navigate} />
           ) : [
             "Calendar",
             "Prep sheets",

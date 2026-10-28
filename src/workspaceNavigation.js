@@ -1,6 +1,6 @@
 export const sections = [
   { name: "Overview", pages: ["Overview"] },
-  { name: "Sales", pages: ["Orders", "Quotes", "Customers", "Documents", "Payments"] },
+  { name: "Sales", pages: ["Orders", "Quotes", "Customers", "Packing", "Documents", "Payments"] },
   {
     name: "Kitchen",
     pages: [
@@ -8,10 +8,12 @@ export const sections = [
       "Daily planner",
       "Prep sheets",
       "Batch traceability",
+      "Batch yields",
       "Can make",
       "Product stock",
       "Recipes",
       "Recipe scaling",
+      "Seasonal plans",
     ],
   },
   {
@@ -25,11 +27,12 @@ export const sections = [
       "Ingredients",
       "Packaging",
       "Waste & expiry",
+      "Use soon",
     ],
   },
   {
     name: "Reports",
-    pages: ["Owner forecast", "Tax report", "Waste analysis"],
+    pages: ["Daily snapshot", "Owner forecast", "Tax report", "Waste analysis"],
   },
   {
     name: "Settings",
@@ -62,6 +65,10 @@ export const pages = {
     label: "Payments",
     description:
       "Record deposits, partial payments and refunds, then print a customer receipt.",
+  },
+  Packing: {
+    label: "Packing board",
+    description: "Complete a consistent packing, labeling, allergen and pickup check for every open order.",
   },
   Customers: {
     label: "Customers",
@@ -97,6 +104,10 @@ export const pages = {
     description:
       "Trace finished batches to ingredient delivery lots, shelf life and captured production cost.",
   },
+  "Batch yields": {
+    label: "Batch yields",
+    description: "Record actual portions produced and spot recurring yield loss or overproduction.",
+  },
   "Can make": {
     label: "Batch availability",
     description:
@@ -128,6 +139,10 @@ export const pages = {
       "Preview quantities for a target portion count without changing your saved recipe.",
     next: "Recipes",
     nextLabel: "Manage recipes",
+  },
+  "Seasonal plans": {
+    label: "Seasonal planning",
+    description: "Save holiday menus, market targets and event production goals.",
   },
   "Inventory dashboard": {
     label: "Stock overview",
@@ -186,6 +201,14 @@ export const pages = {
       "Review low stock and expiry dates, then record spoiled inventory or unsold desserts.",
     next: "Shopping list",
     nextLabel: "Replenish stock",
+  },
+  "Use soon": {
+    label: "Use soon",
+    description: "Find tracked lots nearing expiry and the recipes that can use them.",
+  },
+  "Daily snapshot": {
+    label: "Daily snapshot",
+    description: "Review one day of sales, costs, payments, tax and kitchen output.",
   },
   "Owner forecast": {
     label: "Owner forecast",

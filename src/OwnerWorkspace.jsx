@@ -11,6 +11,7 @@ import { lotAlerts } from "./inventoryLots.js";
 import { localDate } from "./planning.js";
 import { createLock, verifyPin } from "./security.js";
 import { addDays } from "./productLots.js";
+import { priceChanges } from "./ownerFeatures.js";
 
 const money = (n) =>
   new Intl.NumberFormat("en-US", {
@@ -316,6 +317,15 @@ function SupplierPrices({ data }) {
   const rows = [...(data.purchaseHistory || [])].sort((a, b) =>
     b.date.localeCompare(a.date),
   );
+  const changes = priceChanges(data);
+  const supplierTotals = Object.values(rows.reduce((result, row) => {
+    const supplier = row.supplier || "Unassigned supplier";
+    result[supplier] ??= { supplier, orders: 0, spend: 0, latest: "" };
+    result[supplier].orders += 1;
+    result[supplier].spend += (row.finalPackageCost || row.packagePrice || 0) * (row.packages || 1);
+    result[supplier].latest = result[supplier].latest > row.date ? result[supplier].latest : row.date;
+    return result;
+  }, {})).sort((a, b) => b.spend - a.spend);
   return (
     <>
       <div className="planning-toolbar">
@@ -342,6 +352,8 @@ function SupplierPrices({ data }) {
           Export CSV
         </button>
       </div>
+      {!!changes.length && <section className="panel planning-form"><h2>Price movement alerts</h2><p>Compares each item’s two latest receipts from the same supplier.</p>{changes.slice(0, 8).map((row) => <div className="legend" key={`${row.itemName}-${row.supplier}`}><span><b>{row.itemName}</b><small>{row.supplier} · latest receipt {row.date}</small></span><b className={row.change > 0 ? "negative" : "positive"}>{row.change > 0 ? "+" : ""}{row.percent.toFixed(1)}% · {money(row.previous)} → {money(row.latest)}</b></div>)}</section>}
+      {!!supplierTotals.length && <section className="panel table-scroll"><h2>Vendor ordering history</h2><table><thead><tr><th>SUPPLIER</th><th>RECEIPTS</th><th>RECORDED SPEND</th><th>LATEST</th></tr></thead><tbody>{supplierTotals.map((row) => <tr key={row.supplier}><td><b>{row.supplier}</b></td><td>{row.orders}</td><td>{money(row.spend)}</td><td>{row.latest}</td></tr>)}</tbody></table></section>}
       <section className="panel table-scroll">
         <table>
           <thead><tr><th>DATE</th><th>SUPPLIER</th><th>ITEM</th><th>ENTERED</th><th>FINAL COST</th></tr></thead>
