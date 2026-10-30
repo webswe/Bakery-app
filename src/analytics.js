@@ -45,7 +45,7 @@ export function migrateData(data) {
     scalingPresets: data.scalingPresets || [],
     purchaseOrders: data.purchaseOrders || [],
     movements: data.movements || [],
-    settings: data.settings || { hourlyWage: 0, electricityRate: 0 },
+    settings: { hourlyWage: 0, electricityRate: 0, ...(data.settings || {}) },
     taxRates: data.taxRates || { food: data.tax ?? 0, other: data.tax ?? 0 },
     items: data.items.map((i) => ({
       ...i,

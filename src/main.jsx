@@ -22,6 +22,7 @@ import CatalogWorkspace from "./CatalogWorkspace.jsx";
 import OwnerEnhancements from "./OwnerEnhancements.jsx";
 import QuickSearch from "./QuickSearch.jsx";
 import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
+import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import { verifyPin } from "./security.js";
 import { ensureCustomer } from "./customerOps.js";
 import { parseQuantity } from "./quantity.js";
@@ -196,6 +197,18 @@ function App() {
       ?.scrollIntoView({ block: "nearest", inline: "center" });
     window.scrollTo(0, 0);
   }, [page]);
+  const appearance = { accent: "#315e56", density: "comfortable", showTips: true, ...(data.settings?.appearance || {}) };
+  const bakeryName = data.businessProfile?.name || "My bakery";
+  const bakeryInitial = bakeryName.trim().charAt(0).toUpperCase() || "B";
+  useEffect(() => {
+    document.documentElement.style.setProperty("--app-accent", appearance.accent);
+    document.documentElement.dataset.density = appearance.density;
+    document.title = `${bakeryName} · Bakery Ledger`;
+    return () => {
+      document.documentElement.style.removeProperty("--app-accent");
+      delete document.documentElement.dataset.density;
+    };
+  }, [appearance.accent, appearance.density, bakeryName]);
   useEffect(() => {
     const scroll = () => setShowBackToTop(window.scrollY > 500);
     const shortcut = (event) => {
@@ -490,14 +503,14 @@ function App() {
             <ChefHat />
           </span>
           <span>
-            Bakery<span className="brand-light">Ledger</span>
+            {bakeryName}
             <small>A little clarity. A lot of growth.</small>
           </span>
         </a>
         <div className="workspace">
-          <span className="avatar">B</span>
+          <span className="avatar">{bakeryInitial}</span>
           <div>
-            My bakery<small>Your business workspace</small>
+            {bakeryName}<small>Your business workspace</small>
           </div>
           <span className="dot" />
         </div>
@@ -525,10 +538,10 @@ function App() {
             );
           })}
         </nav>
-        <div className="workspace-guide">
+        {appearance.showTips && <div className="workspace-guide">
           <p>Quote → Order → Produce → Fulfill</p>
           <small>One connected workflow for your bakery.</small>
-        </div>
+        </div>}
         <div className="workspace-local">
           <span className="status-dot" /> Saved on this device
           <small>USD · Local workspace</small>
@@ -554,7 +567,7 @@ function App() {
             <QuickSearch ref={quickNav} data={data} navigate={navigate} />
             <UpdateStatusBadge />
             <span className="save-indicator"><span className="status-dot" /> Saved locally</span>
-            <span className="header-avatar">B</span>
+          <span className="header-avatar">{bakeryInitial}</span>
           </div>
         </header>
         <div className="content">
@@ -603,7 +616,7 @@ function App() {
               ))}
             </nav>
           )}
-          {info.next && (
+          {info.next && appearance.showTips && (
             <div className="workflow-handoff">
               <span>
                 {page === "Quotes"
@@ -677,6 +690,8 @@ function App() {
             <TraceabilityWorkspace data={data} />
           ) : page === "Business profile" ? (
             <BusinessProfileWorkspace data={data} save={save} />
+          ) : page === "App customization" ? (
+            <AppCustomizationWorkspace data={data} save={save} />
           ) : page === "App updates" ? (
             <UpdateWorkspace />
           ) : ["Daily snapshot", "Use soon", "Packing", "Batch yields", "Seasonal plans"].includes(page) ? (

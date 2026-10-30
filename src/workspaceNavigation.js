@@ -36,7 +36,7 @@ export const sections = [
   },
   {
     name: "Settings",
-    pages: ["Tutorial", "Business profile", "Cost settings", "Tax settings", "App updates", "Backups", "Security"],
+    pages: ["Tutorial", "Business profile", "App customization", "Cost settings", "Tax settings", "App updates", "Backups", "Security"],
   },
 ];
 export const pages = {
@@ -239,6 +239,10 @@ export const pages = {
     label: "Business profile",
     description:
       "Set the bakery contact and registration details shown on printed customer documents.",
+  },
+  "App customization": {
+    label: "App customization",
+    description: "Personalize the workspace appearance and choose how much guidance appears while you work.",
   },
   "Tax settings": {
     label: "Tax settings",
