@@ -1,17 +1,9 @@
 import React, { useState } from "react";
 import { Check, Palette, RotateCcw } from "lucide-react";
-
-const palettes = [
-  { id: "evergreen", label: "Evergreen", color: "#315e56" },
-  { id: "berry", label: "Berry", color: "#9b4d5b" },
-  { id: "sunrise", label: "Sunrise", color: "#b66a32" },
-  { id: "ocean", label: "Ocean", color: "#2e6f8a" },
-];
-
-const defaults = { accent: "#315e56", density: "comfortable", showTips: true };
+import { appearanceThemes, defaultAppearance, resolveAppearance } from "./appearanceThemes.js";
 
 export default function AppCustomizationWorkspace({ data, save }) {
-  const current = { ...defaults, ...(data.settings?.appearance || {}) };
+  const current = resolveAppearance(data.settings?.appearance);
   const [appearance, setAppearance] = useState(current);
   const [notice, setNotice] = useState("");
   const choose = (changes) => setAppearance((value) => ({ ...value, ...changes }));
@@ -20,7 +12,7 @@ export default function AppCustomizationWorkspace({ data, save }) {
     if (save({ ...data, settings }) !== false) setNotice("App customization saved.");
   };
   const reset = () => {
-    setAppearance(defaults);
+    setAppearance(defaultAppearance);
     setNotice("");
   };
   return (
@@ -31,10 +23,10 @@ export default function AppCustomizationWorkspace({ data, save }) {
           <div><h2>Make Bakery Ledger feel like your workspace</h2><p>Choose an accent and working density. Your choices stay on this device and never change your recipes, records or backups.</p></div>
         </div>
         <fieldset>
-          <legend>Accent color</legend>
+          <legend>Color theme</legend>
           <div className="palette-options">
-            {palettes.map((palette) => <button type="button" key={palette.id} className={appearance.accent === palette.color ? "palette-option selected" : "palette-option"} onClick={() => choose({ accent: palette.color })}>
-              <i style={{ background: palette.color }} />{palette.label}{appearance.accent === palette.color && <Check size={15} />}
+            {appearanceThemes.map((theme) => <button type="button" key={theme.id} className={appearance.themeId === theme.id ? "palette-option selected" : "palette-option"} onClick={() => choose({ themeId: theme.id })}>
+              <i className="theme-swatch" style={{ background: `linear-gradient(135deg, ${theme.sidebar} 0 50%, ${theme.accent} 50%)` }} />{theme.label}{appearance.themeId === theme.id && <Check size={15} />}
             </button>)}
           </div>
         </fieldset>
@@ -52,7 +44,7 @@ export default function AppCustomizationWorkspace({ data, save }) {
           {notice && <p className="positive" role="status">{notice}</p>}
         </div>
       </section>
-      <section className="panel customization-preview" style={{ "--preview-accent": appearance.accent }}>
+      <section className="panel customization-preview" style={{ "--preview-accent": resolveAppearance(appearance).theme.accent, "--preview-soft": resolveAppearance(appearance).theme.soft }}>
         <span className="eyebrow">PREVIEW</span><h2>{data.businessProfile?.name || "My bakery"}</h2>
         <div><span>Today’s production</span><b>3 batches planned</b><button type="button">Open planner</button></div>
       </section>

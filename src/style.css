@@ -6,7 +6,7 @@
   font-synthesis: none;
   font-size: 14px;
 }
-:root { --app-accent:#315e56; }
+:root { --app-accent:#315e56; --app-sidebar:#182e38; --app-canvas:#f4f6f8; --app-soft:#e8f2ef; }
 
 
 * {
@@ -926,12 +926,12 @@ td small {
 /* Financial workspace */
 :root {
   color: #233344;
-  background: #f4f6f8;
+  background: var(--app-canvas);
   font-family: Inter, "Segoe UI", sans-serif;
   font-size: 14px;
 }
 aside {
-  background: #182e38;
+  background: var(--app-sidebar);
   border-color: #233e48;
   color: #e4edee;
 }
@@ -975,8 +975,8 @@ nav button.active {
   color: #a2b9bf;
 }
 .primary {
-  background: #2f6f62;
-  border-color: #2f6f62;
+  background: var(--app-accent);
+  border-color: var(--app-accent);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1566,10 +1566,63 @@ nav button { flex-shrink:0; }
 .customization-preview > div { display:flex; align-items:center; gap:18px; padding:16px; border-radius:8px; background:#f1f6f5; color:#405e69; }
 .customization-preview > div b { margin-left:auto; }
 .customization-preview button { border:0; border-radius:6px; padding:9px 12px; background:var(--preview-accent); color:#fff; }
+.customization-preview > div { background:var(--preview-soft); }
+.theme-swatch { border-radius:5px!important; width:24px!important; height:24px!important; }
 :root[data-density="compact"] .panel { padding:16px; }
 :root[data-density="compact"] .content { padding-top:24px; }
 :root[data-density="compact"] .today-grid button { padding:14px; }
 @media (max-width:580px) { .customization-card { padding:20px; } .palette-options { grid-template-columns:repeat(2,minmax(0,1fr)); } .choice-options { grid-template-columns:1fr; } .customization-preview > div { align-items:flex-start; flex-direction:column; gap:8px; } .customization-preview > div b { margin-left:0; } }
+
+/* Customizable owner dashboard */
+.owner-dashboard { display:grid; gap:24px; }
+.dashboard-actions { display:flex; justify-content:flex-end; margin-top:-70px; margin-bottom:22px; position:relative; z-index:1; }
+.dashboard-customizer { border-top:4px solid var(--app-accent); }
+.dashboard-toggle-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; padding:0 23px 20px; }
+.dashboard-toggle-grid label { display:flex; align-items:center; gap:8px; padding:11px; border:1px solid #dce6e9; border-radius:7px; color:#4d6876; font-size:11px; }
+.dashboard-toggle-grid input { accent-color:var(--app-accent); }
+.dashboard-chart-choice { display:flex; align-items:center; gap:8px; padding:15px 23px; border-block:1px solid #e5ecef; color:#607986; font-size:11px; }
+.dashboard-chart-choice span { margin-right:auto; font-weight:700; }
+.dashboard-chart-choice button { padding:7px 10px; border:1px solid #d6e2e6; border-radius:6px; background:#fff; color:#647c87; }
+.dashboard-chart-choice button.selected { border-color:var(--app-accent); background:var(--app-soft); color:var(--app-accent); }
+.dashboard-widget-list { display:grid; gap:1px; padding:12px 23px; background:#edf1f3; }
+.dashboard-widget-list > div { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:8px; padding:10px; background:#fff; }
+.dashboard-widget-list > div.hidden-widget { opacity:.55; }
+.dashboard-widget-list span { display:grid; gap:3px; }
+.dashboard-widget-list small { color:#758993; font-size:10px; }
+.dashboard-customizer > .secondary { margin:0 23px 20px; }
+.custom-dashboard-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; }
+.dashboard-card { min-width:0; }
+.dashboard-wide { grid-column:1 / -1; }
+.revenue-area { fill:color-mix(in srgb,var(--app-accent) 13%,transparent); }
+.revenue-line,.cost-line { fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.revenue-line { stroke:var(--app-accent); }
+.cost-line { stroke:#d49a62; stroke-dasharray:5 5; }
+.revenue-bar { fill:var(--app-accent); }
+.cost-bar { fill:#d49a62; }
+.sales-mix { display:grid; grid-template-columns:140px minmax(0,1fr); align-items:center; gap:24px; padding:0 23px 24px; }
+.donut { width:132px; height:132px; display:grid; place-items:center; border-radius:50%; }
+.donut::after { content:""; grid-area:1/1; width:76px; height:76px; border-radius:50%; background:#fff; }
+.donut span { z-index:1; grid-area:1/1; display:grid; color:#718691; font-size:9px; text-align:center; }
+.donut b { color:#304e5b; font-size:20px; }
+.sales-mix-list { display:grid; gap:10px; }
+.sales-mix-list > div { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; color:#5c7480; font-size:11px; }
+.sales-mix-list i { width:9px; height:9px; border-radius:3px; }
+.sales-mix-list span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.inventory-health { padding:0 23px 22px; }
+.stock-bar { display:flex; height:12px; overflow:hidden; margin:4px 0 22px; border-radius:8px; background:#e9eef0; }
+.stock-bar i { height:100%; }
+.stock-bar .healthy { background:var(--app-accent); }
+.stock-bar .low { background:#d5a04e; }
+.stock-bar .out { background:#b95d57; }
+.inventory-health dl { display:grid; gap:11px; margin:0 0 18px; }
+.inventory-health dl div { display:flex; justify-content:space-between; color:#637b87; font-size:11px; }
+.inventory-health dd { margin:0; color:#314f5b; font-weight:700; }
+.inventory-health button { padding:0; color:var(--app-accent); }
+.empty-inline { padding:0 23px 22px; color:#718691; font-size:11px; }
+.owner-dashboard .today-board,.owner-dashboard .stats,.owner-dashboard .metric-strip { margin-bottom:0; }
+@media (max-width:850px) { .dashboard-actions { margin-top:0; justify-content:flex-start; } .dashboard-toggle-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:700px) { .custom-dashboard-grid { grid-template-columns:1fr; } .dashboard-wide { grid-column:auto; } .sales-mix { grid-template-columns:1fr; } .donut { margin:auto; } }
+@media (max-width:580px) { .dashboard-toggle-grid { grid-template-columns:1fr; } .dashboard-chart-choice { align-items:flex-start; flex-wrap:wrap; } .dashboard-chart-choice span { flex-basis:100%; } .dashboard-widget-list > div { grid-template-columns:auto minmax(0,1fr) auto auto; } }
 
 /* Owner operations */
 .stock-lot-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:10px; }

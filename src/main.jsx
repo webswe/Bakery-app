@@ -3,7 +3,6 @@ import {
   purchaseTax,
   purchaseMode,
   taxRate,
-  saleRevenue,
 } from "./taxation.js";
 import Operations, { SaleFields } from "./InventoryWorkspace.jsx";
 import { addPresets, sell, fullCost } from "./operations.js";
@@ -11,7 +10,6 @@ import Dashboard from "./Dashboard.jsx";
 import { migrateData } from "./analytics.js";
 import BakeryTools from "./BakeryTools.jsx";
 import { persistWorkspace } from "./backupStorage.js";
-import { stockAlerts } from "./business.js";
 import PlanningWorkspace from "./PlanningWorkspace.jsx";
 import OwnerWorkspace from "./OwnerWorkspace.jsx";
 import TutorialWorkspace, { GuidedTutorial } from "./TutorialWorkspace.jsx";
@@ -23,6 +21,8 @@ import OwnerEnhancements from "./OwnerEnhancements.jsx";
 import QuickSearch from "./QuickSearch.jsx";
 import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
 import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
+import { resolveAppearance } from "./appearanceThemes.js";
+import { normalizeDashboardConfig } from "./dashboardConfig.js";
 import { verifyPin } from "./security.js";
 import { ensureCustomer } from "./customerOps.js";
 import { parseQuantity } from "./quantity.js";
@@ -197,18 +197,25 @@ function App() {
       ?.scrollIntoView({ block: "nearest", inline: "center" });
     window.scrollTo(0, 0);
   }, [page]);
-  const appearance = { accent: "#315e56", density: "comfortable", showTips: true, ...(data.settings?.appearance || {}) };
+  const appearance = resolveAppearance(data.settings?.appearance);
+  const dashboardConfig = normalizeDashboardConfig(data.settings?.dashboard);
   const bakeryName = data.businessProfile?.name || "My bakery";
   const bakeryInitial = bakeryName.trim().charAt(0).toUpperCase() || "B";
   useEffect(() => {
-    document.documentElement.style.setProperty("--app-accent", appearance.accent);
+    document.documentElement.style.setProperty("--app-accent", appearance.theme.accent);
+    document.documentElement.style.setProperty("--app-sidebar", appearance.theme.sidebar);
+    document.documentElement.style.setProperty("--app-canvas", appearance.theme.canvas);
+    document.documentElement.style.setProperty("--app-soft", appearance.theme.soft);
     document.documentElement.dataset.density = appearance.density;
     document.title = `${bakeryName} · Bakery Ledger`;
     return () => {
       document.documentElement.style.removeProperty("--app-accent");
+      document.documentElement.style.removeProperty("--app-sidebar");
+      document.documentElement.style.removeProperty("--app-canvas");
+      document.documentElement.style.removeProperty("--app-soft");
       delete document.documentElement.dataset.density;
     };
-  }, [appearance.accent, appearance.density, bakeryName]);
+  }, [appearance.theme.id, appearance.theme.accent, appearance.theme.sidebar, appearance.theme.canvas, appearance.theme.soft, appearance.density, bakeryName]);
   useEffect(() => {
     const scroll = () => setShowBackToTop(window.scrollY > 500);
     const shortcut = (event) => {
@@ -303,11 +310,7 @@ function App() {
     };
   }, [modal]);
   const sales = data.sales.filter((s) => s.date.startsWith(month)),
-    expenses = data.expenses.filter((s) => s.date.startsWith(month)),
-    revenue = sales.reduce((s, x) => s + saleRevenue(x), 0),
-    cogs = sales.reduce((s, x) => s + x.cost, 0),
-    overhead = expenses.reduce((s, x) => s + x.amount, 0),
-    profit = revenue - cogs - overhead;
+    expenses = data.expenses.filter((s) => s.date.startsWith(month));
   function submit(e) {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
@@ -636,47 +639,6 @@ function App() {
               </button>
             </div>
           )}
-          {page === "Overview" && (
-            <section className="today-board" aria-label="Today's work">
-              <div>
-                <span className="eyebrow">TODAY’S WORK</span>
-                <h2>Keep your bakery moving</h2>
-              </div>
-              <div className="today-grid">
-                {[
-                  [
-                    "Orders",
-                    data.orders.filter((o) => o.status === "open").length,
-                    "Open orders",
-                    "Review payments and pickups",
-                  ],
-                  [
-                    "Daily planner",
-                    data.productionPlans
-                      .filter(
-                        (p) => p.status === "planned" && p.date <= today(),
-                      )
-                      .reduce((n, p) => n + p.batches, 0),
-                    "Batches due",
-                    "Includes overdue production",
-                  ],
-                  [
-                    "Waste & expiry",
-                    stockAlerts(data).length,
-                    "Stock alerts",
-                    "Low stock and expiry",
-                  ],
-                ].map(([target, value, label, hint]) => (
-                  <button key={target} onClick={() => navigate(target)}>
-                    <span>{label}</span>
-                    <strong>{value}</strong>
-                    <small>{hint}</small>
-                    <ArrowUpRight size={17} />
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
           {page === "Tutorial" ? (
             <TutorialWorkspace
               navigate={navigate}
@@ -792,51 +754,8 @@ function App() {
                   onChange={(e) => setMonth(e.target.value)}
                 />
               </div>
-              <div className="stats">
-                {[
-                  [
-                    "Total revenue",
-                    revenue,
-                    "Excludes separately recorded sales tax",
-                    "green",
-                  ],
-                  [
-                    "Cost of goods",
-                    cogs,
-                    "Production incl. labor & overhead",
-                    "",
-                  ],
-                  [
-                    "Operating expenses",
-                    overhead,
-                    "Your day-to-day business costs",
-                    "",
-                  ],
-                  ["Net profit", profit, "Revenue − costs − expenses", "green"],
-                ].map(([title, n, hint, c]) => (
-                  <div className={"stat " + c} key={title}>
-                    <div>
-                      {title}
-                      <TrendingUp size={17} />
-                    </div>
-                    <strong>{money(n)}</strong>
-                    <small>{hint}</small>
-                  </div>
-                ))}
-              </div>
-              <p className="accounting-note">
-                Customer sales tax collected:{" "}
-                {money(
-                  sales.reduce(
-                    (n, s) => n + (s.net != null ? s.tax || 0 : 0),
-                    0,
-                  ),
-                )}
-                . Excluded from revenue when separately recorded; historical
-                sales without a breakdown keep their original totals.
-              </p>
-              <Dashboard data={data} month={month} />
-              <section className="panel transactions">
+              <Dashboard data={data} month={month} save={save} navigate={navigate} />
+              {dashboardConfig.showRecent && <section className="panel transactions">
                 <div className="panel-heading">
                   <div>
                     <h2>The latest in your bakery</h2>
@@ -945,7 +864,7 @@ function App() {
                     </p>
                   </div>
                 )}
-              </section>
+              </section>}
               <div className="footer-note">
                 A pinch of planning. A whole lot of possibility.
               </div>
