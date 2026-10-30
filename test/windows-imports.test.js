@@ -18,3 +18,10 @@ test("source filenames are distinct and local imports specify exact names and ex
     }
   }
 });
+
+test("Windows release artifacts use updater-safe hyphenated filenames", () => {
+  const packageFile = fileURLToPath(new URL("../package.json", import.meta.url));
+  const packageData = JSON.parse(readFileSync(packageFile, "utf8"));
+  assert.equal(packageData.build.artifactName, "Bakery-Ledger-Setup-${version}.${ext}");
+  assert.equal(packageData.build.artifactName.includes(" "), false);
+});
