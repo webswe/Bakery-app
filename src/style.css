@@ -1788,6 +1788,7 @@ nav button { flex-shrink:0; }
 .update-card { display:grid; grid-template-columns:auto minmax(0,1fr); gap:20px; padding:28px; }
 .update-card h2 { margin:7px 0; }
 .update-card p { color:#607783; line-height:1.6; }
+.update-card .update-last-checked { margin:8px 0 0; color:#78909a; font-size:11px; }
 .update-icon { display:grid; place-items:center; width:58px; height:58px; border-radius:14px; background:#e5efec; color:#315e56; }
 .update-progress { height:8px; margin:16px 0; overflow:hidden; border-radius:999px; background:#e5ebed; }
 .update-progress i { display:block; height:100%; border-radius:inherit; background:#3e766a; transition:width .2s ease; }

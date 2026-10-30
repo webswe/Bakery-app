@@ -26,7 +26,12 @@ const checkForUpdates = async () => {
     publishStatus({ state: "development", message: "Update checks run in the installed Windows app." });
     return updateState;
   }
-  publishStatus({ state: "checking", message: "Checking for updates…", error: "" });
+  publishStatus({
+    state: "checking",
+    checkedAt: new Date().toISOString(),
+    message: "Checking for updates…",
+    error: "",
+  });
   try {
     await autoUpdater.checkForUpdates();
   } catch (error) {

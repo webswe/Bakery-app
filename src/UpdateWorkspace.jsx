@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Download, RefreshCw } from "lucide-react";
 
 const desktop = () => window.bakeryDesktop;
+const checkedAt = (value) =>
+  value
+    ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value))
+    : "Not checked yet";
 
 function useUpdateState() {
   const [status, setStatus] = useState(null);
@@ -36,6 +40,7 @@ export default function UpdateWorkspace() {
           <span className="eyebrow">WINDOWS DESKTOP APP</span>
           <h2>Bakery Ledger {status?.currentVersion || ""}</h2>
           <p>{status?.message || "This browser preview cannot install desktop updates."}</p>
+          {status && <p className="update-last-checked">Last checked: {checkedAt(status.checkedAt)}</p>}
           {status?.state === "downloading" && <div className="update-progress"><i style={{ width: `${status.progress || 5}%` }} /></div>}
           {status?.error && <p className="error" role="alert">{status.error}</p>}
           <div className="planning-actions">
