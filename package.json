@@ -1,6 +1,6 @@
 {
   "name": "bakery-ledger",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Recipes, costing and profit tracking for small bakeries",
   "main": "desktop.cjs",
   "author": "Bakery Ledger",
@@ -33,14 +33,23 @@
     "files": [
       "dist/**/*",
       "desktop.cjs",
+      "preload.cjs",
+      "build/icon.png",
       "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Bakery Ledger"
     },
     "publish": {
       "provider": "github",

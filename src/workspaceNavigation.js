@@ -36,7 +36,7 @@ export const sections = [
   },
   {
     name: "Settings",
-    pages: ["Tutorial", "Business profile", "Cost settings", "Tax settings", "Backups", "Security"],
+    pages: ["Tutorial", "Business profile", "Cost settings", "Tax settings", "App updates", "Backups", "Security"],
   },
 ];
 export const pages = {
@@ -246,6 +246,10 @@ export const pages = {
       "Manage purchase-tax defaults separately from customer sales tax. Existing records retain their saved rates.",
     action: "Edit tax defaults",
     modal: "tax",
+  },
+  "App updates": {
+    label: "App updates",
+    description: "Check the installed Windows app version, review release notes and install available updates.",
   },
   Backups: {
     label: "Backups & recovery",

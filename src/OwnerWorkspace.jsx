@@ -141,6 +141,7 @@ function Calendar({ data }) {
 function PrepSheets({ data }) {
   const [date, setDate] = useState(localDate());
   const plans = data.productionPlans.filter((plan) => plan.date === date);
+  const profile = data.businessProfile || {};
   return (
     <>
       <div className="planning-toolbar no-print">
@@ -170,61 +171,77 @@ function PrepSheets({ data }) {
           const order = data.orders.find((item) => item.id === plan.orderId);
           return (
             <article className="panel prep-sheet" key={plan.id}>
-              <header>
-                <span className="pill">{plan.status}</span>
-                <h2>{recipe?.name || plan.recipeName}</h2>
-                <p>
-                  {plan.batches} batch(es) ·{" "}
-                  {(recipe?.yield || 0) * plan.batches} portions · {date}
-                </p>
+              <div className="prep-brand">
+                <span>{profile.name || "Bakery Ledger"}</span>
+                <b>PRODUCTION PREP SHEET</b>
+              </div>
+              <header className="prep-sheet-header">
+                <div>
+                  <span className="pill">{plan.status}</span>
+                  <h2>{recipe?.name || plan.recipeName}</h2>
+                  <p>Production date {date}</p>
+                </div>
+                <div className="prep-batch-code">
+                  <small>TASK</small>
+                  <b>{plan.id.slice(0, 8).toUpperCase()}</b>
+                </div>
               </header>
+              <div className="prep-summary">
+                <div><span>Batches</span><b>{plan.batches}</b></div>
+                <div><span>Expected yield</span><b>{(recipe?.yield || 0) * plan.batches}</b></div>
+                <div><span>Yield / batch</span><b>{recipe?.yield || 0}</b></div>
+                <div><span>Actual yield</span><b className="write-in">&nbsp;</b></div>
+              </div>
               {order && (
                 <div className="prep-customer">
-                  <b>{order.customer || "Customer order"}</b>
-                  <span>Pickup {order.pickupDate}</span>
-                  <span>{order.notes}</span>
+                  <span><small>CUSTOMER</small><b>{order.customer || "Customer order"}</b></span>
+                  <span><small>PICKUP</small><b>{order.pickupDate}</b></span>
+                  {order.notes && <span><small>ORDER NOTES</small><b>{order.notes}</b></span>}
                 </div>
               )}
-              <h3>Scaled ingredients & packaging</h3>
-              {recipe?.lines.map((line, index) => (
-                <div className="legend" key={index}>
-                  <span>
-                    {items.find((item) => item.id === line.itemId)?.name ||
-                      "Missing item"}
-                  </span>
-                  <b>
-                    {qty(line.amount * plan.batches)} {line.unit}
-                  </b>
-                </div>
-              ))}
+              <section className="prep-section">
+                <h3>Scaled ingredients & packaging</h3>
+                <div className="prep-ingredient-head"><span>CHECK</span><span>ITEM</span><span>QUANTITY</span></div>
+                {recipe?.lines.map((line, index) => (
+                  <div className="prep-ingredient" key={index}>
+                    <i aria-hidden="true" />
+                    <span>{items.find((item) => item.id === line.itemId)?.name || "Missing item"}</span>
+                    <b>{qty(line.amount * plan.batches)} {line.unit}</b>
+                  </div>
+                ))}
+              </section>
               <div className="prep-method">
                 <h3>Method & timing</h3>
-                <p>
-                  Prep {recipe?.prepMinutes || 0} min · Bake {recipe?.bakeMinutes || 0} min · Cooling {recipe?.coolingMinutes || 0} min
-                  {recipe?.bakeTemperature ? ` · ${recipe.bakeTemperature}` : ""}
-                </p>
+                <div className="prep-timing">
+                  <span><small>PREP</small><b>{recipe?.prepMinutes || 0} min</b></span>
+                  <span><small>BAKE</small><b>{recipe?.bakeMinutes || 0} min</b></span>
+                  <span><small>COOL</small><b>{recipe?.coolingMinutes || 0} min</b></span>
+                  <span><small>TEMPERATURE</small><b>{recipe?.bakeTemperature || "—"}</b></span>
+                </div>
                 {recipe?.equipment && <p><b>Equipment:</b> {recipe.equipment}</p>}
                 <div className="method-steps">{recipe?.method || "No method saved."}</div>
               </div>
-              <p>
-                <b>Allergens:</b> {recipe?.allergens || "Not specified"}
-              </p>
-              <p><b>Storage:</b> {recipe?.storageInstructions || "Not specified"} · Shelf life {recipe?.shelfLifeDays || "not set"}{recipe?.shelfLifeDays ? " day(s)" : ""}</p>
-              <p>
-                <b>Kitchen notes:</b> {plan.notes || "—"}
-              </p>
+              <div className="prep-safety">
+                <p><small>ALLERGENS</small><b>{recipe?.allergens || "Not specified"}</b></p>
+                <p><small>STORAGE</small><b>{recipe?.storageInstructions || "Not specified"}</b></p>
+                <p><small>KITCHEN NOTES</small><b>{plan.notes || "—"}</b></p>
+              </div>
               <div className="prep-checks">
-                {["Bake", "Chill", "Decorate", "Pack"].map((step) => (
-                  <span key={step}>☐ {step}</span>
+                {["Mixed", "Baked", "Cooled", "Decorated", "Packed", "Final count"].map((step) => (
+                  <span key={step}><i /> {step}</span>
                 ))}
               </div>
               <div className="batch-label">
-                <b>{recipe?.name}</b>
-                <span>{order?.customer || "Bakery stock"}</span>
-                <span>{order ? "Pickup " + order.pickupDate : date}</span>
-                <span>Allergens: {recipe?.allergens || "Not specified"}</span>
-                <span>Best before: {addDays(date, recipe?.shelfLifeDays) || "Not set"}</span>
-                <span>Storage: {recipe?.storageInstructions || "Not specified"}</span>
+                <div className="label-brand"><span>{profile.name || "Bakery Ledger"}</span><small>PRODUCT LABEL · CUT ON DOTTED LINE</small></div>
+                <h3>{recipe?.name}</h3>
+                <div className="label-grid">
+                  <span><small>FOR</small><b>{order?.customer || "Bakery stock"}</b></span>
+                  <span><small>MADE</small><b>{date}</b></span>
+                  <span><small>{order ? "PICKUP" : "BEST BEFORE"}</small><b>{order?.pickupDate || addDays(date, recipe?.shelfLifeDays) || "Not set"}</b></span>
+                  <span><small>BEST BEFORE</small><b>{addDays(date, recipe?.shelfLifeDays) || "Not set"}</b></span>
+                </div>
+                <p><small>ALLERGENS</small><b>{recipe?.allergens || "Not specified"}</b></p>
+                <p><small>STORAGE</small><b>{recipe?.storageInstructions || "Not specified"}</b></p>
               </div>
             </article>
           );

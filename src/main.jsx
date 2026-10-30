@@ -21,6 +21,7 @@ import TraceabilityWorkspace from "./TraceabilityWorkspace.jsx";
 import CatalogWorkspace from "./CatalogWorkspace.jsx";
 import OwnerEnhancements from "./OwnerEnhancements.jsx";
 import QuickSearch from "./QuickSearch.jsx";
+import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
 import { verifyPin } from "./security.js";
 import { ensureCustomer } from "./customerOps.js";
 import { parseQuantity } from "./quantity.js";
@@ -551,6 +552,7 @@ function App() {
           </span>
           <div className="header-tools">
             <QuickSearch ref={quickNav} data={data} navigate={navigate} />
+            <UpdateStatusBadge />
             <span className="save-indicator"><span className="status-dot" /> Saved locally</span>
             <span className="header-avatar">B</span>
           </div>
@@ -675,6 +677,8 @@ function App() {
             <TraceabilityWorkspace data={data} />
           ) : page === "Business profile" ? (
             <BusinessProfileWorkspace data={data} save={save} />
+          ) : page === "App updates" ? (
+            <UpdateWorkspace />
           ) : ["Daily snapshot", "Use soon", "Packing", "Batch yields", "Seasonal plans"].includes(page) ? (
             <OwnerEnhancements data={data} save={save} page={page} navigate={navigate} />
           ) : [
