@@ -2,6 +2,7 @@ import { directSaleTotals, purchaseTax } from "./taxation.js";
 import { receiveInventory, reconcileLots } from "./inventoryLots.js";
 import { finishedProductAlerts } from "./productLots.js";
 import React, { useDeferredValue, useState } from "react";
+import { X } from "lucide-react";
 import { addPresets, availability, produce, fullCost } from "./operations.js";
 const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
@@ -166,7 +167,10 @@ export function SaleFields({ data }) {
 }
 export default function Operations({ data, save, open, tab }) {
   const [error, setError] = useState(""),
-    [q, setQ] = useState("");
+    [q, setQ] = useState(""),
+    [showInventoryGuide, setShowInventoryGuide] = useState(
+      () => localStorage.getItem("bakery-ledger-inventory-guide-dismissed") !== "true",
+    );
   const deferredQuery = useDeferredValue(q).toLocaleLowerCase();
   function act(fn) {
     try {
@@ -198,7 +202,7 @@ export default function Operations({ data, save, open, tab }) {
       {error && <div className="error">{error}</div>}
       {tab === "Inventory" ? (
         <>
-          <div className="operations-banner">
+          {showInventoryGuide && <div className="operations-banner">
             <div>
               <h2>Ingredient & packaging inventory</h2>
               <p>
@@ -206,13 +210,27 @@ export default function Operations({ data, save, open, tab }) {
                 stock below. Presets need your actual purchase prices.
               </p>
             </div>
-            <button
-              className="secondary"
-              onClick={() => act(() => addPresets(data))}
-            >
-              Add common ingredients
-            </button>
-          </div>
+            <div className="operations-banner-actions">
+              <button
+                className="secondary"
+                onClick={() => act(() => addPresets(data))}
+              >
+                Add common ingredients
+              </button>
+              <button
+                className="icon-button banner-close"
+                type="button"
+                aria-label="Dismiss inventory setup guidance"
+                title="Dismiss this guidance"
+                onClick={() => {
+                  localStorage.setItem("bakery-ledger-inventory-guide-dismissed", "true");
+                  setShowInventoryGuide(false);
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>}
           <div className="panel table-scroll">
             <table>
               <thead>

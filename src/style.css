@@ -1275,6 +1275,9 @@ th {
   border: 1px solid #d4e3e4;
   border-radius: 8px;
 }
+.operations-banner-actions { display:flex; align-items:center; gap:8px; }
+.operations-banner .banner-close { width:34px; height:34px; flex:0 0 34px; padding:0; border:1px solid #c6d8da; border-radius:50%; color:#4f6e78; }
+.operations-banner .banner-close:hover { background:#fff; color:#244f49; }
 .stock-form {
   display: flex;
   gap: 6px;
@@ -1356,6 +1359,7 @@ nav button {
   .operations-banner {
     display: block;
   }
+  .operations-banner-actions { margin-top:14px; }
   .stock-form {
     min-width: 190px;
   }
@@ -1840,7 +1844,8 @@ nav button { flex-shrink:0; }
   .cost-summary { align-items:flex-start; flex-direction:column; gap:10px; }
   .cost-summary b { margin-left:6px; }
   .operations-banner { align-items:flex-start; flex-direction:column; }
-  .operations-banner button { width:100%; }
+  .operations-banner .secondary { width:100%; }
+  .operations-banner .banner-close { width:40px; height:40px; flex-basis:40px; }
   .receipt { padding:22px; }
   .back-to-top { right:14px; bottom:14px; }
 }
