@@ -1285,7 +1285,7 @@ th {
   flex-wrap: wrap;
   margin-bottom: 8px;
 }
-.stock-form input {
+.stock-form > input {
   width: 85px;
 }
 .stock-form input,
@@ -1625,8 +1625,13 @@ nav button { flex-shrink:0; }
 @media (max-width:580px) { .dashboard-toggle-grid { grid-template-columns:1fr; } .dashboard-chart-choice { align-items:flex-start; flex-wrap:wrap; } .dashboard-chart-choice span { flex-basis:100%; } .dashboard-widget-list > div { grid-template-columns:auto minmax(0,1fr) auto auto; } }
 
 /* Owner operations */
-.stock-lot-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:10px; }
-.stock-lot-fields label { min-width:0; }
+/* Lot details take a full row of the stock form and size columns from the space actually available. */
+.stock-form { min-width:min(100%,250px); }
+.stock-form > select { flex:1 1 100%; min-width:0; }
+.stock-lot-fields { flex:1 1 100%; grid-column:1/-1; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr)); gap:10px 12px; margin-top:6px; padding:12px; border:1px solid #dfe8ec; border-radius:8px; background:#f7fafb; }
+.stock-lot-fields label { display:flex; flex-direction:column; gap:5px; min-width:0; color:#5b7480; font-size:11px; font-weight:600; }
+.stock-lot-fields input { width:100%; min-width:0; min-height:36px; }
+.stock-lot-fields input[type="date"] { min-width:min(100%,150px); }
 .stock-form details { margin:8px 0; }
 .stock-form summary { cursor:pointer; color:#426778; font-size:11px; font-weight:600; }
 .table-scroll { overflow-x:auto; }
@@ -1694,7 +1699,6 @@ nav button { flex-shrink:0; }
   .owner-workspace:has(.calendar-grid) { overflow-x:auto; }
 }
 @media (max-width:580px) {
-  .stock-lot-fields { grid-template-columns:1fr; }
   .prep-sheet-grid { grid-template-columns:1fr; }
   .prep-summary { grid-template-columns:repeat(2,1fr); }
   .prep-summary > div:nth-child(2) { border-right:0; }
@@ -1969,3 +1973,139 @@ nav button { flex-shrink:0; }
   .inline-preset-form { align-items:stretch; flex-direction:column; }
   .update-card { grid-template-columns:1fr; }
 }
+
+/* ==========================================================================
+   Phase 2 refinement: one spacing scale, readable type floors, aligned headers
+   ========================================================================== */
+:root {
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:24px; --space-6:32px;
+  --control-height:40px;
+}
+
+/* Page rhythm: heading -> tabs -> content use the same steps everywhere. */
+.content > .page-title { margin-bottom:var(--space-5); }
+.content > .planning-actions, .planning-workspace > .planning-actions { margin:var(--space-4) 0 var(--space-5); }
+.content > .section-top, .planning-workspace > .section-top { margin-bottom:var(--space-4); gap:var(--space-4); }
+.content > .section-top h2, .planning-workspace > .section-top h2 { margin:0; }
+.content > * + .panel, .planning-workspace > * + .panel, .planning-workspace > .panel + .recipe-grid { margin-top:var(--space-5); }
+.section-top { flex-wrap:wrap; }
+.section-top:has(+ .owner-dashboard) { margin-bottom:var(--space-2); }
+
+/* Dashboard header: the customise button used to sit on top of the month picker (negative margin hack). */
+.dashboard-actions { margin:0 0 var(--space-4); position:static; }
+.owner-dashboard { display:grid; gap:var(--space-5); }
+.owner-dashboard > * { margin-top:0; margin-bottom:0; }
+.owner-dashboard .today-board > div:first-child { margin-bottom:var(--space-3); }
+
+/* Metric cards: same height and baseline regardless of hint length. */
+.stats { gap:var(--space-4); align-items:stretch; }
+.stat { display:flex; flex-direction:column; justify-content:flex-start; min-width:0; }
+.stat strong { overflow-wrap:anywhere; line-height:1.1; }
+.stat small { margin-top:auto; font-size:11px; line-height:1.45; }
+.metric-strip { gap:0; }
+.metric-strip span { font-size:11px; }
+.metric-strip > div { min-width:0; }
+.metric-strip strong { overflow-wrap:anywhere; }
+.today-grid small { font-size:12px; }
+
+/* Panels: headings inside padded form panels must not add a second inset. */
+.panel-heading { padding:var(--space-4) var(--space-5); }
+.panel-heading p { font-size:12px; line-height:1.5; margin-top:var(--space-1); }
+.planning-form > .panel-heading, .quote-preview > .panel-heading { padding:0 0 var(--space-2); }
+.planning-form form { gap:var(--space-4); }
+.quote-preview h2 { margin:var(--space-4) 0; }
+
+/* Readable type floor for dense data (was 8-9px). */
+th { font-size:10px; letter-spacing:.08em; padding:var(--space-3) var(--space-4); white-space:nowrap; vertical-align:middle; }
+td { font-size:13px; padding:var(--space-3) var(--space-4); vertical-align:middle; }
+td small { font-size:11px; margin-top:var(--space-1); line-height:1.4; }
+th:first-child, td:first-child { padding-left:var(--space-5); }
+th:last-child, td:last-child { padding-right:var(--space-5); }
+.pill { font-size:10px; padding:4px 8px; }
+.eyebrow { font-size:10px; }
+/* Dates, quantities and amounts stay on one line; the first (name) column wraps and may be long. */
+.content td:not(:first-child) { white-space:nowrap; }
+.content td:has(form), .content td:has(.stock-form), .content td:has(textarea), .content td:has(.wrap-cell) { white-space:normal; }
+.content td:first-child { min-width:200px; overflow-wrap:anywhere; }
+.content td { font-variant-numeric:tabular-nums; }
+.num { text-align:right; font-variant-numeric:tabular-nums; }
+
+/* Saved quote / order cards: label left, amount right, actions grouped. */
+.saved-quote { display:flex; flex-direction:column; gap:var(--space-2); }
+.saved-quote > * { margin:0; }
+.saved-quote h3 { font-size:20px; line-height:1.3; overflow-wrap:anywhere; }
+.saved-quote > span.pill { align-self:flex-start; }
+.saved-quote dl { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--space-2) var(--space-4); margin:var(--space-2) 0; padding-top:var(--space-3); border-top:1px solid #e4ecf0; font-size:13px; }
+.saved-quote dt { color:#5c7482; }
+.saved-quote dd { margin:0; font-weight:600; text-align:right; font-variant-numeric:tabular-nums; }
+.saved-quote > button { align-self:flex-start; }
+.saved-quote form { margin:var(--space-2) 0 0; }
+.recipe-grid { gap:var(--space-5); align-items:stretch; }
+
+/* Forms: one control height and one label/field rhythm. */
+.modal label, .planning-form label { gap:6px; font-size:12px; font-weight:600; }
+.modal input, .modal select, .planning-form input, .planning-form select, .planning-form textarea { min-height:var(--control-height); }
+.modal textarea, .planning-form textarea { min-height:96px; }
+.modal input[type="checkbox"], .planning-form input[type="checkbox"] { min-height:0; }
+.form-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:0 var(--space-4); }
+.form-row > label { min-width:0; }
+.planning-form .form-row { row-gap:var(--space-4); }
+.modal label { margin-bottom:var(--space-4); }
+.modal form { padding:var(--space-5); }
+.modal .hint, .hint { font-size:11px; line-height:1.6; }
+.error { line-height:1.5; overflow-wrap:anywhere; }
+.section-top input, .section-top select { min-height:36px; }
+input[type="month"], input[type="date"] { min-width:150px; }
+button.primary, button.secondary, .modal-actions button { min-height:var(--control-height); }
+button.primary, button.secondary { padding-inline:var(--space-4); }
+
+/* Modal footer is always reachable, on every window size. */
+.modal { max-height:min(92vh,880px); }
+.modal-actions { position:sticky; bottom:calc(-1 * var(--space-5)); z-index:2; margin:var(--space-5) calc(-1 * var(--space-5)) calc(-1 * var(--space-5)); padding:var(--space-4) var(--space-5); background:#fff; flex-wrap:wrap; }
+@media (max-width:580px) {
+  .modal-actions { margin-inline:-17px; padding:var(--space-3) 17px; bottom:-17px; }
+  .modal form { padding:17px; }
+  .content > .planning-actions > button { flex:1 1 180px; }
+  .stat small { margin-top:var(--space-2); }
+}
+
+/* Inventory lots page tiles and any stats row that holds only 3 cards. */
+.stats.planning-stats { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+
+/* Card grids size from available width (a fixed repeat(3,1fr) forced overflow) and align card actions. */
+.recipe-grid { grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr)); gap:var(--space-5); }
+.recipe-card { display:flex; flex-direction:column; min-width:0; padding:var(--space-5); }
+.recipe-card h2 { overflow-wrap:anywhere; margin:0 0 var(--space-2); }
+.recipe-card > p { font-size:12px; margin:0 0 var(--space-1); }
+.recipe-card dl { font-size:12px; row-gap:var(--space-3); margin:var(--space-4) 0 var(--space-5); padding-top:var(--space-4); border-top:1px solid #e4ecf0; }
+.recipe-card-actions { margin-top:auto; flex-wrap:wrap; }
+.recipe-card dd { text-align:right; font-variant-numeric:tabular-nums; }
+
+/* Definition lists in form panels read as label/value rows, and section headers keep a gap before their search box. */
+.planning-form > dl, .planning-form dl.kv { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--space-2) var(--space-4); margin:var(--space-3) 0 var(--space-5); max-width:420px; font-size:13px; }
+.planning-form > dl dt { color:#5c7482; }
+.planning-form > dl dd { margin:0; font-weight:600; text-align:right; font-variant-numeric:tabular-nums; }
+.planning-form > h2 { margin:0 0 var(--space-3); }
+.planning-form > h2:not(:first-child) { margin-top:var(--space-5); }
+.planning-form > p { margin:0 0 var(--space-3); line-height:1.6; }
+.section-top { gap:var(--space-3) var(--space-4); }
+.section-top > input:not([type]), .section-top > input[type="search"], .section-top > input[type="text"] { flex:0 1 280px; min-width:160px; min-height:36px; }
+@media (max-height:900px) { .customer-layout > .planning-form { position:static; } }
+.customer-card dl { font-size:12px; gap:var(--space-2) var(--space-4); }
+.customer-card { padding:var(--space-5); }
+
+/* Bare panels that start with a heading (snapshot, report cards) previously had no inner padding. */
+.panel:where(:has(> h2:first-child)):not(.planning-form):not(.quote-preview):not(.saved-quote):not(.production-task):not(.customer-card):not(.recipe-card) { padding:var(--space-5); }
+.panel > h2:first-child { margin-top:0; }
+.stats.planning-stats:has(> :nth-child(6):last-child) { grid-template-columns:repeat(3,minmax(0,1fr)); }
+@media (max-width:700px) { .stats.planning-stats:has(> :nth-child(6):last-child) { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.planning-toolbar { align-items:flex-end; flex-wrap:wrap; }
+.planning-toolbar .planning-actions { align-items:flex-end; margin-top:0; }
+.planning-toolbar > label { display:flex; flex-direction:column; gap:6px; font-size:12px; font-weight:600; }
+.modal > .panel-heading { align-items:center; padding:var(--space-4) var(--space-5); }
+.modal > .panel-heading .icon-button { margin-top:0; }
+
+/* Stock form: a real minimum so the table column cannot collapse (percentages inside auto table cells resolve to 0). */
+.stock-form { min-width:250px; }
+/* Compact density must not inset full-bleed tables inside their panel. */
+:root[data-density="compact"] .panel.table-scroll, :root[data-density="compact"] .panel:has(> table), :root[data-density="compact"] .panel:has(> .table-scroll) { padding:0; }
