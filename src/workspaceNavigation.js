@@ -1,5 +1,5 @@
 export const sections = [
-  { name: "Overview", pages: ["Overview"] },
+  { name: "Overview", pages: ["Overview", "Goals & tasks"] },
   { name: "Sales", pages: ["Orders", "Quotes", "Customers", "Packing", "Documents", "Payments"] },
   {
     name: "Kitchen",
@@ -46,6 +46,12 @@ export const pages = {
       "See what needs attention today, then review your business performance.",
     action: "Record a sale",
     modal: "sale",
+  },
+  "Goals & tasks": {
+    label: "Goals & tasks",
+    description: "Keep owner follow-ups, deadlines and working business targets beside the daily bakery workflow.",
+    next: "Overview",
+    nextLabel: "Return to dashboard",
   },
   Orders: {
     label: "Orders",

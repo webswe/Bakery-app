@@ -1624,6 +1624,54 @@ nav button { flex-shrink:0; }
 @media (max-width:700px) { .custom-dashboard-grid { grid-template-columns:1fr; } .dashboard-wide { grid-column:auto; } .sales-mix { grid-template-columns:1fr; } .donut { margin:auto; } }
 @media (max-width:580px) { .dashboard-toggle-grid { grid-template-columns:1fr; } .dashboard-chart-choice { align-items:flex-start; flex-wrap:wrap; } .dashboard-chart-choice span { flex-basis:100%; } .dashboard-widget-list > div { grid-template-columns:auto minmax(0,1fr) auto auto; } }
 
+/* Owner goals and tasks */
+.owner-command-center { display:grid; gap:22px; }
+.goal-settings { padding:26px; }
+.goal-settings form { display:grid; gap:16px; }
+.task-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.task-summary > div { display:flex; align-items:center; justify-content:space-between; padding:18px; }
+.task-summary span { color:#647b87; font-size:11px; }
+.task-summary b { color:#304e5b; font-size:25px; }
+.task-summary .danger { border-color:#eccbc7; background:#fff8f7; }
+.task-summary .danger b { color:#a54c48; }
+.task-summary .warning { border-color:#ecd9b7; background:#fffaf0; }
+.task-summary .warning b { color:#a06b25; }
+.task-summary .positive b { color:var(--app-accent); }
+.owner-task-layout { display:grid; grid-template-columns:minmax(280px,.8fr) minmax(0,1.4fr); align-items:start; gap:22px; }
+.owner-task-form { position:sticky; top:92px; }
+.owner-task-list { display:grid; gap:10px; }
+.owner-task-list .section-top { margin:0 0 4px; }
+.owner-task-list select { padding:9px 11px; border:1px solid #d7e2e6; border-radius:6px; background:#fff; color:#536d79; }
+.owner-task { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:start; gap:12px; padding:16px; }
+.owner-task.completed { opacity:.6; }
+.owner-task.completed .task-title b { text-decoration:line-through; }
+.task-check { padding:0; border:0; background:transparent; color:var(--app-accent); }
+.task-title { display:flex; align-items:center; gap:8px; }
+.task-title b { color:#304d5a; }
+.owner-task p { margin:5px 0; color:#6b818c; font-size:10px; }
+.owner-task small { display:block; color:#526d79; line-height:1.5; white-space:pre-line; }
+.priority { padding:3px 6px; border-radius:999px; background:#edf1f3; color:#607884; font-size:8px; font-weight:700; text-transform:uppercase; }
+.priority.high { background:#f7e4e1; color:#a34d45; }
+.priority.low { background:#e8f0f4; color:#527283; }
+.task-actions { display:flex; gap:3px; }
+.goal-progress-list { display:grid; gap:18px; padding:0 23px 18px; }
+.goal-progress-list > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; }
+.goal-progress-list span { display:grid; gap:3px; color:#405e6a; font-size:11px; }
+.goal-progress-list small { color:#748994; font-size:9px; }
+.goal-progress-list strong { color:var(--app-accent); }
+.goal-progress-list i { grid-column:1/-1; height:7px; overflow:hidden; border-radius:5px; background:#e9eef0; }
+.goal-progress-list em { display:block; height:100%; border-radius:inherit; background:var(--app-accent); }
+.dashboard-card-link { margin:0 23px 20px; padding:0; color:var(--app-accent); }
+.dashboard-task-list { display:grid; padding:0 23px 16px; }
+.dashboard-task-list > div { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #edf1f3; }
+.dashboard-task-list i { width:8px; height:8px; border-radius:50%; background:#86a295; }
+.dashboard-task-list i.high,.dashboard-task-list i.overdue { background:#b95d57; }
+.dashboard-task-list i.low { background:#8ba4b0; }
+.dashboard-task-list span { display:grid; gap:3px; color:#3e5b68; font-size:11px; }
+.dashboard-task-list small,.dashboard-task-list p { color:#758a94; font-size:9px; }
+@media (max-width:850px) { .owner-task-layout { grid-template-columns:1fr; } .owner-task-form { position:static; } }
+@media (max-width:580px) { .task-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .goal-settings { padding:19px; } .owner-task { grid-template-columns:auto minmax(0,1fr); } .task-actions { grid-column:2; } }
+
 /* Owner operations */
 /* Lot details take a full row of the stock form and size columns from the space actually available. */
 .stock-form { min-width:min(100%,250px); }

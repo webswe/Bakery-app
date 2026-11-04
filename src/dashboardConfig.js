@@ -5,6 +5,8 @@ export const dashboardWidgets = [
   { id: "inventoryHealth", label: "Inventory health", description: "Healthy, low, and out-of-stock inventory." },
   { id: "productPerformance", label: "Product performance", description: "Revenue, profit, and margin by product." },
   { id: "costingHealth", label: "Costing health", description: "Conversion and recipe setup completeness." },
+  { id: "ownerGoals", label: "Owner goals", description: "Monthly revenue, profit and weekly batch progress." },
+  { id: "ownerTasks", label: "Owner tasks", description: "Overdue and upcoming follow-ups." },
 ];
 
 export const defaultDashboardConfig = {

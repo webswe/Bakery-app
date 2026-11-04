@@ -5,6 +5,7 @@ import { monthlySummary, previousMonth } from "./analytics.js";
 import { stockAlerts } from "./business.js";
 import DashboardCustomizer from "./DashboardCustomizer.jsx";
 import { normalizeDashboardConfig } from "./dashboardConfig.js";
+import { normalizeOwnerGoals, taskSummary } from "./ownerPlanning.js";
 
 const money = (value) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value || 0);
 
@@ -38,6 +39,13 @@ export default function Dashboard({ data, month, save, navigate }) {
   const lowStock = alerts.filter((item) => (item.stock || 0) > 0).length;
   const healthyStock = Math.max(0, data.items.length - outOfStock - lowStock);
   const totalStock = Math.max(1, data.items.length);
+  const day = new Date().toLocaleDateString("en-CA");
+  const tasks = taskSummary(data, day);
+  const goals = normalizeOwnerGoals(data.settings?.ownerGoals);
+  const startOfWeek = new Date(`${day}T12:00:00`);
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  const weekStart = startOfWeek.toLocaleDateString("en-CA");
+  const completedBatches = data.productionPlans.filter((plan) => plan.status === "completed" && plan.date >= weekStart && plan.date <= day).reduce((total, plan) => total + (Number(plan.batches) || 0), 0);
   const closeCustomizer = () => {
     save({ ...data, settings: { ...data.settings, dashboard: draft } });
     setCustomizing(false);
@@ -55,6 +63,8 @@ export default function Dashboard({ data, month, save, navigate }) {
     inventoryHealth: <section className="panel dashboard-card" key="inventoryHealth"><PanelHeading title="Inventory health" text="Current ingredient and packaging status." /><div className="inventory-health"><div className="stock-bar"><i className="healthy" style={{ width: `${healthyStock / totalStock * 100}%` }} /><i className="low" style={{ width: `${lowStock / totalStock * 100}%` }} /><i className="out" style={{ width: `${outOfStock / totalStock * 100}%` }} /></div><dl><div><dt>Healthy</dt><dd>{healthyStock}</dd></div><div><dt>Low / expiring</dt><dd>{lowStock}</dd></div><div><dt>Out of stock</dt><dd>{outOfStock}</dd></div></dl><button className="text-button" onClick={() => navigate("Inventory dashboard")}>Review inventory <ArrowUpRight size={14} /></button></div></section>,
     productPerformance: <section className="panel dashboard-card dashboard-wide" key="productPerformance"><PanelHeading title="Product performance" text="Ranked by revenue; profit excludes operating expenses." /><div className="table-scroll"><table><thead><tr><th>PRODUCT</th><th>PORTIONS</th><th>REVENUE</th><th>GROSS PROFIT</th><th>MARGIN</th></tr></thead><tbody>{grouped.map((item) => <tr key={item.name}><td><b>{item.name}</b><div className="performance-bar"><i style={{ width: `${item.revenue / maxRecipe * 100}%` }} /></div></td><td>{item.quantity}</td><td>{money(item.revenue)}</td><td>{money(item.revenue - item.cost)}</td><td>{item.revenue ? `${((item.revenue - item.cost) / item.revenue * 100).toFixed(1)}%` : "—"}</td></tr>)}</tbody></table></div>{!grouped.length && <p className="empty-inline">Record a sale to compare product performance.</p>}</section>,
     costingHealth: <section className="panel dashboard-card" key="costingHealth"><PanelHeading title="Costing health" text="Keep recipe estimates complete." /><div className="health-list"><div><span>Cup conversions</span><b>{data.items.filter((item) => item.type === "ingredient" && (item.gramsPerCup || item.density)).length} / {data.items.filter((item) => item.type === "ingredient").length}</b></div><div><span>Recipes</span><b>{data.recipes.length}</b></div><div><span>Food tax default</span><b>{data.taxRates.food}%</b></div><div><span>Other tax default</span><b>{data.taxRates.other}%</b></div></div></section>,
+    ownerGoals: <section className="panel dashboard-card" key="ownerGoals"><PanelHeading title="Owner goals" text="Working targets for this month and week." /><div className="goal-progress-list">{[["Monthly revenue", summary.revenue, goals.monthlyRevenue, money], ["Monthly profit", summary.profit, goals.monthlyProfit, money], ["Weekly batches", completedBatches, goals.weeklyBatches, String]].map(([label, value, target, format]) => <div key={label}><span><b>{label}</b><small>{target ? `${format(value)} of ${format(target)}` : "Set a target in Goals & tasks"}</small></span><strong>{target ? `${Math.min(999, Math.max(0, value / target * 100)).toFixed(0)}%` : "—"}</strong><i><em style={{ width: `${target ? Math.min(100, Math.max(0, value / target * 100)) : 0}%` }} /></i></div>)}</div><button className="text-button dashboard-card-link" onClick={() => navigate("Goals & tasks")}>Edit goals <ArrowUpRight size={14} /></button></section>,
+    ownerTasks: <section className="panel dashboard-card" key="ownerTasks"><PanelHeading title="Owner tasks" text={`${tasks.overdue.length} overdue · ${tasks.today.length} due today`} /><div className="dashboard-task-list">{[...tasks.overdue, ...tasks.today, ...tasks.upcoming].slice(0, 5).map((task) => <div key={task.id}><i className={task.dueDate < day ? "overdue" : task.priority} /><span><b>{task.title}</b><small>{task.category} · {task.dueDate}</small></span></div>)}{![...tasks.overdue, ...tasks.today, ...tasks.upcoming].length && <p>Nothing waiting. Your owner list is clear.</p>}</div><button className="text-button dashboard-card-link" onClick={() => navigate("Goals & tasks")}>Manage tasks <ArrowUpRight size={14} /></button></section>,
   };
 
   return <div className="owner-dashboard">

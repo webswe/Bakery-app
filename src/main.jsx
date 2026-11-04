@@ -21,6 +21,7 @@ import OwnerEnhancements from "./OwnerEnhancements.jsx";
 import QuickSearch from "./QuickSearch.jsx";
 import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
 import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
+import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
 import { resolveAppearance } from "./appearanceThemes.js";
 import { normalizeDashboardConfig } from "./dashboardConfig.js";
 import { verifyPin } from "./security.js";
@@ -654,6 +655,8 @@ function App() {
             <BusinessProfileWorkspace data={data} save={save} />
           ) : page === "App customization" ? (
             <AppCustomizationWorkspace data={data} save={save} />
+          ) : page === "Goals & tasks" ? (
+            <OwnerCommandCenter data={data} save={save} />
           ) : page === "App updates" ? (
             <UpdateWorkspace />
           ) : ["Daily snapshot", "Use soon", "Packing", "Batch yields", "Seasonal plans"].includes(page) ? (

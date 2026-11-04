@@ -42,6 +42,7 @@ export function migrateData(data) {
     productLots: data.productLots || [],
     productionBatches: data.productionBatches || [],
     seasonalPlans: data.seasonalPlans || [],
+    ownerTasks: data.ownerTasks || [],
     scalingPresets: data.scalingPresets || [],
     purchaseOrders: data.purchaseOrders || [],
     movements: data.movements || [],
