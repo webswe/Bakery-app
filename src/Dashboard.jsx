@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ArrowUpRight, Settings2 } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Settings2 } from "lucide-react";
 import { saleRevenue } from "./taxation.js";
 import { monthlySummary, previousMonth } from "./analytics.js";
 import { stockAlerts } from "./business.js";
@@ -77,7 +77,12 @@ export default function Dashboard({ data, month, save, navigate }) {
   </div>;
 }
 
-function PanelHeading({ title, text, badge }) { return <div className="panel-heading"><div><h2>{title}</h2><p>{text}</p></div>{badge && <span className="pill">{badge}</span>}</div>; }
+function PanelHeading({ title, text, badge }) {
+  const key = `bakery-ledger-dashboard-collapse-${title.toLocaleLowerCase().replaceAll(" ", "-")}`;
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(key) === "true");
+  const toggle = () => setCollapsed((value) => { localStorage.setItem(key, String(!value)); return !value; });
+  return <div className="panel-heading" data-collapsed={collapsed}><div><h2>{title}</h2><p>{text}</p></div>{badge && <span className="pill">{badge}</span>}<button className="icon-button collapse-card" onClick={toggle} aria-label={`${collapsed ? "Expand" : "Collapse"} ${title}`}><ChevronDown size={17} /></button></div>;
+}
 const mixColors = ["#315e56", "#d49a62", "#6e8faa", "#a97086", "#91a66f"];
 function salesMixGradient(rows) {
   const total = rows.reduce((sum, row) => sum + row.revenue, 0) || 1;

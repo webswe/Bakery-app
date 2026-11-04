@@ -11,6 +11,7 @@ import { localDate } from "./planning.js";
 import { readBackups } from "./backupStorage.js";
 import { migrateData } from "./analytics.js";
 import { orderPaid } from "./ownerOps.js";
+import PrintAction from "./PrintAction.jsx";
 import {
   removePurchaseOrder,
   removeScalingPreset,
@@ -350,9 +351,7 @@ function Shopping({ data, act }) {
         <button className="secondary" onClick={csv}>
           Export CSV
         </button>
-        <button className="secondary" onClick={() => window.print()}>
-          Print list
-        </button>
+        <PrintAction className="secondary">Preview list</PrintAction>
       </div>
       <section className="shopping-summary">
         <div><span>Suppliers</span><b>{suppliers.length}</b></div>
@@ -635,9 +634,7 @@ function Scaling({ data, act }) {
             {qty(scaled.electricityKwh)} kWh · Other overhead{" "}
             {money(scaled.overheadPerBatch)}
           </p>
-          <button className="secondary no-print" onClick={() => window.print()}>
-            Print scaled recipe
-          </button>
+          <PrintAction>Preview scaled recipe</PrintAction>
         </>
       )}
     </section>

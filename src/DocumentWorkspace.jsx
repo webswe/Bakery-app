@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { displayDocumentNumber } from "./documentOps.js";
 import { orderPaid } from "./ownerOps.js";
+import PrintAction from "./PrintAction.jsx";
 
 const money = (value) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value || 0);
@@ -44,7 +45,7 @@ export default function DocumentWorkspace({ data, context = {} }) {
             </select>
           </label>
         </div>
-        <button className="primary" disabled={!record} onClick={() => window.print()}>Print / Save PDF</button>
+        <PrintAction className="primary" disabled={!record}>Preview & print</PrintAction>
       </section>
       {record ? (
         <article className="panel business-document">

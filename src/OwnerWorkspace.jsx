@@ -12,6 +12,7 @@ import { localDate } from "./planning.js";
 import { createLock, verifyPin } from "./security.js";
 import { addDays } from "./productLots.js";
 import { priceChanges } from "./ownerFeatures.js";
+import PrintAction from "./PrintAction.jsx";
 
 const money = (n) =>
   new Intl.NumberFormat("en-US", {
@@ -158,9 +159,7 @@ function PrepSheets({ data }) {
           />
         </label>
       </div>
-      <button className="secondary no-print" onClick={() => window.print()}>
-        Print prep sheets & labels
-      </button>
+      <PrintAction>Preview prep sheets & labels</PrintAction>
       <div className="prep-sheet-grid">
         {plans.map((plan) => {
           const snapshot = plan.recipeSnapshot;
@@ -455,7 +454,7 @@ function Payments({ data, act }) {
               <dt>Balance</dt><dd>{money(order.total - orderPaid(data, order))}</dd>
             </dl>
           )}
-          <button className="secondary no-print" onClick={() => window.print()}>Print receipt</button>
+          <PrintAction>Preview receipt</PrintAction>
         </section>
       </div>
       <section className="panel table-scroll">

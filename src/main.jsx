@@ -22,6 +22,8 @@ import QuickSearch from "./QuickSearch.jsx";
 import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
 import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
+import { NotificationCenter, PinnedShortcuts, QuickActionMenu, UndoToast } from "./WorkspaceUtilities.jsx";
+import { readRecentPages, rememberPage } from "./qol.js";
 import { resolveAppearance } from "./appearanceThemes.js";
 import { normalizeDashboardConfig } from "./dashboardConfig.js";
 import { verifyPin } from "./security.js";
@@ -51,6 +53,7 @@ import {
   ChefHat,
   TrendingUp,
   Settings,
+  Star,
   X,
 } from "lucide-react";
 import { units, lineCost, recipeCost, convertItem } from "./costing.js";
@@ -58,6 +61,7 @@ import "./style.css";
 const uid = () => crypto.randomUUID();
 const lockKey = "bakery-ledger-lock-v1";
 const tutorialKey = "bakery-ledger-tutorial-v1";
+const modalDraftKey = (type, value) => `bakery-ledger-${type}-draft-${value?.id || "new"}-v1`;
 const readLock = () => {
   try {
     return JSON.parse(localStorage.getItem(lockKey)) || null;
@@ -163,18 +167,24 @@ function App() {
     () => !localStorage.getItem(tutorialKey),
   );
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [savedAt, setSavedAt] = useState(null);
+  const [undo, setUndo] = useState(null);
+  const [recentPages, setRecentPages] = useState(() => readRecentPages(localStorage));
   const quickNav = useRef(null);
   const [page, setPage] = useState(() => readRoute(window.location.hash).page),
     [routeContext, setRouteContext] = useState(
       () => readRoute(window.location.hash).context,
     ),
     [modal, setModal] = useState(null),
+    [modalDirty, setModalDirty] = useState(false),
     [error, setError] = useState(""),
     [month, setMonth] = useState(today().slice(0, 7));
   const section = sectionFor(page),
     info = pages[page];
   function navigate(nextPage, context = {}) {
+    if (modalDirty && !confirm("Leave this unsaved draft? It will remain available to recover later.")) return;
     setModal(null);
+    setModalDirty(false);
     setPage(nextPage);
     setRouteContext(context);
     setError("");
@@ -197,6 +207,27 @@ function App() {
       .querySelector('.workspace-tabs [aria-current="page"]')
       ?.scrollIntoView({ block: "nearest", inline: "center" });
     window.scrollTo(0, 0);
+  }, [page]);
+  useEffect(() => {
+    setRecentPages((current) => rememberPage(localStorage, current, page));
+  }, [page]);
+  useEffect(() => {
+    const key = `bakery-ledger-table-widths-${page}`;
+    const apply = setTimeout(() => {
+      try {
+        const widths = JSON.parse(localStorage.getItem(key)) || [];
+        document.querySelectorAll(".content table").forEach((table, tableIndex) => table.querySelectorAll("th").forEach((cell, cellIndex) => {
+          if (widths[tableIndex]?.[cellIndex]) cell.style.width = `${widths[tableIndex][cellIndex]}px`;
+        }));
+      } catch { /* use natural table widths */ }
+    });
+    const remember = (event) => {
+      if (!event.target.closest(".content th")) return;
+      const widths = [...document.querySelectorAll(".content table")].map((table) => [...table.querySelectorAll("th")].map((cell) => Math.round(cell.getBoundingClientRect().width)));
+      localStorage.setItem(key, JSON.stringify(widths));
+    };
+    document.addEventListener("pointerup", remember);
+    return () => { clearTimeout(apply); document.removeEventListener("pointerup", remember); };
   }, [page]);
   const appearance = resolveAppearance(data.settings?.appearance);
   const dashboardConfig = normalizeDashboardConfig(data.settings?.dashboard);
@@ -265,6 +296,7 @@ function App() {
     try {
       persistWorkspace(localStorage, next, today(), restoring);
       setData(next);
+      setSavedAt(new Date());
       setError("");
       return true;
     } catch {
@@ -272,9 +304,40 @@ function App() {
       return false;
     }
   }
+  function saveWithUndo(next, message) {
+    const previous = data;
+    if (save(next)) setUndo({ previous, message });
+  }
+  const pinnedPages = data.settings?.qol?.pinnedPages || [];
+  function togglePinnedPage(target) {
+    const next = pinnedPages.includes(target) ? pinnedPages.filter((item) => item !== target) : [...pinnedPages, target].slice(-8);
+    save({ ...data, settings: { ...data.settings, qol: { ...data.settings?.qol, pinnedPages: next } } });
+  }
   function open(type, value) {
     setError("");
-    setModal({ type, value });
+    let nextValue = value;
+    let restoredDraft = false;
+    if (["item", "recipe"].includes(type)) {
+      try {
+        const draft = JSON.parse(localStorage.getItem(modalDraftKey(type, value)));
+        if (draft) { nextValue = { ...(value || {}), ...draft }; restoredDraft = true; }
+      } catch { /* ignore unreadable draft */ }
+    }
+    setModalDirty(false);
+    setModal({ type, value: nextValue, restoredDraft });
+  }
+  function saveModalDraft(event) {
+    if (!modal || !["item", "recipe"].includes(modal.type)) return;
+    const form = event.currentTarget;
+    const draft = Object.fromEntries(new FormData(form));
+    if (modal.type === "recipe") draft.lines = [...form.querySelectorAll("[data-line]")].map((row) => ({ itemId: row.querySelector('[name="itemId"]')?.value, amount: row.querySelector('[name="quantity"]')?.value, unit: row.querySelector('[name="lineUnit"]')?.value }));
+    localStorage.setItem(modalDraftKey(modal.type, modal.value), JSON.stringify(draft));
+    setModalDirty(true);
+  }
+  function closeModal() {
+    if (modalDirty && !confirm("Close this form? Your draft will remain saved on this device.")) return;
+    setModalDirty(false);
+    setModal(null);
   }
   function deleteInventoryItem(item) {
     let next;
@@ -290,10 +353,8 @@ function App() {
       )
     )
       return;
-    if (
-      save(next)
-    )
-      setModal(null);
+    saveWithUndo(next, `${item.name} deleted from inventory.`);
+    setModal(null);
   }
   function cost(r) {
     try {
@@ -448,6 +509,8 @@ function App() {
             { id: uid(), date: f.date, name: f.name, amount: +f.amount },
           ],
         });
+      if (["item", "recipe"].includes(modal.type)) localStorage.removeItem(modalDraftKey(modal.type, modal.value));
+      setModalDirty(false);
       setModal(null);
     } catch (err) {
       setError(err.message);
@@ -494,6 +557,7 @@ function App() {
     );
   return (
     <div className="app">
+      <a className="skip-link" href="#workspace-title">Skip to workspace content</a>
       <aside>
         <a
           className="brand"
@@ -568,9 +632,11 @@ function App() {
             Workspace <span className="slash">/</span> <b>{section.name}</b>
           </span>
           <div className="header-tools">
-            <QuickSearch ref={quickNav} data={data} navigate={navigate} />
+            <QuickSearch ref={quickNav} data={data} navigate={navigate} openAction={open} recentPages={recentPages} />
+            <QuickActionMenu open={open} navigate={navigate} />
+            <NotificationCenter data={data} navigate={navigate} />
             <UpdateStatusBadge />
-            <span className="save-indicator"><span className="status-dot" /> Saved locally</span>
+            <span className="save-indicator" role="status" aria-live="polite" title={savedAt ? savedAt.toLocaleString() : "Loaded from this device"}><span className="status-dot" />{savedAt ? "Saved just now" : "Saved locally"}</span>
           <span className="header-avatar">{bakeryInitial}</span>
           </div>
         </header>
@@ -588,7 +654,7 @@ function App() {
               </h1>
               <p>{info.description}</p>
             </div>
-            {info.action && (
+            <div className="page-actions"><button className={pinnedPages.includes(page) ? "pin-page pinned" : "pin-page"} onClick={() => togglePinnedPage(page)} aria-label={`${pinnedPages.includes(page) ? "Unpin" : "Pin"} ${info.label}`} title="Pin this page"><Star size={16} fill={pinnedPages.includes(page) ? "currentColor" : "none"} /></button>{info.action && (
               <button
                 className="primary"
                 onClick={() =>
@@ -601,7 +667,7 @@ function App() {
                 <Plus size={17} />
                 {info.action}
               </button>
-            )}
+            )}</div>
           </div>
           {section.pages.length > 1 && (
             <nav
@@ -620,6 +686,7 @@ function App() {
               ))}
             </nav>
           )}
+          <PinnedShortcuts pinned={pinnedPages} recent={recentPages} navigate={navigate} onUnpin={togglePinnedPage} />
           {info.next && appearance.showTips && (
             <div className="workflow-handoff">
               <span>
@@ -820,7 +887,7 @@ function App() {
                               className="icon-button"
                               onClick={() => {
                                 if (confirm("Delete this transaction?"))
-                                  save({
+                                  saveWithUndo({
                                     ...data,
                                     products: s.stockTracked
                                       ? {
@@ -847,7 +914,7 @@ function App() {
                                     expenses: data.expenses.filter(
                                       (x) => x.id !== s.id,
                                     ),
-                                  });
+                                  }, `${s.type} deleted.`);
                               }}
                             >
                               <Trash2 size={15} />
@@ -878,10 +945,12 @@ function App() {
               page={page}
               open={open}
               recipeCost={cost}
+              save={save}
             />
           )}
         </div>
       </main>
+      <UndoToast value={undo} onUndo={() => { if (undo?.previous) save(undo.previous); setUndo(null); }} onClose={() => setUndo(null)} />
       {modal && (
         <div className="overlay">
           <section
@@ -890,7 +959,7 @@ function App() {
             aria-modal="true"
             aria-labelledby="modal-title"
             onKeyDown={(e) => {
-              if (e.key === "Escape") setModal(null);
+              if (e.key === "Escape") closeModal();
               if (e.key === "Tab") {
                 const nodes = e.currentTarget.querySelectorAll(
                   "button:not(:disabled), input:not([hidden]), select, textarea",
@@ -917,17 +986,18 @@ function App() {
                       ? "Recipe studio"
                       : modal.type === "sale"
                         ? "Record a sale"
-                        : "Record an expense"}
+                        : "Record an expense"}{modalDirty ? " • Unsaved draft" : ""}
               </h2>
               <button
                 className="icon-button"
                 aria-label="Close"
-                onClick={() => setModal(null)}
+                onClick={closeModal}
               >
                 <X />
               </button>
             </div>
-            <form onSubmit={submit}>
+            <form onSubmit={submit} onInput={saveModalDraft}>
+              {modal.restoredDraft && <p className="draft-status">Recovered your autosaved draft.</p>}
               {modal.type === "tax" ? (
                 <>
                   <p className="hint">

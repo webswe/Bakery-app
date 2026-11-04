@@ -1,6 +1,6 @@
 {
   "name": "bakery-ledger",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "description": "Recipes, costing and profit tracking for small bakeries",
   "main": "desktop.cjs",
   "author": "Bakery Ledger",
@@ -35,6 +35,7 @@
       "dist/**/*",
       "desktop.cjs",
       "preload.cjs",
+      "release-notes.cjs",
       "build/icon.png",
       "package.json"
     ],

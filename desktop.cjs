@@ -1,18 +1,13 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const { autoUpdater } = require("electron-updater");
 const path = require("node:path");
+const { releaseNotes } = require("./release-notes.cjs");
 
 let mainWindow;
 let updateState = {
   state: "idle",
   currentVersion: app.getVersion(),
   message: "Bakery Ledger is up to date.",
-};
-
-const releaseNotes = (info) => {
-  if (Array.isArray(info?.releaseNotes))
-    return info.releaseNotes.map((entry) => entry.note || "").filter(Boolean).join("\n\n");
-  return typeof info?.releaseNotes === "string" ? info.releaseNotes : "";
 };
 
 const publishStatus = (patch) => {

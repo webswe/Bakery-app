@@ -1,5 +1,5 @@
 import { purchaseTax } from "./taxation.js";
-import React, { useDeferredValue, useMemo, useState } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
   localDate,
   inventoryForecast,
@@ -60,7 +60,8 @@ export default function PlanningWorkspace({ data, save, tab, open, navigate, con
 function InventoryDashboard({ data, open }) {
   const [through, setThrough] = useState(nextWeek),
     [search, setSearch] = useState(""),
-    [filter, setFilter] = useState("all");
+    [filter, setFilter] = useState(() => localStorage.getItem("bakery-ledger-inventory-filter") || "all");
+  useEffect(() => localStorage.setItem("bakery-ledger-inventory-filter", filter), [filter]);
   const deferredSearch = useDeferredValue(search).toLocaleLowerCase();
   const forecast = useMemo(
     () => inventoryForecast(data, through || localDate()),
@@ -255,6 +256,7 @@ function RecipeSelect({ data, value, onChange }) {
   );
 }
 function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
+  const draftKey = "bakery-ledger-quote-draft-v1";
   const initialCustomer = data.customers?.find((customer) => customer.id === initialCustomerId);
   const empty = () => ({
     recipeId: data.recipes[0]?.id || "",
@@ -267,10 +269,20 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
     notes: "",
     date: localDate(),
   });
-  const [form, setForm] = useState(empty),
+  const [form, setForm] = useState(() => {
+      try {
+        const draft = JSON.parse(localStorage.getItem(draftKey));
+        return initialCustomer ? empty() : { ...empty(), ...(draft || {}) };
+      } catch {
+        return empty();
+      }
+    }),
     [editing, setEditing] = useState(null),
     [notice, setNotice] = useState(""),
     [visibleQuotes, setVisibleQuotes] = useState(30);
+  useEffect(() => {
+    if (!editing) localStorage.setItem(draftKey, JSON.stringify(form));
+  }, [form, editing]);
   const change = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
     setNotice("");
@@ -282,6 +294,7 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
     problem = e.message;
   }
   function reset() {
+    localStorage.removeItem(draftKey);
     setForm(empty());
     setEditing(null);
   }
@@ -304,6 +317,7 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
               }
             }}
           >
+            {!editing && localStorage.getItem(draftKey) && <p className="draft-status">Draft autosaved on this device.</p>}
             <RecipeSelect
               data={data}
               value={form.recipeId}
