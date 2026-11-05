@@ -31,6 +31,7 @@ import { ensureCustomer } from "./customerOps.js";
 import { parseQuantity } from "./quantity.js";
 import { removeInventoryItem } from "./inventoryCatalog.js";
 import { restoreProductLots } from "./productLots.js";
+import { recipeSaleDetails } from "./recipePricing.js";
 import {
   sections,
   pages,
@@ -467,12 +468,19 @@ function App() {
         if (!lines.length)
           throw Error("Add at least one ingredient or packaging item.");
         lines.forEach((l) => lineCost(l, data.items));
+        const saleQuantity = f.saleFormat === "dozen" ? 12 : Number(f.saleQuantity) || 1;
+        const salePrice = Number(f.salePrice);
+        if (!(saleQuantity >= 1) || saleQuantity > +f.yield) throw Error("Selling-unit quantity must be between 1 and the batch yield.");
+        if (!(salePrice >= 0)) throw Error("Enter a valid selling price.");
         const r = {
           id: modal.value?.id || uid(),
           name: f.name,
           category: f.category,
           yield: +f.yield,
-          price: +f.price,
+          price: salePrice / saleQuantity,
+          saleFormat: f.saleFormat,
+          saleQuantity,
+          salePrice,
           allergens: f.allergens.trim(),
           equipment: f.equipment.trim(),
           method: f.method.trim(),
@@ -1408,11 +1416,17 @@ function ItemFields({ item: i = {}, taxRates }) {
   );
 }
 function RecipeFields({ recipe: r = {}, items }) {
+  const savedSale = recipeSaleDetails(r);
   const [lines, setLines] = useState(
       (r.lines || []).map((l) => ({ ...l, key: uid() })),
     ),
-    [yieldN, setYield] = useState(r.yield || 1);
-  let total = 0;
+    [yieldN, setYield] = useState(r.yield || 1),
+    [saleFormat, setSaleFormat] = useState(savedSale.format),
+    [saleQuantity, setSaleQuantity] = useState(savedSale.quantity),
+    [salePrice, setSalePrice] = useState(savedSale.salePrice);
+  let total = 0,
+    ingredientTotal = 0,
+    packagingTotal = 0;
   return (
     <>
       <div className="recipe-editor-intro">
@@ -1453,17 +1467,18 @@ function RecipeFields({ recipe: r = {}, items }) {
           />
         </label>
       </div>
-      <label>
-        Selling price per portion ($)
-        <input
-          name="price"
-          type="number"
-          min="0"
-          step="0.01"
-          defaultValue={r.price || 0}
-          required
-        />
-      </label>
+      <div className="conversion-box recipe-selling-box">
+        <h3>Selling format</h3>
+        <p>Choose how the customer buys this dessert. Bakery Ledger still tracks finished stock by individual sellable portions.</p>
+        <div className="form-row">
+          <label>Sold as<select name="saleFormat" value={saleFormat} onChange={(event) => { const format = event.target.value; setSaleFormat(format); if (format === "dozen") setSaleQuantity(12); if (["individual", "slice"].includes(format)) setSaleQuantity(1); }}><option value="individual">Individual dessert</option><option value="slice">Slice</option><option value="box">Box</option><option value="tray">Tray</option><option value="dozen">Dozen</option><option value="custom">Custom selling unit</option></select></label>
+          <label>Desserts / portions in one selling unit<input name="saleQuantity" type="number" min="1" max={yieldN} step="1" value={saleQuantity} disabled={["individual", "slice", "dozen"].includes(saleFormat)} onChange={(event) => setSaleQuantity(+event.target.value)} required /></label>
+        </div>
+        {["individual", "slice", "dozen"].includes(saleFormat) && <input name="saleQuantity" type="hidden" value={saleQuantity} />}
+        <label>Customer price for one {saleFormat === "individual" ? "dessert" : saleFormat === "custom" ? "selling unit" : saleFormat} ($)<input name="salePrice" type="number" min="0" step="0.01" value={salePrice} onChange={(event) => setSalePrice(event.target.value)} required /></label>
+        <div className="price-equivalent"><span>Equivalent price per dessert / portion</span><b>{money((Number(salePrice) || 0) / Math.max(1, saleQuantity))}</b></div>
+        <p className="hint">Ingredient and packaging lines below are batch quantities. Their costs, plus labor, utilities and overhead, are divided across the batch yield automatically.</p>
+      </div>
       <label>
         Allergens
         <input
@@ -1565,6 +1580,8 @@ function RecipeFields({ recipe: r = {}, items }) {
         try {
           result = lineCost({ ...l, amount: parseQuantity(l.amount) }, items);
           total += result.cost;
+          if (items.find((item) => item.id === l.itemId)?.type === "packaging") packagingTotal += result.cost;
+          else ingredientTotal += result.cost;
         } catch (e) {
           err = e.message;
         }
@@ -1631,7 +1648,13 @@ function RecipeFields({ recipe: r = {}, items }) {
       </button>
       <div className="cost-summary">
         <span>
-          Ingredients & packaging <b>{money(total)}</b>
+          Ingredients <b>{money(ingredientTotal)}</b>
+        </span>
+        <span>
+          Packaging <b>{money(packagingTotal)}</b>
+        </span>
+        <span>
+          Materials total <b>{money(total)}</b>
         </span>
         <span>
           Per portion <b>{yieldN > 0 ? money(total / yieldN) : "—"}</b>

@@ -25,8 +25,14 @@ export function previousMonth(month) {
   return `${m === 1 ? y - 1 : y}-${String(m === 1 ? 12 : m - 1).padStart(2, "0")}`;
 }
 export function migrateData(data) {
+  const recipes = (data.recipes || []).map((recipe) => {
+    const saleFormat = recipe.saleFormat || "individual";
+    const saleQuantity = saleFormat === "dozen" ? 12 : Math.max(1, Number(recipe.saleQuantity) || 1);
+    return { ...recipe, saleFormat, saleQuantity, salePrice: Number.isFinite(Number(recipe.salePrice)) ? Number(recipe.salePrice) : (Number(recipe.price) || 0) * saleQuantity };
+  });
   return {
     ...data,
+    recipes,
     salesTaxRate: data.salesTaxRate ?? 0,
     orders: data.orders || [],
     customers: data.customers || [],

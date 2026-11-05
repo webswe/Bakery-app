@@ -1,22 +1,27 @@
 import { directSaleTotals, purchaseTax } from "./taxation.js";
 import { receiveInventory, reconcileLots } from "./inventoryLots.js";
 import { finishedProductAlerts } from "./productLots.js";
-import React, { useDeferredValue, useState } from "react";
+import React, { useDeferredValue, useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { addPresets, availability, produce, fullCost } from "./operations.js";
+import { recipeSaleDetails } from "./recipePricing.js";
 const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     n,
   );
 export function SaleFields({ data }) {
   const [id, setId] = useState(data.recipes[0]?.id || ""),
-    [qty, setQty] = useState(1),
+    [sellingUnits, setSellingUnits] = useState(1),
     [discount, setDiscount] = useState(0),
     [rate, setRate] = useState(data.salesTaxRate ?? 0),
     [customerId, setCustomerId] = useState(""),
     [customerName, setCustomerName] = useState("");
   const r = data.recipes.find((x) => x.id === id),
     stock = data.products[id]?.quantity || 0;
+  const sale = recipeSaleDetails(r);
+  const qty = sellingUnits * sale.quantity;
+  const availableSellingUnits = Math.floor(stock / sale.quantity);
+  useEffect(() => setSellingUnits(1), [id]);
   let totals, issue;
   try {
     totals = directSaleTotals(r?.price || 0, qty, discount, rate);
@@ -43,15 +48,14 @@ export function SaleFields({ data }) {
       </label>
       <div className="form-row">
         <label>
-          Quantity
+          Quantity ({sale.label}{sellingUnits === 1 ? "" : "s"})
           <input
-            name="quantity"
             type="number"
             min="1"
-            max={stock || 1}
+            max={availableSellingUnits || 1}
             step="1"
-            value={qty}
-            onChange={(e) => setQty(+e.target.value)}
+            value={sellingUnits}
+            onChange={(e) => setSellingUnits(+e.target.value)}
             required
           />
         </label>
@@ -60,13 +64,15 @@ export function SaleFields({ data }) {
           <input
             type="number"
             min="0"
-            max={(r?.price || 0) * qty}
+            max={sale.salePrice * sellingUnits}
             step="0.01"
             value={discount}
             onChange={(e) => setDiscount(+e.target.value)}
           />
         </label>
       </div>
+      <input type="hidden" name="quantity" value={qty} />
+      <div className="sale-unit-summary"><span>{sellingUnits} {sale.label}{sellingUnits === 1 ? "" : "s"}</span><b>{qty} individual portion{qty === 1 ? "" : "s"}</b><small>{money(sale.salePrice)} per {sale.label}. Packaging recipe lines are already included in captured production cost.</small></div>
       <label>
         Customer sales tax (%)
         <input
