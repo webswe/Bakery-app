@@ -1,5 +1,6 @@
 import React, { useDeferredValue, useMemo, useState } from "react";
 import { customerActivity, saveCustomer } from "./customerOps.js";
+import { localDate, saveQuote } from "./planning.js";
 
 const money = (value) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value || 0);
@@ -70,6 +71,7 @@ export default function CustomerWorkspace({ data, save, navigate }) {
           <div className="customer-list">
             {customers.map((customer) => {
               const activity = customerActivity(data, customer);
+              const lastOrder = [...activity.orders].sort((a, b) => (b.pickupDate || "").localeCompare(a.pickupDate || ""))[0];
               return (
                 <article className="panel customer-card" key={customer.id}>
                   <div>
@@ -87,6 +89,14 @@ export default function CustomerWorkspace({ data, save, navigate }) {
                   <div className="planning-actions">
                     <button className="secondary" onClick={() => setEditing(customer.id)}>Edit</button>
                     <button className="text-button" onClick={() => navigate("Quotes", { customerId: customer.id })}>Create quote</button>
+                    {lastOrder && <button className="text-button" onClick={() => {
+                      const source = data.quotes.find((quote) => quote.id === lastOrder.quoteId);
+                      if (!source) return;
+                      try {
+                        const next = saveQuote(data, { recipeId: source.recipeId, portions: source.snapshot.portions, margin: source.margin ?? 30, extraCost: source.extraCost || 0, taxRate: source.taxRate ?? data.salesTaxRate ?? 0, customer: customer.name, customerId: customer.id, notes: `Reorder based on ${lastOrder.orderNumber || "previous order"}. ${source.notes || ""}`.trim(), date: localDate() });
+                        if (save(next) !== false) navigate("Quotes");
+                      } catch (error) { setError(error.message); }
+                    }}>Repeat last order</button>}
                   </div>
                 </article>
               );

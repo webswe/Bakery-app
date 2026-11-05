@@ -12,7 +12,11 @@ export const sections = [
       "Can make",
       "Product stock",
       "Recipes",
+      "Recipe lab",
+      "Allergen matrix",
       "Recipe scaling",
+      "Capacity planner",
+      "Kitchen timers",
       "Seasonal plans",
     ],
   },
@@ -24,6 +28,7 @@ export const sections = [
       "Inventory lots",
       "Supplier prices",
       "Shopping list",
+      "Purchase orders",
       "Ingredients",
       "Packaging",
       "Waste & expiry",
@@ -32,11 +37,11 @@ export const sections = [
   },
   {
     name: "Reports",
-    pages: ["Daily snapshot", "Owner forecast", "Tax report", "Waste analysis"],
+    pages: ["Daily snapshot", "Daily closeout", "Owner forecast", "Menu profitability", "Tax report", "Waste analysis"],
   },
   {
     name: "Settings",
-    pages: ["Tutorial", "Business profile", "App customization", "Cost settings", "Tax settings", "App updates", "Backups", "Security"],
+    pages: ["Tutorial", "Business profile", "App customization", "Cost settings", "Tax settings", "Equipment care", "Archive", "App updates", "Backups", "Security"],
   },
 ];
 export const pages = {
@@ -139,6 +144,10 @@ export const pages = {
     next: "Recipe scaling",
     nextLabel: "Scale a recipe",
   },
+  "Recipe lab": { label: "Recipe lab", description: "Manage pricing scenarios, customer tiers, reusable recipe components, packaging presets and recipe history." },
+  "Allergen matrix": { label: "Allergen matrix", description: "Review recorded allergens across the whole menu before planning, labeling or quoting." },
+  "Capacity planner": { label: "Capacity planner", description: "Compare scheduled production with prep, oven, decorating and packing time." },
+  "Kitchen timers": { label: "Kitchen timers", description: "Run named bake, rest, proof and cooling timers beside the production plan." },
   "Recipe scaling": {
     label: "Recipe scaling",
     description:
@@ -183,6 +192,7 @@ export const pages = {
     next: "Inventory",
     nextLabel: "Receive purchases",
   },
+  "Purchase orders": { label: "Purchase orders", description: "Track supplier order drafts from planned through received and closed." },
   Ingredients: {
     label: "Ingredients",
     description:
@@ -216,6 +226,8 @@ export const pages = {
     label: "Daily snapshot",
     description: "Review one day of sales, costs, payments, tax and kitchen output.",
   },
+  "Daily closeout": { label: "Daily closeout", description: "Complete the owner checklist and leave tomorrow's first priority." },
+  "Menu profitability": { label: "Menu profitability", description: "Rank menu items by sales, margin and profit earned per labor hour." },
   "Owner forecast": {
     label: "Owner forecast",
     description:
@@ -236,6 +248,8 @@ export const pages = {
     description:
       "Set wage and electricity assumptions for future production and quotes.",
   },
+  "Equipment care": { label: "Equipment care", description: "Track bakery equipment, service dates and maintenance history." },
+  Archive: { label: "Archive", description: "Move old completed work out of daily views while keeping it restorable in backups." },
   Tutorial: {
     label: "Getting started",
     description:

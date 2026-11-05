@@ -22,6 +22,8 @@ import QuickSearch from "./QuickSearch.jsx";
 import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
 import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
+import BakeryOperationsWorkspace from "./BakeryOperationsWorkspace.jsx";
+import { saveRecipePreset, saveRecipeRevision } from "./bakeryOperations.js";
 import { NotificationCenter, PinnedShortcuts, QuickActionMenu, UndoToast } from "./WorkspaceUtilities.jsx";
 import { readRecentPages, rememberPage } from "./qol.js";
 import { resolveAppearance } from "./appearanceThemes.js";
@@ -495,8 +497,9 @@ function App() {
           electricityKwh: +f.electricityKwh || 0,
           overheadPerBatch: +f.overheadPerBatch || 0,
         };
+        const withRevision = saveRecipeRevision(data, modal.value, r);
         persist({
-          ...data,
+          ...withRevision,
           recipes: [...data.recipes.filter((x) => x.id !== r.id), r],
         });
       }
@@ -734,6 +737,8 @@ function App() {
             <OwnerCommandCenter data={data} save={save} />
           ) : page === "App updates" ? (
             <UpdateWorkspace />
+          ) : ["Recipe lab", "Allergen matrix", "Capacity planner", "Kitchen timers", "Daily closeout", "Equipment care", "Menu profitability", "Purchase orders", "Archive"].includes(page) ? (
+            <BakeryOperationsWorkspace data={data} save={save} page={page} open={open} navigate={navigate} />
           ) : ["Daily snapshot", "Use soon", "Packing", "Batch yields", "Seasonal plans"].includes(page) ? (
             <OwnerEnhancements data={data} save={save} page={page} navigate={navigate} />
           ) : [
@@ -1072,7 +1077,7 @@ function App() {
               ) : modal.type === "item" ? (
                 <ItemFields item={modal.value} taxRates={data.taxRates} />
               ) : modal.type === "recipe" ? (
-                <RecipeFields recipe={modal.value} items={data.items} />
+                <RecipeFields recipe={modal.value} items={data.items} data={data} save={save} />
               ) : modal.type === "sale" ? (
                 <SaleFields data={data} />
               ) : (
@@ -1415,7 +1420,7 @@ function ItemFields({ item: i = {}, taxRates }) {
     </>
   );
 }
-function RecipeFields({ recipe: r = {}, items }) {
+function RecipeFields({ recipe: r = {}, items, data, save }) {
   const savedSale = recipeSaleDetails(r);
   const [lines, setLines] = useState(
       (r.lines || []).map((l) => ({ ...l, key: uid() })),
@@ -1575,6 +1580,9 @@ function RecipeFields({ recipe: r = {}, items }) {
         napkins. Decimals and fractions such as 0.5, 1/2, 1 1/2, and ½ are
         accepted. Cost reflects the amount used; packages show what you need to buy.
       </p>
+      <div className="recipe-preset-tools">
+        {[...(data.recipeComponents || []).map((preset) => ({ ...preset, kind: "component" })), ...(data.packagingPresets || []).map((preset) => ({ ...preset, kind: "packaging" }))].map((preset) => <button type="button" className="preset-chip" key={preset.id} onClick={() => setLines([...lines, ...preset.lines.map((line) => ({ ...line, key: uid() }))])}>+ {preset.name} <small>{preset.kind === "component" ? "sub-recipe" : "packaging"}</small></button>)}
+      </div>
       {lines.map((l, index) => {
         let result, err;
         try {
@@ -1646,6 +1654,7 @@ function RecipeFields({ recipe: r = {}, items }) {
         <Plus size={16} />
         Add ingredient or packaging
       </button>
+      {!!lines.length && <div className="preset-save-actions"><span>Reuse these lines in other recipes:</span><button type="button" className="text-button" onClick={() => { const name = prompt("Name this sub-recipe (for example, Vanilla buttercream)"); if (name) save(saveRecipePreset(data, "component", { name, lines: lines.filter((line) => items.find((item) => item.id === line.itemId)?.type !== "packaging").map(({ itemId, amount, unit }) => ({ itemId, amount, unit })) })); }}>Save ingredients as sub-recipe</button><button type="button" className="text-button" onClick={() => { const name = prompt("Name this packaging preset (for example, Market box kit)"); if (name) save(saveRecipePreset(data, "packaging", { name, lines: lines.filter((line) => items.find((item) => item.id === line.itemId)?.type === "packaging").map(({ itemId, amount, unit }) => ({ itemId, amount, unit })) })); }}>Save packaging preset</button></div>}
       <div className="cost-summary">
         <span>
           Ingredients <b>{money(ingredientTotal)}</b>
