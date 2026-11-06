@@ -23,7 +23,6 @@ import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
 import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
 import SupportWorkspace from "./SupportWorkspace.jsx";
-import BakeryOperationsWorkspace from "./BakeryOperationsWorkspace.jsx";
 import { saveRecipePreset, saveRecipeRevision } from "./bakeryOperations.js";
 import { NotificationCenter, PinnedShortcuts, QuickActionMenu, UndoToast } from "./WorkspaceUtilities.jsx";
 import { readRecentPages, rememberPage } from "./qol.js";
@@ -42,7 +41,7 @@ import {
   readRoute,
   routeHash,
 } from "./workspaceNavigation.js";
-import React, { useState, useEffect, useRef } from "react";
+import React, { lazy, Suspense, useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
   LayoutDashboard,
@@ -62,6 +61,8 @@ import {
 } from "lucide-react";
 import { units, lineCost, recipeCost, convertItem } from "./costing.js";
 import "./style.css";
+const OwnerToolkitWorkspace = lazy(() => import("./OwnerToolkitWorkspace.jsx"));
+const BakeryOperationsWorkspace = lazy(() => import("./BakeryOperationsWorkspace.jsx"));
 const uid = () => crypto.randomUUID();
 const lockKey = "bakery-ledger-lock-v1";
 const tutorialKey = "bakery-ledger-tutorial-v1";
@@ -726,6 +727,8 @@ function App() {
             />
           ) : page === "Help & support" ? (
             <SupportWorkspace data={data} page={page} />
+          ) : ["Order intake", "Production timeline", "Recurring prep", "Substitutions", "Label studio", "Kitchen binder", "Cost alerts", "Sales trends", "Data tools"].includes(page) ? (
+            <Suspense fallback={<p className="panel empty">Opening owner tools…</p>}><OwnerToolkitWorkspace data={data} save={save} page={page} navigate={navigate} /></Suspense>
           ) : page === "Customers" ? (
             <CustomerWorkspace data={data} save={save} navigate={navigate} />
           ) : page === "Documents" ? (
@@ -741,7 +744,7 @@ function App() {
           ) : page === "App updates" ? (
             <UpdateWorkspace />
           ) : ["Recipe lab", "Allergen matrix", "Capacity planner", "Kitchen timers", "Daily closeout", "Equipment care", "Menu profitability", "Purchase orders", "Archive"].includes(page) ? (
-            <BakeryOperationsWorkspace data={data} save={save} page={page} open={open} navigate={navigate} />
+            <Suspense fallback={<p className="panel empty">Opening bakery operations…</p>}><BakeryOperationsWorkspace data={data} save={save} page={page} open={open} navigate={navigate} /></Suspense>
           ) : ["Daily snapshot", "Use soon", "Packing", "Batch yields", "Seasonal plans"].includes(page) ? (
             <OwnerEnhancements data={data} save={save} page={page} navigate={navigate} />
           ) : [

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { recipeCostDetails, recipeSaleDetails } from "../src/recipePricing.js";
+import { recipeCostDetails, recipePricingPlan, recipeSaleDetails } from "../src/recipePricing.js";
 
 test("box pricing keeps a compatible per-dessert price and separates packaging cost", () => {
   const items = [
@@ -14,4 +14,13 @@ test("box pricing keeps a compatible per-dessert price and separates packaging c
   assert.equal(details.packaging, 0.5);
   assert.equal(details.total, 14.7);
   assert.equal(details.revenue, 18);
+});
+
+test("pricing plans include the selling format and respect margin rounding", () => {
+  const recipe = { yield: 10, price: 3, saleFormat: "box", saleQuantity: 2, salePrice: 6, lines: [{ itemId: "flour", amount: 500, unit: "g" }] };
+  const items = [{ id: "flour", type: "ingredient", amount: 1000, unit: "g", price: 4 }];
+  const plan = recipePricingPlan(recipe, items, {}, { targetMargin: 50, roundTo: 0.5 });
+  assert.equal(plan.label, "box");
+  assert.equal(plan.suggestedPortion, 0.5);
+  assert.equal(plan.suggestedSale, 1);
 });

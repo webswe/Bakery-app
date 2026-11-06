@@ -33,3 +33,14 @@ export function recipeCostDetails(recipe, items, settings = {}) {
   const profit = revenue - total;
   return { ...lines, labor, electricity, overhead, total, perPortion: total / yieldAmount, revenue, profit, margin: revenue > 0 ? profit / revenue * 100 : 0 };
 }
+
+export function recipePricingPlan(recipe, items, settings = {}, input = {}) {
+  const costs = recipeCostDetails(recipe, items, settings);
+  const targetMargin = Math.min(95, Math.max(0, Number(input?.targetMargin ?? recipe.pricingPlan?.targetMargin ?? 35)));
+  const minimumMargin = Math.min(targetMargin, Math.max(0, Number(input?.minimumMargin ?? recipe.pricingPlan?.minimumMargin ?? 20)));
+  const roundTo = Math.max(0.01, Number(input?.roundTo ?? recipe.pricingPlan?.roundTo ?? 0.5));
+  const suggestedPortion = Math.ceil((costs.perPortion / Math.max(0.01, 1 - targetMargin / 100)) / roundTo) * roundTo;
+  const sale = recipeSaleDetails(recipe);
+  const suggestedSale = suggestedPortion * sale.quantity;
+  return { ...costs, ...sale, targetMargin, minimumMargin, roundTo, suggestedPortion, suggestedSale, priceGap: suggestedSale - sale.salePrice, belowMinimum: costs.margin < minimumMargin };
+}
