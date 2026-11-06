@@ -8,7 +8,9 @@ export function saveCustomer(data, input, id) {
     (customer) => key(customer.name) === key(name) && customer.id !== id,
   );
   if (duplicate) throw Error("A customer with this name already exists.");
-  const previous = (data.customers || []).find((customer) => customer.id === id);
+  const previous = (data.customers || []).find(
+    (customer) => customer.id === id,
+  );
   const customer = {
     ...previous,
     id: id || crypto.randomUUID(),
@@ -35,9 +37,9 @@ export function ensureCustomer(data, input) {
   const selected = (data.customers || []).find(
     (customer) => customer.id === input.customerId,
   );
-  const matched = selected || (data.customers || []).find(
-    (customer) => key(customer.name) === key(name),
-  );
+  const matched =
+    selected ||
+    (data.customers || []).find((customer) => key(customer.name) === key(name));
   if (matched) return { data, customerId: matched.id };
   const next = saveCustomer(data, { name });
   return { data: next, customerId: next.customers.at(-1).id };
@@ -55,9 +57,14 @@ export function customerActivity(data, customer) {
     orders,
     sales,
     orderTotal: orders.reduce((sum, order) => sum + (order.total || 0), 0),
-    lastDate: [...quotes.map((item) => item.date), ...orders.map((item) => item.pickupDate), ...sales.map((item) => item.date)]
-      .filter(Boolean)
-      .sort()
-      .at(-1) || "",
+    lastDate:
+      [
+        ...quotes.map((item) => item.date),
+        ...orders.map((item) => item.pickupDate),
+        ...sales.map((item) => item.date),
+      ]
+        .filter(Boolean)
+        .sort()
+        .at(-1) || "",
   };
 }

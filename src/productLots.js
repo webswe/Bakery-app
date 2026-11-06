@@ -1,4 +1,6 @@
-const day = (value) => value || new Date().toLocaleDateString("en-CA");
+import { localDay } from "./dateUtils.js";
+
+const day = (value) => value || localDay();
 
 export function addDays(value, days) {
   if (!(Number(days) > 0)) return "";
@@ -49,7 +51,10 @@ export function consumeProductLots(lots, recipeId, quantity) {
         ? { ...lot, remaining: Math.max(0, lot.remaining - usage.get(lot.id)) }
         : lot,
     ),
-    usage: [...usage].map(([productLotId, amount]) => ({ productLotId, amount })),
+    usage: [...usage].map(([productLotId, amount]) => ({
+      productLotId,
+      amount,
+    })),
   };
 }
 

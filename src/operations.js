@@ -2,7 +2,8 @@ import { directSaleTotals } from "./taxation.js";
 import { consumeManyLots } from "./inventoryLots.js";
 import { createProductLot, consumeProductLots } from "./productLots.js";
 import { lineCost, recipeCost } from "./costing.js";
-export const presets = [
+import { localDay } from "./dateUtils.js";
+const presets = [
   ["All-purpose flour", 120],
   ["Bread flour", 120],
   ["Cake flour", 114],
@@ -133,9 +134,7 @@ export function produce(
   if (a.batches < batches)
     throw Error("Insufficient ingredients or packaging.");
   if (
-    r.lines.some(
-      (l) => data.items.find((i) => i.id === l.itemId)?.needsPrice,
-    )
+    r.lines.some((l) => data.items.find((i) => i.id === l.itemId)?.needsPrice)
   )
     throw Error("Set purchase prices for all recipe items first.");
   const quantity = batches * r.yield,
@@ -144,15 +143,8 @@ export function produce(
     old = data.products[id] || { quantity: 0, value: 0 };
   const lotResult = consumeManyLots(data, a.needs, batches);
   const batchId = crypto.randomUUID();
-  const producedAt =
-    context.productionDate || new Date().toLocaleDateString("en-CA");
-  const productLot = createProductLot(
-    r,
-    quantity,
-    cost,
-    batchId,
-    producedAt,
-  );
+  const producedAt = context.productionDate || localDay();
+  const productLot = createProductLot(r, quantity, cost, batchId, producedAt);
   const productionBatch = {
     id: batchId,
     batchCode: `B-${producedAt.replaceAll("-", "")}-${batchId.slice(0, 6).toUpperCase()}`,

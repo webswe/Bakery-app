@@ -19,7 +19,10 @@ const publishStatus = (patch) => {
 
 const checkForUpdates = async () => {
   if (!app.isPackaged) {
-    publishStatus({ state: "development", message: "Update checks run in the installed Windows app." });
+    publishStatus({
+      state: "development",
+      message: "Update checks run in the installed Windows app.",
+    });
     return updateState;
   }
   publishStatus({
@@ -31,7 +34,11 @@ const checkForUpdates = async () => {
   try {
     await autoUpdater.checkForUpdates();
   } catch (error) {
-    publishStatus({ state: "error", message: "Could not check for updates.", error: error.message });
+    publishStatus({
+      state: "error",
+      message: "Could not check for updates.",
+      error: error.message,
+    });
   }
   return updateState;
 };
@@ -47,7 +54,10 @@ ipcMain.handle("support:app-info", () => ({
   platform: `${process.platform} ${process.getSystemVersion?.() || ""}`.trim(),
 }));
 ipcMain.handle("support:save-report", async (_event, report) => {
-  const folder = path.join(app.getPath("documents"), "Bakery Ledger Support Reports");
+  const folder = path.join(
+    app.getPath("documents"),
+    "Bakery Ledger Support Reports",
+  );
   await fs.mkdir(folder, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const target = path.join(folder, `Bakery-Ledger-support-${stamp}.txt`);
@@ -89,7 +99,10 @@ app.whenReady().then(() => {
     }),
   );
   autoUpdater.on("update-not-available", () =>
-    publishStatus({ state: "current", message: "Bakery Ledger is up to date." }),
+    publishStatus({
+      state: "current",
+      message: "Bakery Ledger is up to date.",
+    }),
   );
   autoUpdater.on("download-progress", (progress) =>
     publishStatus({
@@ -99,7 +112,11 @@ app.whenReady().then(() => {
     }),
   );
   autoUpdater.on("error", (error) =>
-    publishStatus({ state: "error", message: "Update check failed.", error: error.message }),
+    publishStatus({
+      state: "error",
+      message: "Update check failed.",
+      error: error.message,
+    }),
   );
   autoUpdater.on("update-downloaded", async (info) => {
     const notes = releaseNotes(info);
@@ -117,7 +134,9 @@ app.whenReady().then(() => {
       cancelId: 1,
       title: "Bakery Ledger update ready",
       message: `Bakery Ledger ${info.version} is ready.`,
-      detail: notes ? `What’s new\n\n${notes}` : "Restart to install the update. Your saved bakery data will remain on this computer.",
+      detail: notes
+        ? `What’s new\n\n${notes}`
+        : "Restart to install the update. Your saved bakery data will remain on this computer.",
     });
     if (response.response === 0) autoUpdater.quitAndInstall();
   });

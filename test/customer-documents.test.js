@@ -1,7 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { customerActivity, ensureCustomer, saveCustomer } from "../src/customerOps.js";
-import { allocateDocumentNumber, displayDocumentNumber } from "../src/documentOps.js";
+import {
+  customerActivity,
+  ensureCustomer,
+  saveCustomer,
+} from "../src/customerOps.js";
+import {
+  allocateDocumentNumber,
+  displayDocumentNumber,
+} from "../src/documentOps.js";
 
 const fixture = () => ({
   customers: [],
@@ -21,7 +28,9 @@ test("customer records retain preferences and connect legacy activity by name", 
   const customer = data.customers[0];
   data = {
     ...data,
-    orders: [{ id: "o", customer: "Emma", total: 50, pickupDate: "2026-10-30" }],
+    orders: [
+      { id: "o", customer: "Emma", total: 50, pickupDate: "2026-10-30" },
+    ],
   };
   assert.equal(customer.allergies, "Peanuts");
   assert.equal(customerActivity(data, customer).orderTotal, 50);
@@ -51,5 +60,8 @@ test("document numbers increment independently by type and year", () => {
   assert.equal(quote.number, "Q-2026-0001");
   assert.equal(next.number, "Q-2026-0002");
   assert.equal(invoice.number, "INV-2026-0001");
-  assert.equal(displayDocumentNumber({ quoteNumber: quote.number }, "quote"), quote.number);
+  assert.equal(
+    displayDocumentNumber({ quoteNumber: quote.number }, "quote"),
+    quote.number,
+  );
 });

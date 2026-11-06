@@ -1,4 +1,4 @@
-export const moneyRound = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+const moneyRound = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 export function taxRate(value) {
   const n = Number(value);
   if (value === "" || value == null || !Number.isFinite(n) || n < 0 || n > 100)

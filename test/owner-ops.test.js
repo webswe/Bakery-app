@@ -10,18 +10,38 @@ import {
 
 const fixture = () => ({
   orders: [
-    { id: "o", customer: "Ada", recipeName: "Cake", portions: 8, pickupDate: "2026-10-30", status: "open", total: 100, paid: 0 },
+    {
+      id: "o",
+      customer: "Ada",
+      recipeName: "Cake",
+      portions: 8,
+      pickupDate: "2026-10-30",
+      status: "open",
+      total: 100,
+      paid: 0,
+    },
   ],
   payments: [],
   productionPlans: [
-    { id: "p", recipeId: "r", recipeName: "Cake", date: "2026-10-29", batches: 2, status: "planned" },
+    {
+      id: "p",
+      recipeId: "r",
+      recipeName: "Cake",
+      date: "2026-10-29",
+      batches: 2,
+      status: "planned",
+    },
   ],
   recipes: [],
-  sales: [
-    { date: "2026-10-20", net: 100, tax: 7, taxRate: 7, total: 107 },
-  ],
+  sales: [{ date: "2026-10-20", net: 100, tax: 7, taxRate: 7, total: 107 }],
   purchaseHistory: [
-    { date: "2026-10-21", packagePrice: 10, finalPackageCost: 10, taxAmount: 0.7, packages: 2 },
+    {
+      date: "2026-10-21",
+      packagePrice: 10,
+      finalPackageCost: 10,
+      taxAmount: 0.7,
+      packages: 2,
+    },
   ],
   waste: [
     { date: "2026-10-22", name: "Cream", reason: "Expired", cost: 3 },
@@ -45,7 +65,12 @@ test("payment ledger supports partial payments and refunds with order limits", (
   assert.equal(orderPaid(data, data.orders[0]), 50);
   assert.equal(data.orders[0].paid, 50);
   assert.throws(
-    () => recordPayment(data, "o", { amount: 51, kind: "refund", date: "2026-10-28" }),
+    () =>
+      recordPayment(data, "o", {
+        amount: 51,
+        kind: "refund",
+        date: "2026-10-28",
+      }),
     /exceeds/,
   );
 });
@@ -55,10 +80,10 @@ test("owner reports retain tax, schedule and waste detail", () => {
   const tax = taxReport(data, "2026-10");
   assert.equal(tax.customerTax, 7);
   assert.equal(tax.purchaseTax, 1.4);
-  assert.deepEqual(calendarEntries(data, "2026-10").map((row) => row.type), [
-    "Production",
-    "Pickup",
-  ]);
+  assert.deepEqual(
+    calendarEntries(data, "2026-10").map((row) => row.type),
+    ["Production", "Pickup"],
+  );
   const waste = wasteAnalysis(data, "2026-10");
   assert.equal(waste.total, 5);
   assert.equal(waste.byItem[0].cost, 5);

@@ -18,19 +18,8 @@ import {
   savePurchaseOrder,
   saveScalingPreset,
 } from "./ownerFeatures.js";
-const money = (n) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
-    n,
-  );
+import { downloadBlob, money } from "./uiFormatters.js";
 const qty = (n) => Number(n.toFixed(3));
-function download(name, text, type = "application/json") {
-  const url = URL.createObjectURL(new Blob([text], { type }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 export default function BakeryTools({
   data,
   save,
@@ -164,18 +153,24 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
         <h2>Customer orders</h2>
       </div>
       <div className="recipe-grid">
-        {[...data.orders].reverse().slice(0, visibleOrders).map((o) => (
-          <OrderCard
-            key={o.id}
-            order={o}
-            act={act}
-            data={data}
-            navigate={navigate}
-          />
-        ))}
+        {[...data.orders]
+          .reverse()
+          .slice(0, visibleOrders)
+          .map((o) => (
+            <OrderCard
+              key={o.id}
+              order={o}
+              act={act}
+              data={data}
+              navigate={navigate}
+            />
+          ))}
       </div>
       {data.orders.length > visibleOrders && (
-        <button className="secondary load-more" onClick={() => setVisibleOrders((count) => count + 30)}>
+        <button
+          className="secondary load-more"
+          onClick={() => setVisibleOrders((count) => count + 30)}
+        >
           Show older orders
         </button>
       )}
@@ -219,7 +214,10 @@ function OrderCard({ order: o, act, data, navigate }) {
           <button className="secondary" onClick={() => navigate("Payments")}>
             Record payment or refund
           </button>
-          <button className="secondary" onClick={() => navigate("Documents", { orderId: o.id })}>
+          <button
+            className="secondary"
+            onClick={() => navigate("Documents", { orderId: o.id })}
+          >
             Print invoice or pickup slip
           </button>
           <form
@@ -283,11 +281,13 @@ function Shopping({ data, act }) {
     (sum, item) => sum + (item.estimate || 0),
     0,
   );
-  const unpricedCount = list.rows.filter((item) => item.estimate === null).length;
+  const unpricedCount = list.rows.filter(
+    (item) => item.estimate === null,
+  ).length;
   const profile = data.businessProfile || {};
   const csv = () => {
     const cell = (v) => '"' + String(v).replaceAll('"', '""') + '"';
-    download(
+    downloadBlob(
       "bakery-shopping-" + day + ".csv",
       [
         ["Supplier", "Item", "Packages", "Quantity", "Unit", "Estimated cost"],
@@ -330,13 +330,17 @@ function Shopping({ data, act }) {
       </div>
       <header className="shopping-print-header print-only">
         <div>
-          <span className="shopping-print-brand">{profile.name || "My Bakery"}</span>
+          <span className="shopping-print-brand">
+            {profile.name || "My Bakery"}
+          </span>
           <h1>Supplier Shopping List</h1>
           <p>{[profile.address, profile.phone].filter(Boolean).join(" · ")}</p>
         </div>
         <dl>
-          <dt>Plan through</dt><dd>{day}</dd>
-          <dt>Printed</dt><dd>{localDate()}</dd>
+          <dt>Plan through</dt>
+          <dd>{day}</dd>
+          <dt>Printed</dt>
+          <dd>{localDate()}</dd>
         </dl>
       </header>
       {list.errors.map((e) => (
@@ -345,7 +349,10 @@ function Shopping({ data, act }) {
         </p>
       ))}
       <div className="planning-actions no-print">
-        <button className="primary" onClick={() => act(() => savePurchaseOrder(data, day, list.rows))}>
+        <button
+          className="primary"
+          onClick={() => act(() => savePurchaseOrder(data, day, list.rows))}
+        >
           Save purchase order
         </button>
         <button className="secondary" onClick={csv}>
@@ -354,19 +361,36 @@ function Shopping({ data, act }) {
         <PrintAction className="secondary">Preview list</PrintAction>
       </div>
       <section className="shopping-summary">
-        <div><span>Suppliers</span><b>{suppliers.length}</b></div>
-        <div><span>Items</span><b>{list.rows.length}</b></div>
-        <div><span>Estimated total</span><b>{money(estimatedTotal)}</b></div>
-        <div><span>Prices needed</span><b>{unpricedCount}</b></div>
+        <div>
+          <span>Suppliers</span>
+          <b>{suppliers.length}</b>
+        </div>
+        <div>
+          <span>Items</span>
+          <b>{list.rows.length}</b>
+        </div>
+        <div>
+          <span>Estimated total</span>
+          <b>{money(estimatedTotal)}</b>
+        </div>
+        <div>
+          <span>Prices needed</span>
+          <b>{unpricedCount}</b>
+        </div>
       </section>
       {suppliers.map((s) => (
         <section className="panel planning-form shopping-supplier" key={s}>
           <header>
             <h2>{s}</h2>
-            <span>{list.rows.filter((item) => item.supplier === s).length} item(s)</span>
+            <span>
+              {list.rows.filter((item) => item.supplier === s).length} item(s)
+            </span>
           </header>
           <div className="shopping-column-headings print-only">
-            <span>ITEM</span><span>PACKAGES</span><span>BUY QUANTITY</span><span>ESTIMATE</span>
+            <span>ITEM</span>
+            <span>PACKAGES</span>
+            <span>BUY QUANTITY</span>
+            <span>ESTIMATE</span>
           </div>
           {list.rows
             .filter((i) => i.supplier === s)
@@ -382,11 +406,15 @@ function Shopping({ data, act }) {
                   />
                   <span>
                     {i.name}
-                    <small className="no-print">{i.packages} package(s) · {qty(i.buyQuantity)} {i.unit}</small>
+                    <small className="no-print">
+                      {i.packages} package(s) · {qty(i.buyQuantity)} {i.unit}
+                    </small>
                   </span>
                 </label>
                 <span className="shopping-packages">{i.packages}</span>
-                <span className="shopping-quantity">{qty(i.buyQuantity)} {i.unit}</span>
+                <span className="shopping-quantity">
+                  {qty(i.buyQuantity)} {i.unit}
+                </span>
                 <b>
                   {i.estimate === null ? "Price needed" : money(i.estimate)}
                 </b>
@@ -402,16 +430,57 @@ function Shopping({ data, act }) {
       )}
       {!!list.rows.length && (
         <footer className="shopping-print-footer print-only">
-          <div><b>Purchase notes</b><span /></div>
-          <div><b>Substitutions / unavailable items</b><span /></div>
-          <p>After shopping, receive each package in Bakery Ledger with its actual supplier price and expiry date.</p>
+          <div>
+            <b>Purchase notes</b>
+            <span />
+          </div>
+          <div>
+            <b>Substitutions / unavailable items</b>
+            <span />
+          </div>
+          <p>
+            After shopping, receive each package in Bakery Ledger with its
+            actual supplier price and expiry date.
+          </p>
         </footer>
       )}
-      {!!data.purchaseOrders.length && <section className="panel planning-form no-print">
-        <h2>Saved supplier orders</h2>
-        <p>Keep a dated copy of what you planned to buy for price and vendor reference.</p>
-        {[...data.purchaseOrders].reverse().slice(0, 12).map((order) => <div className="legend" key={order.id}><span><b>Plan through {order.throughDate}</b><small>{order.rows.length} item(s) · {[...new Set(order.rows.map((row) => row.supplier))].join(", ")}</small></span><span><b>{money(order.estimatedTotal)}</b><button className="text-button" onClick={() => { if (confirm("Delete this saved supplier order?")) act(() => removePurchaseOrder(data, order.id)); }}>Delete</button></span></div>)}
-      </section>}
+      {!!data.purchaseOrders.length && (
+        <section className="panel planning-form no-print">
+          <h2>Saved supplier orders</h2>
+          <p>
+            Keep a dated copy of what you planned to buy for price and vendor
+            reference.
+          </p>
+          {[...data.purchaseOrders]
+            .reverse()
+            .slice(0, 12)
+            .map((order) => (
+              <div className="legend" key={order.id}>
+                <span>
+                  <b>Plan through {order.throughDate}</b>
+                  <small>
+                    {order.rows.length} item(s) ·{" "}
+                    {[...new Set(order.rows.map((row) => row.supplier))].join(
+                      ", ",
+                    )}
+                  </small>
+                </span>
+                <span>
+                  <b>{money(order.estimatedTotal)}</b>
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      if (confirm("Delete this saved supplier order?"))
+                        act(() => removePurchaseOrder(data, order.id));
+                    }}
+                  >
+                    Delete
+                  </button>
+                </span>
+              </div>
+            ))}
+        </section>
+      )}
     </div>
   );
 }
@@ -602,15 +671,68 @@ function Scaling({ data, act }) {
         />
       </label>
       <div className="scaling-presets" aria-label="Scaling presets">
-        {[{ id: "half", name: "Half batch", portions: Math.max(1, Math.ceil((data.recipes.find((recipe) => recipe.id === id)?.yield || 1) / 2)) }, { id: "one", name: "1 batch", portions: data.recipes.find((recipe) => recipe.id === id)?.yield || 1 }, { id: "two", name: "2 batches", portions: (data.recipes.find((recipe) => recipe.id === id)?.yield || 1) * 2 }, ...(data.scalingPresets || [])].map((preset) => (
+        {[
+          {
+            id: "half",
+            name: "Half batch",
+            portions: Math.max(
+              1,
+              Math.ceil(
+                (data.recipes.find((recipe) => recipe.id === id)?.yield || 1) /
+                  2,
+              ),
+            ),
+          },
+          {
+            id: "one",
+            name: "1 batch",
+            portions:
+              data.recipes.find((recipe) => recipe.id === id)?.yield || 1,
+          },
+          {
+            id: "two",
+            name: "2 batches",
+            portions:
+              (data.recipes.find((recipe) => recipe.id === id)?.yield || 1) * 2,
+          },
+          ...(data.scalingPresets || []),
+        ].map((preset) => (
           <span className="preset-chip" key={preset.id}>
-            <button type="button" onClick={() => setTarget(preset.portions)}>{preset.name} · {preset.portions}</button>
-            {!['half', 'one', 'two'].includes(preset.id) && <button type="button" aria-label={`Delete ${preset.name} preset`} onClick={() => act(() => removeScalingPreset(data, preset.id))}>×</button>}
+            <button type="button" onClick={() => setTarget(preset.portions)}>
+              {preset.name} · {preset.portions}
+            </button>
+            {!["half", "one", "two"].includes(preset.id) && (
+              <button
+                type="button"
+                aria-label={`Delete ${preset.name} preset`}
+                onClick={() => act(() => removeScalingPreset(data, preset.id))}
+              >
+                ×
+              </button>
+            )}
           </span>
         ))}
       </div>
-      <form className="inline-preset-form" onSubmit={(event) => { event.preventDefault(); if (act(() => saveScalingPreset(data, { name: presetName, portions: target }))) setPresetName(""); }}>
-        <label>Save current target as a preset<input value={presetName} onChange={(event) => setPresetName(event.target.value)} placeholder="Market day" /></label>
+      <form
+        className="inline-preset-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (
+            act(() =>
+              saveScalingPreset(data, { name: presetName, portions: target }),
+            )
+          )
+            setPresetName("");
+        }}
+      >
+        <label>
+          Save current target as a preset
+          <input
+            value={presetName}
+            onChange={(event) => setPresetName(event.target.value)}
+            placeholder="Market day"
+          />
+        </label>
         <button className="secondary">Save preset</button>
       </form>
       {error ? (
@@ -659,7 +781,7 @@ function Backups({ data, act, restore }) {
       <button
         className="primary"
         onClick={() =>
-          download(
+          downloadBlob(
             "bakery-ledger-" + localDate() + ".json",
             JSON.stringify(data, null, 2),
           )
@@ -680,7 +802,7 @@ function Backups({ data, act, restore }) {
         <button
           className="secondary"
           onClick={() =>
-            download(
+            downloadBlob(
               "bakery-ledger-original-unreadable.txt",
               localStorage.getItem("bakery-ledger-unreadable-v1"),
               "text/plain",
@@ -700,7 +822,7 @@ function Backups({ data, act, restore }) {
             <button
               className="secondary"
               onClick={() =>
-                download(
+                downloadBlob(
                   "bakery-ledger-backup-" + b.day + ".json",
                   JSON.stringify(b.data, null, 2),
                 )

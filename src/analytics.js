@@ -27,8 +27,18 @@ export function previousMonth(month) {
 export function migrateData(data) {
   const recipes = (data.recipes || []).map((recipe) => {
     const saleFormat = recipe.saleFormat || "individual";
-    const saleQuantity = saleFormat === "dozen" ? 12 : Math.max(1, Number(recipe.saleQuantity) || 1);
-    return { ...recipe, saleFormat, saleQuantity, salePrice: Number.isFinite(Number(recipe.salePrice)) ? Number(recipe.salePrice) : (Number(recipe.price) || 0) * saleQuantity };
+    const saleQuantity =
+      saleFormat === "dozen"
+        ? 12
+        : Math.max(1, Number(recipe.saleQuantity) || 1);
+    return {
+      ...recipe,
+      saleFormat,
+      saleQuantity,
+      salePrice: Number.isFinite(Number(recipe.salePrice))
+        ? Number(recipe.salePrice)
+        : (Number(recipe.price) || 0) * saleQuantity,
+    };
   });
   return {
     ...data,
@@ -37,7 +47,10 @@ export function migrateData(data) {
     orders: data.orders || [],
     customers: data.customers || [],
     documentCounters: data.documentCounters || {},
-    businessProfile: { supportEmail: "botaa109@gmail.com", ...(data.businessProfile || {}) },
+    businessProfile: {
+      supportEmail: "botaa109@gmail.com",
+      ...(data.businessProfile || {}),
+    },
     payments: data.payments || [],
     waste: data.waste || [],
     inventoryLots: data.inventoryLots || [],

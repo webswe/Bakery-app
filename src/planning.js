@@ -77,7 +77,10 @@ export function saveQuote(data, input, id) {
   const customerResult = ensureCustomer(data, input);
   const previous = (data.quotes || []).find((quote) => quote.id === id);
   const allocation = previous?.quoteNumber
-    ? { number: previous.quoteNumber, documentCounters: customerResult.data.documentCounters }
+    ? {
+        number: previous.quoteNumber,
+        documentCounters: customerResult.data.documentCounters,
+      }
     : allocateDocumentNumber(customerResult.data, "quote", quoteDate);
   const quote = {
     ...input,
@@ -100,8 +103,7 @@ export function saveQuote(data, input, id) {
 }
 export function savePlan(data, input, id) {
   const recipe = data.recipes.find((r) => r.id === input.recipeId);
-  if (!recipe)
-    throw Error("Choose a recipe.");
+  if (!recipe) throw Error("Choose a recipe.");
   const batches = number(input.batches, "Batches", 1);
   if (!Number.isInteger(batches)) throw Error("Enter whole batches.");
   if (
@@ -117,8 +119,7 @@ export function savePlan(data, input, id) {
     date: date(input.date),
     id: id || crypto.randomUUID(),
     status: "planned",
-    recipeSnapshot:
-      input.recipeSnapshot ||
+    recipeSnapshot: input.recipeSnapshot ||
       (data.productionPlans || []).find((p) => p.id === id)?.recipeSnapshot || {
         capturedAt: new Date().toISOString(),
         recipe: structuredClone(recipe),

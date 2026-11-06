@@ -1,15 +1,21 @@
 import React, { useState } from "react";
 import { Check, Palette, RotateCcw } from "lucide-react";
-import { appearanceThemes, defaultAppearance, resolveAppearance } from "./appearanceThemes.js";
+import {
+  appearanceThemes,
+  defaultAppearance,
+  resolveAppearance,
+} from "./appearanceThemes.js";
 
 export default function AppCustomizationWorkspace({ data, save }) {
   const current = resolveAppearance(data.settings?.appearance);
   const [appearance, setAppearance] = useState(current);
   const [notice, setNotice] = useState("");
-  const choose = (changes) => setAppearance((value) => ({ ...value, ...changes }));
+  const choose = (changes) =>
+    setAppearance((value) => ({ ...value, ...changes }));
   const saveAppearance = () => {
     const settings = { ...data.settings, appearance };
-    if (save({ ...data, settings }) !== false) setNotice("App customization saved.");
+    if (save({ ...data, settings }) !== false)
+      setNotice("App customization saved.");
   };
   const reset = () => {
     setAppearance(defaultAppearance);
@@ -19,34 +25,107 @@ export default function AppCustomizationWorkspace({ data, save }) {
     <div className="planning-workspace customization-workspace">
       <section className="panel customization-card">
         <div className="customization-heading">
-          <div className="customization-icon"><Palette size={25} /></div>
-          <div><h2>Make Bakery Ledger feel like your workspace</h2><p>Choose an accent and working density. Your choices stay on this device and never change your recipes, records or backups.</p></div>
+          <div className="customization-icon">
+            <Palette size={25} />
+          </div>
+          <div>
+            <h2>Make Bakery Ledger feel like your workspace</h2>
+            <p>
+              Choose an accent and working density. Your choices stay on this
+              device and never change your recipes, records or backups.
+            </p>
+          </div>
         </div>
         <fieldset>
           <legend>Color theme</legend>
           <div className="palette-options">
-            {appearanceThemes.map((theme) => <button type="button" key={theme.id} className={appearance.themeId === theme.id ? "palette-option selected" : "palette-option"} onClick={() => choose({ themeId: theme.id })}>
-              <i className="theme-swatch" style={{ background: `linear-gradient(135deg, ${theme.sidebar} 0 50%, ${theme.accent} 50%)` }} />{theme.label}{appearance.themeId === theme.id && <Check size={15} />}
-            </button>)}
+            {appearanceThemes.map((theme) => (
+              <button
+                type="button"
+                key={theme.id}
+                className={
+                  appearance.themeId === theme.id
+                    ? "palette-option selected"
+                    : "palette-option"
+                }
+                onClick={() => choose({ themeId: theme.id })}
+              >
+                <i
+                  className="theme-swatch"
+                  style={{
+                    background: `linear-gradient(135deg, ${theme.sidebar} 0 50%, ${theme.accent} 50%)`,
+                  }}
+                />
+                {theme.label}
+                {appearance.themeId === theme.id && <Check size={15} />}
+              </button>
+            ))}
           </div>
         </fieldset>
         <fieldset>
           <legend>Workspace density</legend>
           <div className="choice-options">
-            <button type="button" className={appearance.density === "comfortable" ? "selected" : ""} onClick={() => choose({ density: "comfortable" })}><b>Comfortable</b><small>More breathing room while planning and costing.</small></button>
-            <button type="button" className={appearance.density === "compact" ? "selected" : ""} onClick={() => choose({ density: "compact" })}><b>Compact</b><small>Fits more rows on screen for busy kitchen days.</small></button>
+            <button
+              type="button"
+              className={appearance.density === "comfortable" ? "selected" : ""}
+              onClick={() => choose({ density: "comfortable" })}
+            >
+              <b>Comfortable</b>
+              <small>More breathing room while planning and costing.</small>
+            </button>
+            <button
+              type="button"
+              className={appearance.density === "compact" ? "selected" : ""}
+              onClick={() => choose({ density: "compact" })}
+            >
+              <b>Compact</b>
+              <small>Fits more rows on screen for busy kitchen days.</small>
+            </button>
           </div>
         </fieldset>
-        <label className="toggle-option"><input type="checkbox" checked={appearance.showTips} onChange={(event) => choose({ showTips: event.target.checked })} /><span><b>Show workflow guidance</b><small>Keep the helpful next-step banner and sidebar workflow reminder visible.</small></span></label>
+        <label className="toggle-option">
+          <input
+            type="checkbox"
+            checked={appearance.showTips}
+            onChange={(event) => choose({ showTips: event.target.checked })}
+          />
+          <span>
+            <b>Show workflow guidance</b>
+            <small>
+              Keep the helpful next-step banner and sidebar workflow reminder
+              visible.
+            </small>
+          </span>
+        </label>
         <div className="planning-actions">
-          <button className="primary" onClick={saveAppearance}>Save customization</button>
-          <button className="secondary" onClick={reset}><RotateCcw size={15} />Reset choices</button>
-          {notice && <p className="positive" role="status">{notice}</p>}
+          <button className="primary" onClick={saveAppearance}>
+            Save customization
+          </button>
+          <button className="secondary" onClick={reset}>
+            <RotateCcw size={15} />
+            Reset choices
+          </button>
+          {notice && (
+            <p className="positive" role="status">
+              {notice}
+            </p>
+          )}
         </div>
       </section>
-      <section className="panel customization-preview" style={{ "--preview-accent": resolveAppearance(appearance).theme.accent, "--preview-soft": resolveAppearance(appearance).theme.soft }}>
-        <span className="eyebrow">PREVIEW</span><h2>{data.businessProfile?.name || "My bakery"}</h2>
-        <div><span>Today’s production</span><b>3 batches planned</b><button type="button">Open planner</button></div>
+      <section
+        className="panel customization-preview"
+        style={{
+          "--preview-accent": resolveAppearance(appearance).theme.accent,
+          "--preview-soft": resolveAppearance(appearance).theme.soft,
+        }}
+      >
+        <span className="eyebrow">PREVIEW</span>
+        <h2>{data.businessProfile?.name || "My bakery"}</h2>
+        <div>
+          <span>Today’s production</span>
+          <b>3 batches planned</b>
+          <button type="button">Open planner</button>
+        </div>
       </section>
     </div>
   );

@@ -1,5 +1,10 @@
 const entities = {
-  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
 };
 
 function decodeEntities(value) {
@@ -14,7 +19,8 @@ function decodeEntities(value) {
 }
 
 function noteValue(value) {
-  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (typeof value === "string" || typeof value === "number")
+    return String(value);
   if (!value || typeof value !== "object") return "";
   for (const key of ["note", "text", "content", "value", "body"]) {
     if (value[key] != null) return noteValue(value[key]);
@@ -50,7 +56,8 @@ function plainReleaseNote(value) {
 
 function releaseNotes(info) {
   const notes = info?.releaseNotes;
-  if (Array.isArray(notes)) return notes.map(plainReleaseNote).filter(Boolean).join("\n\n");
+  if (Array.isArray(notes))
+    return notes.map(plainReleaseNote).filter(Boolean).join("\n\n");
   return plainReleaseNote(notes);
 }
 

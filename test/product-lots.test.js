@@ -10,7 +10,12 @@ import {
 
 test("finished lots capture shelf life and storage instructions", () => {
   const lot = createProductLot(
-    { id: "cake", name: "Cake", shelfLifeDays: 3, storageInstructions: "Refrigerate" },
+    {
+      id: "cake",
+      name: "Cake",
+      shelfLifeDays: 3,
+      storageInstructions: "Refrigerate",
+    },
     8,
     20,
     "batch",
@@ -23,8 +28,20 @@ test("finished lots capture shelf life and storage instructions", () => {
 
 test("finished stock is consumed by earliest best-before date", () => {
   const lots = [
-    { id: "later", recipeId: "cake", producedAt: "2026-10-27", bestBefore: "2026-11-03", remaining: 5 },
-    { id: "first", recipeId: "cake", producedAt: "2026-10-26", bestBefore: "2026-10-29", remaining: 3 },
+    {
+      id: "later",
+      recipeId: "cake",
+      producedAt: "2026-10-27",
+      bestBefore: "2026-11-03",
+      remaining: 5,
+    },
+    {
+      id: "first",
+      recipeId: "cake",
+      producedAt: "2026-10-26",
+      bestBefore: "2026-10-29",
+      remaining: 3,
+    },
   ];
   const result = consumeProductLots(lots, "cake", 4);
   assert.deepEqual(result.usage, [
@@ -33,6 +50,12 @@ test("finished stock is consumed by earliest best-before date", () => {
   ]);
   assert.equal(result.lots.find((lot) => lot.id === "later").remaining, 4);
   const restored = restoreProductLots(result.lots, result.usage);
-  assert.deepEqual(restored.map((lot) => lot.remaining), [5, 3]);
-  assert.equal(finishedProductAlerts({ productLots: lots }, "2026-10-30")[0].expired, true);
+  assert.deepEqual(
+    restored.map((lot) => lot.remaining),
+    [5, 3],
+  );
+  assert.equal(
+    finishedProductAlerts({ productLots: lots }, "2026-10-30")[0].expired,
+    true,
+  );
 });

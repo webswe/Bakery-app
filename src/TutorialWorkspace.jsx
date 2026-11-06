@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-export const tutorialSteps = [
+const tutorialSteps = [
   {
     title: "Know what needs attention",
     page: "Overview",
@@ -96,15 +96,23 @@ export function GuidedTutorial({ navigate, onClose }) {
           if (event.key === "Escape") onClose();
         }}
       >
-        <div className="tutorial-progress" aria-label={`Step ${index + 1} of ${tutorialSteps.length}`}>
+        <div
+          className="tutorial-progress"
+          aria-label={`Step ${index + 1} of ${tutorialSteps.length}`}
+        >
           {tutorialSteps.map((item, n) => (
             <span className={n <= index ? "complete" : ""} key={item.title} />
           ))}
         </div>
-        <span className="eyebrow">OWNER QUICK START · {index + 1}/{tutorialSteps.length}</span>
+        <span className="eyebrow">
+          OWNER QUICK START · {index + 1}/{tutorialSteps.length}
+        </span>
         <h2 id="tutorial-title">{step.title}</h2>
         <p>{step.text}</p>
-        <div className="tutorial-tip"><b>Best practice</b>{step.tip}</div>
+        <div className="tutorial-tip">
+          <b>Best practice</b>
+          {step.tip}
+        </div>
         <button
           className="secondary tutorial-open"
           onClick={() => navigate(step.page)}
@@ -112,10 +120,14 @@ export function GuidedTutorial({ navigate, onClose }) {
           {step.button}
         </button>
         <div className="tutorial-actions">
-          <button className="text-button" onClick={onClose}>Exit tutorial</button>
+          <button className="text-button" onClick={onClose}>
+            Exit tutorial
+          </button>
           <span />
           {index > 0 && (
-            <button className="secondary" onClick={() => setIndex(index - 1)}>Back</button>
+            <button className="secondary" onClick={() => setIndex(index - 1)}>
+              Back
+            </button>
           )}
           <button
             className="primary"
@@ -138,14 +150,26 @@ export default function TutorialWorkspace({ navigate, startTour }) {
           <h2>Set up the bakery once, then follow the daily workflow</h2>
           <p>
             Bakery Ledger is organized around the owner’s real sequence: price
-            purchases, cost recipes, quote, produce, collect, fulfill and review.
+            purchases, cost recipes, quote, produce, collect, fulfill and
+            review.
           </p>
         </div>
-        <button className="primary" onClick={startTour}>Start guided tutorial</button>
+        <button className="primary" onClick={startTour}>
+          Start guided tutorial
+        </button>
       </section>
       <div className="tutorial-flow" aria-label="Bakery workflow">
-        <span>Set up</span><b>→</b><span>Quote</span><b>→</b><span>Plan</span>
-        <b>→</b><span>Produce</span><b>→</b><span>Fulfill</span><b>→</b><span>Review</span>
+        <span>Set up</span>
+        <b>→</b>
+        <span>Quote</span>
+        <b>→</b>
+        <span>Plan</span>
+        <b>→</b>
+        <span>Produce</span>
+        <b>→</b>
+        <span>Fulfill</span>
+        <b>→</b>
+        <span>Review</span>
       </div>
       <div className="tutorial-grid">
         {tutorialSteps.map((step, index) => (
@@ -155,7 +179,10 @@ export default function TutorialWorkspace({ navigate, startTour }) {
               <h3>{step.title}</h3>
               <p>{step.text}</p>
               <small>{step.tip}</small>
-              <button className="text-button" onClick={() => navigate(step.page)}>
+              <button
+                className="text-button"
+                onClick={() => navigate(step.page)}
+              >
                 {step.button} →
               </button>
             </div>
@@ -165,10 +192,22 @@ export default function TutorialWorkspace({ navigate, startTour }) {
       <section className="panel tutorial-rhythm">
         <h2>A simple owner rhythm</h2>
         <div>
-          <p><b>Every morning</b> Daily snapshot, Calendar, Prep sheets, Use soon and stock shortages.</p>
-          <p><b>For every order</b> Save quote, accept order, record payments, complete production, finish Packing, then fulfill.</p>
-          <p><b>After production</b> Record actual yield. After shopping, receive each lot with its current price and expiry date.</p>
-          <p><b>Every month</b> Review profit, tax, waste, supplier price alerts and seasonal targets; then export a backup.</p>
+          <p>
+            <b>Every morning</b> Daily snapshot, Calendar, Prep sheets, Use soon
+            and stock shortages.
+          </p>
+          <p>
+            <b>For every order</b> Save quote, accept order, record payments,
+            complete production, finish Packing, then fulfill.
+          </p>
+          <p>
+            <b>After production</b> Record actual yield. After shopping, receive
+            each lot with its current price and expiry date.
+          </p>
+          <p>
+            <b>Every month</b> Review profit, tax, waste, supplier price alerts
+            and seasonal targets; then export a backup.
+          </p>
         </div>
       </section>
     </div>

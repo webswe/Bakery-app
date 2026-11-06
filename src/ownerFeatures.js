@@ -1,24 +1,36 @@
 import { fullCost } from "./operations.js";
 import { saleRevenue } from "./taxation.js";
 import { validDate } from "./business.js";
+import { localDay } from "./dateUtils.js";
 
 const positiveNumber = (value, label) => {
   const number = Number(value);
-  if (!Number.isFinite(number) || number <= 0) throw Error(`Enter a valid ${label}.`);
+  if (!Number.isFinite(number) || number <= 0)
+    throw Error(`Enter a valid ${label}.`);
   return number;
 };
 
 export function dailySnapshot(data, date) {
   validDate(date);
   const sales = (data.sales || []).filter((sale) => sale.date === date);
-  const expenses = (data.expenses || []).filter((expense) => expense.date === date);
-  const payments = (data.payments || []).filter((payment) => payment.date === date);
-  const batches = (data.productionBatches || []).filter((batch) => batch.producedAt === date);
+  const expenses = (data.expenses || []).filter(
+    (expense) => expense.date === date,
+  );
+  const payments = (data.payments || []).filter(
+    (payment) => payment.date === date,
+  );
+  const batches = (data.productionBatches || []).filter(
+    (batch) => batch.producedAt === date,
+  );
   const revenue = sales.reduce((sum, sale) => sum + saleRevenue(sale), 0);
   const productionCost = sales.reduce((sum, sale) => sum + (sale.cost || 0), 0);
-  const operatingCost = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+  const operatingCost = expenses.reduce(
+    (sum, expense) => sum + (expense.amount || 0),
+    0,
+  );
   const cashReceived = payments.reduce(
-    (sum, payment) => sum + (payment.kind === "refund" ? -payment.amount : payment.amount),
+    (sum, payment) =>
+      sum + (payment.kind === "refund" ? -payment.amount : payment.amount),
     0,
   );
   return {
@@ -39,7 +51,9 @@ export function dailySnapshot(data, date) {
 
 export function priceChanges(data) {
   const grouped = new Map();
-  for (const row of [...(data.purchaseHistory || [])].sort((a, b) => a.date.localeCompare(b.date))) {
+  for (const row of [...(data.purchaseHistory || [])].sort((a, b) =>
+    a.date.localeCompare(b.date),
+  )) {
     const key = `${row.itemId || row.itemName}|${row.supplier || ""}`;
     const list = grouped.get(key) || [];
     list.push(row);
@@ -50,7 +64,8 @@ export function priceChanges(data) {
     .map((rows) => {
       const previous = rows.at(-2);
       const latest = rows.at(-1);
-      const before = Number(previous.finalPackageCost ?? previous.packagePrice) || 0;
+      const before =
+        Number(previous.finalPackageCost ?? previous.packagePrice) || 0;
       const now = Number(latest.finalPackageCost ?? latest.packagePrice) || 0;
       return {
         itemName: latest.itemName,
@@ -70,9 +85,13 @@ export function expiryRecipeSuggestions(data, day, windowDays = 14) {
   validDate(day);
   const endDate = new Date(`${day}T12:00:00`);
   endDate.setDate(endDate.getDate() + windowDays);
-  const end = endDate.toLocaleDateString("en-CA");
+  const end = localDay(endDate);
   const expiring = (data.inventoryLots || []).filter(
-    (lot) => lot.remaining > 0 && lot.expiryDate && lot.expiryDate >= day && lot.expiryDate <= end,
+    (lot) =>
+      lot.remaining > 0 &&
+      lot.expiryDate &&
+      lot.expiryDate >= day &&
+      lot.expiryDate <= end,
   );
   const ids = new Set(expiring.map((lot) => lot.itemId));
   const recipes = (data.recipes || [])
@@ -80,11 +99,17 @@ export function expiryRecipeSuggestions(data, day, windowDays = 14) {
       const matches = recipe.lines.filter((line) => ids.has(line.itemId));
       return {
         recipe,
-        matches: matches.map((line) => data.items.find((item) => item.id === line.itemId)).filter(Boolean),
+        matches: matches
+          .map((line) => data.items.find((item) => item.id === line.itemId))
+          .filter(Boolean),
       };
     })
     .filter((entry) => entry.matches.length)
-    .sort((a, b) => b.matches.length - a.matches.length || a.recipe.name.localeCompare(b.recipe.name));
+    .sort(
+      (a, b) =>
+        b.matches.length - a.matches.length ||
+        a.recipe.name.localeCompare(b.recipe.name),
+    );
   return { end, expiring, recipes };
 }
 
@@ -114,14 +139,20 @@ export function togglePackingStep(data, orderId, step) {
 
 export function recordActualYield(data, batchId, actualYield, note = "") {
   const value = Number(actualYield);
-  if (!Number.isFinite(value) || value < 0) throw Error("Enter a valid actual yield.");
+  if (!Number.isFinite(value) || value < 0)
+    throw Error("Enter a valid actual yield.");
   if (!(data.productionBatches || []).some((batch) => batch.id === batchId))
     throw Error("Production batch is missing.");
   return {
     ...data,
     productionBatches: data.productionBatches.map((batch) =>
       batch.id === batchId
-        ? { ...batch, actualYield: value, yieldNote: note.trim(), yieldRecordedAt: new Date().toISOString() }
+        ? {
+            ...batch,
+            actualYield: value,
+            yieldNote: note.trim(),
+            yieldRecordedAt: new Date().toISOString(),
+          }
         : batch,
     ),
   };
@@ -132,7 +163,8 @@ export function saveSeasonalPlan(data, input, id = "") {
   if (!recipe) throw Error("Choose a recipe.");
   const startDate = validDate(input.startDate);
   const endDate = validDate(input.endDate);
-  if (endDate < startDate) throw Error("End date must be on or after the start date.");
+  if (endDate < startDate)
+    throw Error("End date must be on or after the start date.");
   const targetPortions = positiveNumber(input.targetPortions, "portion target");
   const title = input.title?.trim();
   if (!title) throw Error("Enter a season or event name.");
@@ -157,7 +189,10 @@ export function saveSeasonalPlan(data, input, id = "") {
 }
 
 export function removeSeasonalPlan(data, id) {
-  return { ...data, seasonalPlans: (data.seasonalPlans || []).filter((item) => item.id !== id) };
+  return {
+    ...data,
+    seasonalPlans: (data.seasonalPlans || []).filter((item) => item.id !== id),
+  };
 }
 
 export function saveScalingPreset(data, input) {
@@ -169,7 +204,12 @@ export function saveScalingPreset(data, input) {
 }
 
 export function removeScalingPreset(data, id) {
-  return { ...data, scalingPresets: (data.scalingPresets || []).filter((preset) => preset.id !== id) };
+  return {
+    ...data,
+    scalingPresets: (data.scalingPresets || []).filter(
+      (preset) => preset.id !== id,
+    ),
+  };
 }
 
 export function savePurchaseOrder(data, throughDate, rows) {
@@ -187,7 +227,12 @@ export function savePurchaseOrder(data, throughDate, rows) {
 }
 
 export function removePurchaseOrder(data, id) {
-  return { ...data, purchaseOrders: (data.purchaseOrders || []).filter((order) => order.id !== id) };
+  return {
+    ...data,
+    purchaseOrders: (data.purchaseOrders || []).filter(
+      (order) => order.id !== id,
+    ),
+  };
 }
 
 export function seasonalPlanCost(data, plan) {

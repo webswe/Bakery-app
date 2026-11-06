@@ -9,6 +9,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "test": "node --test",
+    "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"test/**/*.js\" \"*.{cjs,js,json,html}\" \".github/workflows/*.{yml,yaml}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css}\" \"test/**/*.js\" \"*.{cjs,js,json,html}\" \".github/workflows/*.{yml,yaml}\"",
     "desktop": "electron .",
     "dist:win": "npm run build && electron-builder --win nsis --publish never",
     "release": "npm run build && electron-builder --win nsis --publish always"
@@ -22,7 +24,8 @@
   "devDependencies": {
     "vite": "^6.1.0",
     "electron": "^35.0.0",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "prettier": "^3.4.2"
   },
   "build": {
     "appId": "com.bakeryledger.app",

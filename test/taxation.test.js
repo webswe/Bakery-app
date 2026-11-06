@@ -71,12 +71,24 @@ test("purchase-tax defaults can update existing rates without changing treatment
     [
       { id: "food", type: "ingredient", taxMode: "added", tax: 1, price: 10 },
       { id: "box", type: "packaging", taxMode: "included", tax: 2, price: 10 },
-      { id: "gift", taxCategory: "other", taxMode: "exempt", tax: 0, price: 10 },
+      {
+        id: "gift",
+        taxCategory: "other",
+        taxMode: "exempt",
+        tax: 0,
+        price: 10,
+      },
     ],
     { food: 5, other: 9 },
   );
-  assert.deepEqual(items.map((item) => item.tax), [5, 9, 9]);
-  assert.deepEqual(items.map((item) => item.taxMode), ["added", "included", "exempt"]);
+  assert.deepEqual(
+    items.map((item) => item.tax),
+    [5, 9, 9],
+  );
+  assert.deepEqual(
+    items.map((item) => item.taxMode),
+    ["added", "included", "exempt"],
+  );
   assert.equal(purchaseTax(items[2]).tax, 0);
 });
 test("legacy tax flags keep exact historical package and proportional costs", () => {

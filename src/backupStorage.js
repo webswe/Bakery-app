@@ -1,5 +1,5 @@
-export const storageKey = "bakery-ledger-v1",
-  backupKey = "bakery-ledger-backups-v1";
+export const storageKey = "bakery-ledger-v1";
+const backupKey = "bakery-ledger-backups-v1";
 export function readBackups(storage) {
   const list = JSON.parse(storage.getItem(backupKey) || "[]");
   if (!Array.isArray(list))

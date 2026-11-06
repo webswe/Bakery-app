@@ -1,5 +1,11 @@
 import { purchaseTax } from "./taxation.js";
-import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   localDate,
   inventoryForecast,
@@ -10,11 +16,7 @@ import {
 } from "./planning.js";
 import { checklistSteps, toggleChecklist } from "./business.js";
 import { fullCost } from "./operations.js";
-
-const money = (n) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
-    n,
-  );
+import { money } from "./uiFormatters.js";
 const qty = (n) => Number(n.toFixed(3));
 const nextWeek = () => {
   const d = new Date();
@@ -26,7 +28,14 @@ const nextWeek = () => {
   ].join("-");
 };
 
-export default function PlanningWorkspace({ data, save, tab, open, navigate, context = {} }) {
+export default function PlanningWorkspace({
+  data,
+  save,
+  tab,
+  open,
+  navigate,
+  context = {},
+}) {
   const [error, setError] = useState("");
   function act(fn) {
     try {
@@ -49,7 +58,12 @@ export default function PlanningWorkspace({ data, save, tab, open, navigate, con
       {tab === "Inventory dashboard" ? (
         <InventoryDashboard data={data} open={open} />
       ) : tab === "Quotes" ? (
-        <QuoteStudio data={data} act={act} navigate={navigate} customerId={context.customerId} />
+        <QuoteStudio
+          data={data}
+          act={act}
+          navigate={navigate}
+          customerId={context.customerId}
+        />
       ) : (
         <DailyPlanner data={data} act={act} />
       )}
@@ -60,8 +74,13 @@ export default function PlanningWorkspace({ data, save, tab, open, navigate, con
 function InventoryDashboard({ data, open }) {
   const [through, setThrough] = useState(nextWeek),
     [search, setSearch] = useState(""),
-    [filter, setFilter] = useState(() => localStorage.getItem("bakery-ledger-inventory-filter") || "all");
-  useEffect(() => localStorage.setItem("bakery-ledger-inventory-filter", filter), [filter]);
+    [filter, setFilter] = useState(
+      () => localStorage.getItem("bakery-ledger-inventory-filter") || "all",
+    );
+  useEffect(
+    () => localStorage.setItem("bakery-ledger-inventory-filter", filter),
+    [filter],
+  );
   const deferredSearch = useDeferredValue(search).toLocaleLowerCase();
   const forecast = useMemo(
     () => inventoryForecast(data, through || localDate()),
@@ -257,7 +276,9 @@ function RecipeSelect({ data, value, onChange }) {
 }
 function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
   const draftKey = "bakery-ledger-quote-draft-v1";
-  const initialCustomer = data.customers?.find((customer) => customer.id === initialCustomerId);
+  const initialCustomer = data.customers?.find(
+    (customer) => customer.id === initialCustomerId,
+  );
   const empty = () => ({
     recipeId: data.recipes[0]?.id || "",
     portions: 1,
@@ -317,7 +338,9 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
               }
             }}
           >
-            {!editing && localStorage.getItem(draftKey) && <p className="draft-status">Draft autosaved on this device.</p>}
+            {!editing && localStorage.getItem(draftKey) && (
+              <p className="draft-status">Draft autosaved on this device.</p>
+            )}
             <RecipeSelect
               data={data}
               value={form.recipeId}
@@ -329,7 +352,9 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
                 <select
                   value={form.customerId || ""}
                   onChange={(event) => {
-                    const customer = data.customers.find((item) => item.id === event.target.value);
+                    const customer = data.customers.find(
+                      (item) => item.id === event.target.value,
+                    );
                     setForm((current) => ({
                       ...current,
                       customerId: customer?.id || "",
@@ -339,7 +364,9 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
                 >
                   <option value="">New or unlinked customer</option>
                   {data.customers.map((customer) => (
-                    <option value={customer.id} key={customer.id}>{customer.name}</option>
+                    <option value={customer.id} key={customer.id}>
+                      {customer.name}
+                    </option>
                   ))}
                 </select>
               </label>
@@ -353,7 +380,9 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
                     ...current,
                     customer: e.target.value,
                     customerId:
-                      data.customers?.find((item) => item.id === current.customerId)?.name === e.target.value
+                      data.customers?.find(
+                        (item) => item.id === current.customerId,
+                      )?.name === e.target.value
                         ? current.customerId
                         : "",
                   }))
@@ -495,67 +524,73 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
         </h2>
       </div>
       <div className="recipe-grid">
-        {[...data.quotes].reverse().slice(0, visibleQuotes).map((q) => (
-          <section className="panel saved-quote" key={q.id}>
-            <span className="pill">{q.quoteNumber || q.date}</span>
-            <h3>{q.customer || "Untitled customer"}</h3>
-            <p>
-              {q.snapshot.recipeName} · {q.snapshot.portions} portions
-            </p>
-            <strong>{money(q.snapshot.total)}</strong>
-            <p>{q.notes}</p>
-            <small>
-              Saved cost {money(q.snapshot.cost)} · {q.snapshot.batches}{" "}
-              batch(es)
-            </small>
-            <div className="planning-actions">
-              <button
-                type="button"
-                className="primary"
-                onClick={() => navigate("Orders", { quoteId: q.id })}
-              >
-                Create order
-              </button>
-              <button
-                className="secondary"
-                onClick={() => {
-                  setForm({ ...q });
-                  setEditing(q.id);
-                  setNotice("");
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-              >
-                Edit & recalculate
-              </button>
-              <button
-                className="secondary"
-                onClick={() => navigate("Documents", { quoteId: q.id })}
-              >
-                Print quote
-              </button>
-              <button
-                className="text-button"
-                onClick={() => {
-                  if (confirm("Delete this saved quote?")) {
-                    if (
-                      act(() => ({
-                        ...data,
-                        quotes: data.quotes.filter((x) => x.id !== q.id),
-                      })) &&
-                      editing === q.id
-                    )
-                      reset();
-                  }
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </section>
-        ))}
+        {[...data.quotes]
+          .reverse()
+          .slice(0, visibleQuotes)
+          .map((q) => (
+            <section className="panel saved-quote" key={q.id}>
+              <span className="pill">{q.quoteNumber || q.date}</span>
+              <h3>{q.customer || "Untitled customer"}</h3>
+              <p>
+                {q.snapshot.recipeName} · {q.snapshot.portions} portions
+              </p>
+              <strong>{money(q.snapshot.total)}</strong>
+              <p>{q.notes}</p>
+              <small>
+                Saved cost {money(q.snapshot.cost)} · {q.snapshot.batches}{" "}
+                batch(es)
+              </small>
+              <div className="planning-actions">
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => navigate("Orders", { quoteId: q.id })}
+                >
+                  Create order
+                </button>
+                <button
+                  className="secondary"
+                  onClick={() => {
+                    setForm({ ...q });
+                    setEditing(q.id);
+                    setNotice("");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                >
+                  Edit & recalculate
+                </button>
+                <button
+                  className="secondary"
+                  onClick={() => navigate("Documents", { quoteId: q.id })}
+                >
+                  Print quote
+                </button>
+                <button
+                  className="text-button"
+                  onClick={() => {
+                    if (confirm("Delete this saved quote?")) {
+                      if (
+                        act(() => ({
+                          ...data,
+                          quotes: data.quotes.filter((x) => x.id !== q.id),
+                        })) &&
+                        editing === q.id
+                      )
+                        reset();
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </section>
+          ))}
       </div>
       {data.quotes.length > visibleQuotes && (
-        <button className="secondary load-more" onClick={() => setVisibleQuotes((count) => count + 30)}>
+        <button
+          className="secondary load-more"
+          onClick={() => setVisibleQuotes((count) => count + 30)}
+        >
           Show older quotes
         </button>
       )}
@@ -598,8 +633,12 @@ function DailyPlanner({ data, act }) {
     setRecipeId(plan.recipeId);
     setBatches(plan.batches);
     setNotes(plan.notes || "");
-    setEditNotice(`Editing ${plan.recipeName || "production task"}. Change the details, then select Save task.`);
-    requestAnimationFrame(() => editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    setEditNotice(
+      `Editing ${plan.recipeName || "production task"}. Change the details, then select Save task.`,
+    );
+    requestAnimationFrame(() =>
+      editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
   }
   return (
     <>
@@ -660,7 +699,11 @@ function DailyPlanner({ data, act }) {
                 reset();
             }}
           >
-            {editNotice && <p className="draft-status" role="status">{editNotice}</p>}
+            {editNotice && (
+              <p className="draft-status" role="status">
+                {editNotice}
+              </p>
+            )}
             <RecipeSelect data={data} value={recipeId} onChange={setRecipeId} />
             <label>
               Whole batches
@@ -795,10 +838,7 @@ function DailyPlanner({ data, act }) {
                     >
                       Complete production
                     </button>
-                    <button
-                      className="secondary"
-                      onClick={() => editPlan(p)}
-                    >
+                    <button className="secondary" onClick={() => editPlan(p)}>
                       Edit
                     </button>
                     <button

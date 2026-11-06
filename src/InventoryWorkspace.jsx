@@ -5,10 +5,7 @@ import React, { useDeferredValue, useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { addPresets, availability, produce, fullCost } from "./operations.js";
 import { recipeSaleDetails } from "./recipePricing.js";
-const money = (n) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
-    n,
-  );
+import { localDay, money } from "./uiFormatters.js";
 export function SaleFields({ data }) {
   const [id, setId] = useState(data.recipes[0]?.id || ""),
     [sellingUnits, setSellingUnits] = useState(1),
@@ -48,7 +45,8 @@ export function SaleFields({ data }) {
       </label>
       <div className="form-row">
         <label>
-          Quantity ({sale.label}{sellingUnits === 1 ? "" : "s"})
+          Quantity ({sale.label}
+          {sellingUnits === 1 ? "" : "s"})
           <input
             type="number"
             min="1"
@@ -72,7 +70,19 @@ export function SaleFields({ data }) {
         </label>
       </div>
       <input type="hidden" name="quantity" value={qty} />
-      <div className="sale-unit-summary"><span>{sellingUnits} {sale.label}{sellingUnits === 1 ? "" : "s"}</span><b>{qty} individual portion{qty === 1 ? "" : "s"}</b><small>{money(sale.salePrice)} per {sale.label}. Packaging recipe lines are already included in captured production cost.</small></div>
+      <div className="sale-unit-summary">
+        <span>
+          {sellingUnits} {sale.label}
+          {sellingUnits === 1 ? "" : "s"}
+        </span>
+        <b>
+          {qty} individual portion{qty === 1 ? "" : "s"}
+        </b>
+        <small>
+          {money(sale.salePrice)} per {sale.label}. Packaging recipe lines are
+          already included in captured production cost.
+        </small>
+      </div>
       <label>
         Customer sales tax (%)
         <input
@@ -120,13 +130,19 @@ export function SaleFields({ data }) {
             name="customerId"
             value={customerId}
             onChange={(event) => {
-              const customer = data.customers.find((item) => item.id === event.target.value);
+              const customer = data.customers.find(
+                (item) => item.id === event.target.value,
+              );
               setCustomerId(customer?.id || "");
               if (customer) setCustomerName(customer.name);
             }}
           >
             <option value="">New or walk-in customer</option>
-            {data.customers.map((customer) => <option value={customer.id} key={customer.id}>{customer.name}</option>)}
+            {data.customers.map((customer) => (
+              <option value={customer.id} key={customer.id}>
+                {customer.name}
+              </option>
+            ))}
           </select>
         </label>
       )}
@@ -137,7 +153,9 @@ export function SaleFields({ data }) {
           value={customerName}
           onChange={(event) => {
             setCustomerName(event.target.value);
-            const selected = data.customers?.find((item) => item.id === customerId);
+            const selected = data.customers?.find(
+              (item) => item.id === customerId,
+            );
             if (selected?.name !== event.target.value) setCustomerId("");
           }}
           placeholder="Optional for walk-in sales"
@@ -146,12 +164,7 @@ export function SaleFields({ data }) {
       <div className="form-row">
         <label>
           Date
-          <input
-            name="date"
-            type="date"
-            defaultValue={new Date().toLocaleDateString("en-CA")}
-            required
-          />
+          <input name="date" type="date" defaultValue={localDay()} required />
         </label>
         <label>
           Payment
@@ -175,7 +188,9 @@ export default function Operations({ data, save, open, tab }) {
   const [error, setError] = useState(""),
     [q, setQ] = useState(""),
     [showInventoryGuide, setShowInventoryGuide] = useState(
-      () => localStorage.getItem("bakery-ledger-inventory-guide-dismissed") !== "true",
+      () =>
+        localStorage.getItem("bakery-ledger-inventory-guide-dismissed") !==
+        "true",
     );
   const deferredQuery = useDeferredValue(q).toLocaleLowerCase();
   function act(fn) {
@@ -208,35 +223,40 @@ export default function Operations({ data, save, open, tab }) {
       {error && <div className="error">{error}</div>}
       {tab === "Inventory" ? (
         <>
-          {showInventoryGuide && <div className="operations-banner">
-            <div>
-              <h2>Ingredient & packaging inventory</h2>
-              <p>
-                Stock uses each item's purchase unit. Receive purchases or count
-                stock below. Presets need your actual purchase prices.
-              </p>
+          {showInventoryGuide && (
+            <div className="operations-banner">
+              <div>
+                <h2>Ingredient & packaging inventory</h2>
+                <p>
+                  Stock uses each item's purchase unit. Receive purchases or
+                  count stock below. Presets need your actual purchase prices.
+                </p>
+              </div>
+              <div className="operations-banner-actions">
+                <button
+                  className="secondary"
+                  onClick={() => act(() => addPresets(data))}
+                >
+                  Add common ingredients
+                </button>
+                <button
+                  className="icon-button banner-close"
+                  type="button"
+                  aria-label="Dismiss inventory setup guidance"
+                  title="Dismiss this guidance"
+                  onClick={() => {
+                    localStorage.setItem(
+                      "bakery-ledger-inventory-guide-dismissed",
+                      "true",
+                    );
+                    setShowInventoryGuide(false);
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
-            <div className="operations-banner-actions">
-              <button
-                className="secondary"
-                onClick={() => act(() => addPresets(data))}
-              >
-                Add common ingredients
-              </button>
-              <button
-                className="icon-button banner-close"
-                type="button"
-                aria-label="Dismiss inventory setup guidance"
-                title="Dismiss this guidance"
-                onClick={() => {
-                  localStorage.setItem("bakery-ledger-inventory-guide-dismissed", "true");
-                  setShowInventoryGuide(false);
-                }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-          </div>}
+          )}
           <div className="panel table-scroll">
             <table>
               <thead>
@@ -249,7 +269,9 @@ export default function Operations({ data, save, open, tab }) {
               </thead>
               <tbody>
                 {data.items
-                  .filter((i) => i.name.toLocaleLowerCase().includes(deferredQuery))
+                  .filter((i) =>
+                    i.name.toLocaleLowerCase().includes(deferredQuery),
+                  )
                   .slice(0, 100)
                   .map((i) => (
                     <tr key={i.id}>
@@ -407,9 +429,14 @@ export default function Operations({ data, save, open, tab }) {
                 stock = data.products[r.id] || { quantity: 0, value: 0 },
                 productLots = (data.productLots || [])
                   .filter((lot) => lot.recipeId === r.id && lot.remaining > 0)
-                  .sort((x, y) => (x.bestBefore || "9999").localeCompare(y.bestBefore || "9999")),
-                expiryAlerts = finishedProductAlerts(data, new Date().toLocaleDateString("en-CA"))
-                  .filter((lot) => lot.recipeId === r.id);
+                  .sort((x, y) =>
+                    (x.bestBefore || "9999").localeCompare(
+                      y.bestBefore || "9999",
+                    ),
+                  ),
+                expiryAlerts = finishedProductAlerts(data, localDay()).filter(
+                  (lot) => lot.recipeId === r.id,
+                );
               let cost;
               try {
                 cost = fullCost(r, data.items, data.settings);
@@ -445,17 +472,37 @@ export default function Operations({ data, save, open, tab }) {
                     <dt>Stock value</dt>
                     <dd>{money(stock.value)}</dd>
                     <dt>Finished lots</dt>
-                    <dd>{productLots.length || (stock.quantity ? "Legacy stock" : 0)}</dd>
+                    <dd>
+                      {productLots.length ||
+                        (stock.quantity ? "Legacy stock" : 0)}
+                    </dd>
                   </dl>
                   {tab === "Product stock" && productLots.length > 0 && (
                     <div className="finished-lot-list">
                       {productLots.slice(0, 4).map((lot) => (
-                        <div className={lot.bestBefore && lot.bestBefore < new Date().toLocaleDateString("en-CA") ? "negative" : ""} key={lot.id}>
-                          <span>{lot.remaining} portions · made {lot.producedAt}</span>
-                          <b>{lot.bestBefore ? `Best before ${lot.bestBefore}` : "No shelf life set"}</b>
+                        <div
+                          className={
+                            lot.bestBefore && lot.bestBefore < localDay()
+                              ? "negative"
+                              : ""
+                          }
+                          key={lot.id}
+                        >
+                          <span>
+                            {lot.remaining} portions · made {lot.producedAt}
+                          </span>
+                          <b>
+                            {lot.bestBefore
+                              ? `Best before ${lot.bestBefore}`
+                              : "No shelf life set"}
+                          </b>
                         </div>
                       ))}
-                      {expiryAlerts.some((lot) => lot.expired) && <p className="negative">Expired finished stock needs review.</p>}
+                      {expiryAlerts.some((lot) => lot.expired) && (
+                        <p className="negative">
+                          Expired finished stock needs review.
+                        </p>
+                      )}
                       {r.storageInstructions && <p>{r.storageInstructions}</p>}
                     </div>
                   )}
@@ -578,7 +625,7 @@ function StockForm({ item, apply }) {
                 <input
                   name="receivedAt"
                   type="date"
-                  defaultValue={new Date().toLocaleDateString("en-CA")}
+                  defaultValue={localDay()}
                   required
                 />
               </label>
@@ -599,10 +646,7 @@ function StockForm({ item, apply }) {
               </label>
               <label>
                 Supplier
-                <input
-                  name="supplier"
-                  defaultValue={item.supplier || ""}
-                />
+                <input name="supplier" defaultValue={item.supplier || ""} />
               </label>
             </div>
           )}

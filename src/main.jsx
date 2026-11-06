@@ -14,7 +14,9 @@ import PlanningWorkspace from "./PlanningWorkspace.jsx";
 import OwnerWorkspace from "./OwnerWorkspace.jsx";
 import TutorialWorkspace, { GuidedTutorial } from "./TutorialWorkspace.jsx";
 import CustomerWorkspace from "./CustomerWorkspace.jsx";
-import DocumentWorkspace, { BusinessProfileWorkspace } from "./DocumentWorkspace.jsx";
+import DocumentWorkspace, {
+  BusinessProfileWorkspace,
+} from "./DocumentWorkspace.jsx";
 import TraceabilityWorkspace from "./TraceabilityWorkspace.jsx";
 import CatalogWorkspace from "./CatalogWorkspace.jsx";
 import OwnerEnhancements from "./OwnerEnhancements.jsx";
@@ -24,7 +26,12 @@ import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
 import SupportWorkspace from "./SupportWorkspace.jsx";
 import { saveRecipePreset, saveRecipeRevision } from "./bakeryOperations.js";
-import { NotificationCenter, PinnedShortcuts, QuickActionMenu, UndoToast } from "./WorkspaceUtilities.jsx";
+import {
+  NotificationCenter,
+  PinnedShortcuts,
+  QuickActionMenu,
+  UndoToast,
+} from "./WorkspaceUtilities.jsx";
 import { readRecentPages, rememberPage } from "./qol.js";
 import { resolveAppearance } from "./appearanceThemes.js";
 import { normalizeDashboardConfig } from "./dashboardConfig.js";
@@ -62,13 +69,17 @@ import {
   X,
 } from "lucide-react";
 import { units, lineCost, recipeCost, convertItem } from "./costing.js";
+import { localDay, money } from "./uiFormatters.js";
 import "./style.css";
 const OwnerToolkitWorkspace = lazy(() => import("./OwnerToolkitWorkspace.jsx"));
-const BakeryOperationsWorkspace = lazy(() => import("./BakeryOperationsWorkspace.jsx"));
+const BakeryOperationsWorkspace = lazy(
+  () => import("./BakeryOperationsWorkspace.jsx"),
+);
 const uid = () => crypto.randomUUID();
 const lockKey = "bakery-ledger-lock-v1";
 const tutorialKey = "bakery-ledger-tutorial-v1";
-const modalDraftKey = (type, value) => `bakery-ledger-${type}-draft-${value?.id || "new"}-v1`;
+const modalDraftKey = (type, value) =>
+  `bakery-ledger-${type}-draft-${value?.id || "new"}-v1`;
 const readLock = () => {
   try {
     return JSON.parse(localStorage.getItem(lockKey)) || null;
@@ -76,11 +87,7 @@ const readLock = () => {
     return null;
   }
 };
-const money = (n) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
-    n,
-  );
-const today = () => new Date().toLocaleDateString("en-CA");
+const today = () => localDay();
 const initial = {
   tax: 7,
   taxRates: { food: 0, other: 7 },
@@ -176,7 +183,9 @@ function App() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [savedAt, setSavedAt] = useState(null);
   const [undo, setUndo] = useState(null);
-  const [recentPages, setRecentPages] = useState(() => readRecentPages(localStorage));
+  const [recentPages, setRecentPages] = useState(() =>
+    readRecentPages(localStorage),
+  );
   const quickNav = useRef(null);
   const [page, setPage] = useState(() => readRoute(window.location.hash).page),
     [routeContext, setRouteContext] = useState(
@@ -189,7 +198,13 @@ function App() {
   const section = sectionFor(page),
     info = pages[page];
   function navigate(nextPage, context = {}) {
-    if (modalDirty && !confirm("Leave this unsaved draft? It will remain available to recover later.")) return;
+    if (
+      modalDirty &&
+      !confirm(
+        "Leave this unsaved draft? It will remain available to recover later.",
+      )
+    )
+      return;
     setModal(null);
     setModalDirty(false);
     setPage(nextPage);
@@ -223,28 +238,55 @@ function App() {
     const apply = setTimeout(() => {
       try {
         const widths = JSON.parse(localStorage.getItem(key)) || [];
-        document.querySelectorAll(".content table").forEach((table, tableIndex) => table.querySelectorAll("th").forEach((cell, cellIndex) => {
-          if (widths[tableIndex]?.[cellIndex]) cell.style.width = `${widths[tableIndex][cellIndex]}px`;
-        }));
-      } catch { /* use natural table widths */ }
+        document
+          .querySelectorAll(".content table")
+          .forEach((table, tableIndex) =>
+            table.querySelectorAll("th").forEach((cell, cellIndex) => {
+              if (widths[tableIndex]?.[cellIndex])
+                cell.style.width = `${widths[tableIndex][cellIndex]}px`;
+            }),
+          );
+      } catch {
+        /* use natural table widths */
+      }
     });
     const remember = (event) => {
       if (!event.target.closest(".content th")) return;
-      const widths = [...document.querySelectorAll(".content table")].map((table) => [...table.querySelectorAll("th")].map((cell) => Math.round(cell.getBoundingClientRect().width)));
+      const widths = [...document.querySelectorAll(".content table")].map(
+        (table) =>
+          [...table.querySelectorAll("th")].map((cell) =>
+            Math.round(cell.getBoundingClientRect().width),
+          ),
+      );
       localStorage.setItem(key, JSON.stringify(widths));
     };
     document.addEventListener("pointerup", remember);
-    return () => { clearTimeout(apply); document.removeEventListener("pointerup", remember); };
+    return () => {
+      clearTimeout(apply);
+      document.removeEventListener("pointerup", remember);
+    };
   }, [page]);
   const appearance = resolveAppearance(data.settings?.appearance);
   const dashboardConfig = normalizeDashboardConfig(data.settings?.dashboard);
   const bakeryName = data.businessProfile?.name || "My bakery";
   const bakeryInitial = bakeryName.trim().charAt(0).toUpperCase() || "B";
   useEffect(() => {
-    document.documentElement.style.setProperty("--app-accent", appearance.theme.accent);
-    document.documentElement.style.setProperty("--app-sidebar", appearance.theme.sidebar);
-    document.documentElement.style.setProperty("--app-canvas", appearance.theme.canvas);
-    document.documentElement.style.setProperty("--app-soft", appearance.theme.soft);
+    document.documentElement.style.setProperty(
+      "--app-accent",
+      appearance.theme.accent,
+    );
+    document.documentElement.style.setProperty(
+      "--app-sidebar",
+      appearance.theme.sidebar,
+    );
+    document.documentElement.style.setProperty(
+      "--app-canvas",
+      appearance.theme.canvas,
+    );
+    document.documentElement.style.setProperty(
+      "--app-soft",
+      appearance.theme.soft,
+    );
     document.documentElement.dataset.density = appearance.density;
     document.title = `${bakeryName} · Bakery Ledger`;
     return () => {
@@ -254,7 +296,15 @@ function App() {
       document.documentElement.style.removeProperty("--app-soft");
       delete document.documentElement.dataset.density;
     };
-  }, [appearance.theme.id, appearance.theme.accent, appearance.theme.sidebar, appearance.theme.canvas, appearance.theme.soft, appearance.density, bakeryName]);
+  }, [
+    appearance.theme.id,
+    appearance.theme.accent,
+    appearance.theme.sidebar,
+    appearance.theme.canvas,
+    appearance.theme.soft,
+    appearance.density,
+    bakeryName,
+  ]);
   useEffect(() => {
     const scroll = () => setShowBackToTop(window.scrollY > 500);
     const shortcut = (event) => {
@@ -317,8 +367,16 @@ function App() {
   }
   const pinnedPages = data.settings?.qol?.pinnedPages || [];
   function togglePinnedPage(target) {
-    const next = pinnedPages.includes(target) ? pinnedPages.filter((item) => item !== target) : [...pinnedPages, target].slice(-8);
-    save({ ...data, settings: { ...data.settings, qol: { ...data.settings?.qol, pinnedPages: next } } });
+    const next = pinnedPages.includes(target)
+      ? pinnedPages.filter((item) => item !== target)
+      : [...pinnedPages, target].slice(-8);
+    save({
+      ...data,
+      settings: {
+        ...data.settings,
+        qol: { ...data.settings?.qol, pinnedPages: next },
+      },
+    });
   }
   function open(type, value) {
     setError("");
@@ -326,9 +384,16 @@ function App() {
     let restoredDraft = false;
     if (["item", "recipe"].includes(type)) {
       try {
-        const draft = JSON.parse(localStorage.getItem(modalDraftKey(type, value)));
-        if (draft) { nextValue = { ...(value || {}), ...draft }; restoredDraft = true; }
-      } catch { /* ignore unreadable draft */ }
+        const draft = JSON.parse(
+          localStorage.getItem(modalDraftKey(type, value)),
+        );
+        if (draft) {
+          nextValue = { ...(value || {}), ...draft };
+          restoredDraft = true;
+        }
+      } catch {
+        /* ignore unreadable draft */
+      }
     }
     setModalDirty(false);
     setModal({ type, value: nextValue, restoredDraft });
@@ -337,12 +402,24 @@ function App() {
     if (!modal || !["item", "recipe"].includes(modal.type)) return;
     const form = event.currentTarget;
     const draft = Object.fromEntries(new FormData(form));
-    if (modal.type === "recipe") draft.lines = [...form.querySelectorAll("[data-line]")].map((row) => ({ itemId: row.querySelector('[name="itemId"]')?.value, amount: row.querySelector('[name="quantity"]')?.value, unit: row.querySelector('[name="lineUnit"]')?.value }));
-    localStorage.setItem(modalDraftKey(modal.type, modal.value), JSON.stringify(draft));
+    if (modal.type === "recipe")
+      draft.lines = [...form.querySelectorAll("[data-line]")].map((row) => ({
+        itemId: row.querySelector('[name="itemId"]')?.value,
+        amount: row.querySelector('[name="quantity"]')?.value,
+        unit: row.querySelector('[name="lineUnit"]')?.value,
+      }));
+    localStorage.setItem(
+      modalDraftKey(modal.type, modal.value),
+      JSON.stringify(draft),
+    );
     setModalDirty(true);
   }
   function closeModal() {
-    if (modalDirty && !confirm("Close this form? Your draft will remain saved on this device.")) return;
+    if (
+      modalDirty &&
+      !confirm("Close this form? Your draft will remain saved on this device.")
+    )
+      return;
     setModalDirty(false);
     setModal(null);
   }
@@ -474,9 +551,13 @@ function App() {
         if (!lines.length)
           throw Error("Add at least one ingredient or packaging item.");
         lines.forEach((l) => lineCost(l, data.items));
-        const saleQuantity = f.saleFormat === "dozen" ? 12 : Number(f.saleQuantity) || 1;
+        const saleQuantity =
+          f.saleFormat === "dozen" ? 12 : Number(f.saleQuantity) || 1;
         const salePrice = Number(f.salePrice);
-        if (!(saleQuantity >= 1) || saleQuantity > +f.yield) throw Error("Selling-unit quantity must be between 1 and the batch yield.");
+        if (!(saleQuantity >= 1) || saleQuantity > +f.yield)
+          throw Error(
+            "Selling-unit quantity must be between 1 and the batch yield.",
+          );
         if (!(salePrice >= 0)) throw Error("Enter a valid selling price.");
         const r = {
           id: modal.value?.id || uid(),
@@ -524,7 +605,8 @@ function App() {
             { id: uid(), date: f.date, name: f.name, amount: +f.amount },
           ],
         });
-      if (["item", "recipe"].includes(modal.type)) localStorage.removeItem(modalDraftKey(modal.type, modal.value));
+      if (["item", "recipe"].includes(modal.type))
+        localStorage.removeItem(modalDraftKey(modal.type, modal.value));
       setModalDirty(false);
       setModal(null);
     } catch (err) {
@@ -564,15 +646,12 @@ function App() {
     e.target.value = "";
   }
   if (locked && lockConfig)
-    return (
-      <LockScreen
-        config={lockConfig}
-        onUnlock={() => setLocked(false)}
-      />
-    );
+    return <LockScreen config={lockConfig} onUnlock={() => setLocked(false)} />;
   return (
     <div className="app">
-      <a className="skip-link" href="#workspace-title">Skip to workspace content</a>
+      <a className="skip-link" href="#workspace-title">
+        Skip to workspace content
+      </a>
       <aside>
         <a
           className="brand"
@@ -593,7 +672,8 @@ function App() {
         <div className="workspace">
           <span className="avatar">{bakeryInitial}</span>
           <div>
-            {bakeryName}<small>Your business workspace</small>
+            {bakeryName}
+            <small>Your business workspace</small>
           </div>
           <span className="dot" />
         </div>
@@ -621,10 +701,12 @@ function App() {
             );
           })}
         </nav>
-        {appearance.showTips && <div className="workspace-guide">
-          <p>Quote → Order → Produce → Fulfill</p>
-          <small>One connected workflow for your bakery.</small>
-        </div>}
+        {appearance.showTips && (
+          <div className="workspace-guide">
+            <p>Quote → Order → Produce → Fulfill</p>
+            <small>One connected workflow for your bakery.</small>
+          </div>
+        )}
         <div className="workspace-local">
           <span className="status-dot" /> Saved on this device
           <small>USD · Local workspace</small>
@@ -647,12 +729,28 @@ function App() {
             Workspace <span className="slash">/</span> <b>{section.name}</b>
           </span>
           <div className="header-tools">
-            <QuickSearch ref={quickNav} data={data} navigate={navigate} openAction={open} recentPages={recentPages} />
+            <QuickSearch
+              ref={quickNav}
+              data={data}
+              navigate={navigate}
+              openAction={open}
+              recentPages={recentPages}
+            />
             <QuickActionMenu open={open} navigate={navigate} />
             <NotificationCenter data={data} navigate={navigate} />
             <UpdateStatusBadge />
-            <span className="save-indicator" role="status" aria-live="polite" title={savedAt ? savedAt.toLocaleString() : "Loaded from this device"}><span className="status-dot" />{savedAt ? "Saved just now" : "Saved locally"}</span>
-          <span className="header-avatar">{bakeryInitial}</span>
+            <span
+              className="save-indicator"
+              role="status"
+              aria-live="polite"
+              title={
+                savedAt ? savedAt.toLocaleString() : "Loaded from this device"
+              }
+            >
+              <span className="status-dot" />
+              {savedAt ? "Saved just now" : "Saved locally"}
+            </span>
+            <span className="header-avatar">{bakeryInitial}</span>
           </div>
         </header>
         <div className="content">
@@ -669,20 +767,35 @@ function App() {
               </h1>
               <p>{info.description}</p>
             </div>
-            <div className="page-actions"><button className={pinnedPages.includes(page) ? "pin-page pinned" : "pin-page"} onClick={() => togglePinnedPage(page)} aria-label={`${pinnedPages.includes(page) ? "Unpin" : "Pin"} ${info.label}`} title="Pin this page"><Star size={16} fill={pinnedPages.includes(page) ? "currentColor" : "none"} /></button>{info.action && (
+            <div className="page-actions">
               <button
-                className="primary"
-                onClick={() =>
-                  open(
-                    info.modal,
-                    page === "Packaging" ? { type: "packaging" } : undefined,
-                  )
+                className={
+                  pinnedPages.includes(page) ? "pin-page pinned" : "pin-page"
                 }
+                onClick={() => togglePinnedPage(page)}
+                aria-label={`${pinnedPages.includes(page) ? "Unpin" : "Pin"} ${info.label}`}
+                title="Pin this page"
               >
-                <Plus size={17} />
-                {info.action}
+                <Star
+                  size={16}
+                  fill={pinnedPages.includes(page) ? "currentColor" : "none"}
+                />
               </button>
-            )}</div>
+              {info.action && (
+                <button
+                  className="primary"
+                  onClick={() =>
+                    open(
+                      info.modal,
+                      page === "Packaging" ? { type: "packaging" } : undefined,
+                    )
+                  }
+                >
+                  <Plus size={17} />
+                  {info.action}
+                </button>
+              )}
+            </div>
           </div>
           {section.pages.length > 1 && (
             <nav
@@ -701,7 +814,12 @@ function App() {
               ))}
             </nav>
           )}
-          <PinnedShortcuts pinned={pinnedPages} recent={recentPages} navigate={navigate} onUnpin={togglePinnedPage} />
+          <PinnedShortcuts
+            pinned={pinnedPages}
+            recent={recentPages}
+            navigate={navigate}
+            onUnpin={togglePinnedPage}
+          />
           {info.next && appearance.showTips && (
             <div className="workflow-handoff">
               <span>
@@ -730,7 +848,16 @@ function App() {
           ) : page === "Help & support" ? (
             <SupportWorkspace data={data} page={page} />
           ) : ownerToolkitPages.includes(page) ? (
-            <Suspense fallback={<p className="panel empty">Opening owner tools…</p>}><OwnerToolkitWorkspace data={data} save={save} page={page} navigate={navigate} /></Suspense>
+            <Suspense
+              fallback={<p className="panel empty">Opening owner tools…</p>}
+            >
+              <OwnerToolkitWorkspace
+                data={data}
+                save={save}
+                page={page}
+                navigate={navigate}
+              />
+            </Suspense>
           ) : page === "Customers" ? (
             <CustomerWorkspace data={data} save={save} navigate={navigate} />
           ) : page === "Documents" ? (
@@ -746,20 +873,43 @@ function App() {
           ) : page === "App updates" ? (
             <UpdateWorkspace />
           ) : bakeryOperationsPages.includes(page) ? (
-            <Suspense fallback={<p className="panel empty">Opening bakery operations…</p>}><BakeryOperationsWorkspace data={data} save={save} page={page} open={open} navigate={navigate} /></Suspense>
-          ) : ["Daily snapshot", "Use soon", "Packing", "Batch yields", "Seasonal plans"].includes(page) ? (
-            <OwnerEnhancements data={data} save={save} page={page} navigate={navigate} />
+            <Suspense
+              fallback={
+                <p className="panel empty">Opening bakery operations…</p>
+              }
+            >
+              <BakeryOperationsWorkspace
+                data={data}
+                save={save}
+                page={page}
+                open={open}
+                navigate={navigate}
+              />
+            </Suspense>
           ) : [
-            "Calendar",
-            "Prep sheets",
-            "Inventory lots",
-            "Supplier prices",
-            "Payments",
-            "Tax report",
-            "Waste analysis",
-            "Owner forecast",
-            "Security",
-          ].includes(page) ? (
+              "Daily snapshot",
+              "Use soon",
+              "Packing",
+              "Batch yields",
+              "Seasonal plans",
+            ].includes(page) ? (
+            <OwnerEnhancements
+              data={data}
+              save={save}
+              page={page}
+              navigate={navigate}
+            />
+          ) : [
+              "Calendar",
+              "Prep sheets",
+              "Inventory lots",
+              "Supplier prices",
+              "Payments",
+              "Tax report",
+              "Waste analysis",
+              "Owner forecast",
+              "Security",
+            ].includes(page) ? (
             <OwnerWorkspace
               key={page}
               data={data}
@@ -845,117 +995,131 @@ function App() {
                   onChange={(e) => setMonth(e.target.value)}
                 />
               </div>
-              <Dashboard data={data} month={month} save={save} navigate={navigate} />
-              {dashboardConfig.showRecent && <section className="panel transactions">
-                <div className="panel-heading">
-                  <div>
-                    <h2>The latest in your bakery</h2>
-                    <p>Your sales and expenses, all in one place.</p>
+              <Dashboard
+                data={data}
+                month={month}
+                save={save}
+                navigate={navigate}
+              />
+              {dashboardConfig.showRecent && (
+                <section className="panel transactions">
+                  <div className="panel-heading">
+                    <div>
+                      <h2>The latest in your bakery</h2>
+                      <p>Your sales and expenses, all in one place.</p>
+                    </div>
+                    <button
+                      className="secondary"
+                      onClick={() => open("expense")}
+                    >
+                      <Plus size={16} />
+                      Add expense
+                    </button>
                   </div>
-                  <button className="secondary" onClick={() => open("expense")}>
-                    <Plus size={16} />
-                    Add expense
-                  </button>
-                </div>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>DESCRIPTION</th>
-                      <th>DATE</th>
-                      <th>TYPE</th>
-                      <th>AMOUNT</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      ...sales.map((s) => ({ ...s, type: "Sale" })),
-                      ...expenses.map((s) => ({ ...s, type: "Expense" })),
-                    ]
-                      .sort((a, b) => b.date.localeCompare(a.date))
-                      .map((s) => (
-                        <tr key={s.id}>
-                          <td>
-                            <b>{s.name}</b>
-                            {s.quantity && <small>{s.quantity} sold</small>}
-                            {s.net != null && (
-                              <small>
-                                Before tax {money(s.net)} · Sales tax{" "}
-                                {money(s.tax || 0)}
-                              </small>
-                            )}
-                          </td>
-                          <td>{s.date}</td>
-                          <td>
-                            <span
-                              className={
-                                "tag " + (s.type === "Sale" ? "sage" : "")
-                              }
-                            >
-                              {s.type}
-                            </span>
-                          </td>
-                          <td>{money(s.total ?? s.amount)}</td>
-                          <td>
-                            <button
-                              aria-label="Delete transaction"
-                              disabled={!!(s.orderId || s.wasteId)}
-                              title={
-                                s.orderId || s.wasteId
-                                  ? "Linked order and waste records are retained for stock consistency"
-                                  : "Delete transaction"
-                              }
-                              className="icon-button"
-                              onClick={() => {
-                                if (confirm("Delete this transaction?"))
-                                  saveWithUndo({
-                                    ...data,
-                                    products: s.stockTracked
-                                      ? {
-                                          ...data.products,
-                                          [s.recipeId]: {
-                                            quantity:
-                                              (data.products[s.recipeId]
-                                                ?.quantity || 0) + s.quantity,
-                                            value:
-                                              (data.products[s.recipeId]
-                                                ?.value || 0) + s.cost,
-                                          },
-                                        }
-                                      : data.products,
-                                    productLots: s.stockTracked
-                                      ? restoreProductLots(
-                                          data.productLots || [],
-                                          s.productLotUsage,
-                                        )
-                                      : data.productLots,
-                                    sales: data.sales.filter(
-                                      (x) => x.id !== s.id,
-                                    ),
-                                    expenses: data.expenses.filter(
-                                      (x) => x.id !== s.id,
-                                    ),
-                                  }, `${s.type} deleted.`);
-                              }}
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-                {!sales.length && !expenses.length && (
-                  <div className="empty">
-                    <span>✧</span>
-                    <h3>A fresh page for your business</h3>
-                    <p>
-                      Record your first sale or expense to see your month take
-                      shape.
-                    </p>
-                  </div>
-                )}
-              </section>}
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>DESCRIPTION</th>
+                        <th>DATE</th>
+                        <th>TYPE</th>
+                        <th>AMOUNT</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ...sales.map((s) => ({ ...s, type: "Sale" })),
+                        ...expenses.map((s) => ({ ...s, type: "Expense" })),
+                      ]
+                        .sort((a, b) => b.date.localeCompare(a.date))
+                        .map((s) => (
+                          <tr key={s.id}>
+                            <td>
+                              <b>{s.name}</b>
+                              {s.quantity && <small>{s.quantity} sold</small>}
+                              {s.net != null && (
+                                <small>
+                                  Before tax {money(s.net)} · Sales tax{" "}
+                                  {money(s.tax || 0)}
+                                </small>
+                              )}
+                            </td>
+                            <td>{s.date}</td>
+                            <td>
+                              <span
+                                className={
+                                  "tag " + (s.type === "Sale" ? "sage" : "")
+                                }
+                              >
+                                {s.type}
+                              </span>
+                            </td>
+                            <td>{money(s.total ?? s.amount)}</td>
+                            <td>
+                              <button
+                                aria-label="Delete transaction"
+                                disabled={!!(s.orderId || s.wasteId)}
+                                title={
+                                  s.orderId || s.wasteId
+                                    ? "Linked order and waste records are retained for stock consistency"
+                                    : "Delete transaction"
+                                }
+                                className="icon-button"
+                                onClick={() => {
+                                  if (confirm("Delete this transaction?"))
+                                    saveWithUndo(
+                                      {
+                                        ...data,
+                                        products: s.stockTracked
+                                          ? {
+                                              ...data.products,
+                                              [s.recipeId]: {
+                                                quantity:
+                                                  (data.products[s.recipeId]
+                                                    ?.quantity || 0) +
+                                                  s.quantity,
+                                                value:
+                                                  (data.products[s.recipeId]
+                                                    ?.value || 0) + s.cost,
+                                              },
+                                            }
+                                          : data.products,
+                                        productLots: s.stockTracked
+                                          ? restoreProductLots(
+                                              data.productLots || [],
+                                              s.productLotUsage,
+                                            )
+                                          : data.productLots,
+                                        sales: data.sales.filter(
+                                          (x) => x.id !== s.id,
+                                        ),
+                                        expenses: data.expenses.filter(
+                                          (x) => x.id !== s.id,
+                                        ),
+                                      },
+                                      `${s.type} deleted.`,
+                                    );
+                                }}
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                  {!sales.length && !expenses.length && (
+                    <div className="empty">
+                      <span>✧</span>
+                      <h3>A fresh page for your business</h3>
+                      <p>
+                        Record your first sale or expense to see your month take
+                        shape.
+                      </p>
+                    </div>
+                  )}
+                </section>
+              )}
               <div className="footer-note">
                 A pinch of planning. A whole lot of possibility.
               </div>
@@ -971,7 +1135,14 @@ function App() {
           )}
         </div>
       </main>
-      <UndoToast value={undo} onUndo={() => { if (undo?.previous) save(undo.previous); setUndo(null); }} onClose={() => setUndo(null)} />
+      <UndoToast
+        value={undo}
+        onUndo={() => {
+          if (undo?.previous) save(undo.previous);
+          setUndo(null);
+        }}
+        onClose={() => setUndo(null)}
+      />
       {modal && (
         <div className="overlay">
           <section
@@ -1007,7 +1178,8 @@ function App() {
                       ? "Recipe studio"
                       : modal.type === "sale"
                         ? "Record a sale"
-                        : "Record an expense"}{modalDirty ? " • Unsaved draft" : ""}
+                        : "Record an expense"}
+                {modalDirty ? " • Unsaved draft" : ""}
               </h2>
               <button
                 className="icon-button"
@@ -1018,7 +1190,9 @@ function App() {
               </button>
             </div>
             <form onSubmit={submit} onInput={saveModalDraft}>
-              {modal.restoredDraft && <p className="draft-status">Recovered your autosaved draft.</p>}
+              {modal.restoredDraft && (
+                <p className="draft-status">Recovered your autosaved draft.</p>
+              )}
               {modal.type === "tax" ? (
                 <>
                   <p className="hint">
@@ -1054,7 +1228,10 @@ function App() {
                     <input name="applyPurchaseRates" type="checkbox" />
                     <span>
                       Update the saved rate on existing inventory items
-                      <small>Each item keeps its current Added, Included, or Exempt treatment. Exempt items remain exempt.</small>
+                      <small>
+                        Each item keeps its current Added, Included, or Exempt
+                        treatment. Exempt items remain exempt.
+                      </small>
                     </span>
                   </label>
                   <div className="conversion-box">
@@ -1085,7 +1262,12 @@ function App() {
               ) : modal.type === "item" ? (
                 <ItemFields item={modal.value} taxRates={data.taxRates} />
               ) : modal.type === "recipe" ? (
-                <RecipeFields recipe={modal.value} items={data.items} data={data} save={save} />
+                <RecipeFields
+                  recipe={modal.value}
+                  items={data.items}
+                  data={data}
+                  save={save}
+                />
               ) : modal.type === "sale" ? (
                 <SaleFields data={data} />
               ) : (
@@ -1444,7 +1626,9 @@ function RecipeFields({ recipe: r = {}, items, data, save }) {
     <>
       <div className="recipe-editor-intro">
         <div>
-          <span className="eyebrow">{r.id ? "EDITING SAVED RECIPE" : "NEW RECIPE"}</span>
+          <span className="eyebrow">
+            {r.id ? "EDITING SAVED RECIPE" : "NEW RECIPE"}
+          </span>
           <h3>{r.name || "Build a complete batch"}</h3>
         </div>
         <span className="pill">{lines.length} RECIPE ITEMS</span>
@@ -1482,15 +1666,77 @@ function RecipeFields({ recipe: r = {}, items, data, save }) {
       </div>
       <div className="conversion-box recipe-selling-box">
         <h3>Selling format</h3>
-        <p>Choose how the customer buys this dessert. Bakery Ledger still tracks finished stock by individual sellable portions.</p>
+        <p>
+          Choose how the customer buys this dessert. Bakery Ledger still tracks
+          finished stock by individual sellable portions.
+        </p>
         <div className="form-row">
-          <label>Sold as<select name="saleFormat" value={saleFormat} onChange={(event) => { const format = event.target.value; setSaleFormat(format); if (format === "dozen") setSaleQuantity(12); if (["individual", "slice"].includes(format)) setSaleQuantity(1); }}><option value="individual">Individual dessert</option><option value="slice">Slice</option><option value="box">Box</option><option value="tray">Tray</option><option value="dozen">Dozen</option><option value="custom">Custom selling unit</option></select></label>
-          <label>Desserts / portions in one selling unit<input name="saleQuantity" type="number" min="1" max={yieldN} step="1" value={saleQuantity} disabled={["individual", "slice", "dozen"].includes(saleFormat)} onChange={(event) => setSaleQuantity(+event.target.value)} required /></label>
+          <label>
+            Sold as
+            <select
+              name="saleFormat"
+              value={saleFormat}
+              onChange={(event) => {
+                const format = event.target.value;
+                setSaleFormat(format);
+                if (format === "dozen") setSaleQuantity(12);
+                if (["individual", "slice"].includes(format))
+                  setSaleQuantity(1);
+              }}
+            >
+              <option value="individual">Individual dessert</option>
+              <option value="slice">Slice</option>
+              <option value="box">Box</option>
+              <option value="tray">Tray</option>
+              <option value="dozen">Dozen</option>
+              <option value="custom">Custom selling unit</option>
+            </select>
+          </label>
+          <label>
+            Desserts / portions in one selling unit
+            <input
+              name="saleQuantity"
+              type="number"
+              min="1"
+              max={yieldN}
+              step="1"
+              value={saleQuantity}
+              disabled={["individual", "slice", "dozen"].includes(saleFormat)}
+              onChange={(event) => setSaleQuantity(+event.target.value)}
+              required
+            />
+          </label>
         </div>
-        {["individual", "slice", "dozen"].includes(saleFormat) && <input name="saleQuantity" type="hidden" value={saleQuantity} />}
-        <label>Customer price for one {saleFormat === "individual" ? "dessert" : saleFormat === "custom" ? "selling unit" : saleFormat} ($)<input name="salePrice" type="number" min="0" step="0.01" value={salePrice} onChange={(event) => setSalePrice(event.target.value)} required /></label>
-        <div className="price-equivalent"><span>Equivalent price per dessert / portion</span><b>{money((Number(salePrice) || 0) / Math.max(1, saleQuantity))}</b></div>
-        <p className="hint">Ingredient and packaging lines below are batch quantities. Their costs, plus labor, utilities and overhead, are divided across the batch yield automatically.</p>
+        {["individual", "slice", "dozen"].includes(saleFormat) && (
+          <input name="saleQuantity" type="hidden" value={saleQuantity} />
+        )}
+        <label>
+          Customer price for one{" "}
+          {saleFormat === "individual"
+            ? "dessert"
+            : saleFormat === "custom"
+              ? "selling unit"
+              : saleFormat}{" "}
+          ($)
+          <input
+            name="salePrice"
+            type="number"
+            min="0"
+            step="0.01"
+            value={salePrice}
+            onChange={(event) => setSalePrice(event.target.value)}
+            required
+          />
+        </label>
+        <div className="price-equivalent">
+          <span>Equivalent price per dessert / portion</span>
+          <b>{money((Number(salePrice) || 0) / Math.max(1, saleQuantity))}</b>
+        </div>
+        <p className="hint">
+          Ingredient and packaging lines below are batch quantities. Their
+          costs, plus labor, utilities and overhead, are divided across the
+          batch yield automatically.
+        </p>
       </div>
       <label>
         Allergens
@@ -1505,43 +1751,86 @@ function RecipeFields({ recipe: r = {}, items, data, save }) {
         <div className="form-row">
           <label>
             Prep minutes
-            <input name="prepMinutes" type="number" min="0" step="1" defaultValue={r.prepMinutes || 0} />
+            <input
+              name="prepMinutes"
+              type="number"
+              min="0"
+              step="1"
+              defaultValue={r.prepMinutes || 0}
+            />
           </label>
           <label>
             Bake minutes
-            <input name="bakeMinutes" type="number" min="0" step="1" defaultValue={r.bakeMinutes || 0} />
+            <input
+              name="bakeMinutes"
+              type="number"
+              min="0"
+              step="1"
+              defaultValue={r.bakeMinutes || 0}
+            />
           </label>
           <label>
             Cooling minutes
-            <input name="coolingMinutes" type="number" min="0" step="1" defaultValue={r.coolingMinutes || 0} />
+            <input
+              name="coolingMinutes"
+              type="number"
+              min="0"
+              step="1"
+              defaultValue={r.coolingMinutes || 0}
+            />
           </label>
         </div>
         <div className="form-row">
           <label>
             Bake temperature
-            <input name="bakeTemperature" defaultValue={r.bakeTemperature || ""} placeholder="e.g. 350°F / 175°C" />
+            <input
+              name="bakeTemperature"
+              defaultValue={r.bakeTemperature || ""}
+              placeholder="e.g. 350°F / 175°C"
+            />
           </label>
           <label>
             Equipment
-            <input name="equipment" defaultValue={r.equipment || ""} placeholder="Mixer, 2 sheet pans" />
+            <input
+              name="equipment"
+              defaultValue={r.equipment || ""}
+              placeholder="Mixer, 2 sheet pans"
+            />
           </label>
         </div>
         <label>
           Step-by-step method
-          <textarea name="method" defaultValue={r.method || ""} placeholder={"1. Prepare pans\n2. Mix batter\n3. Bake and cool"} />
+          <textarea
+            name="method"
+            defaultValue={r.method || ""}
+            placeholder={"1. Prepare pans\n2. Mix batter\n3. Bake and cool"}
+          />
         </label>
         <h3>Finished-product shelf life</h3>
         <div className="form-row">
           <label>
             Best within (days)
-            <input name="shelfLifeDays" type="number" min="0" step="1" defaultValue={r.shelfLifeDays || 0} />
+            <input
+              name="shelfLifeDays"
+              type="number"
+              min="0"
+              step="1"
+              defaultValue={r.shelfLifeDays || 0}
+            />
           </label>
           <label>
             Storage instructions
-            <input name="storageInstructions" defaultValue={r.storageInstructions || ""} placeholder="Refrigerate at or below 40°F" />
+            <input
+              name="storageInstructions"
+              defaultValue={r.storageInstructions || ""}
+              placeholder="Refrigerate at or below 40°F"
+            />
           </label>
         </div>
-        <p className="hint">A value of 0 leaves best-before dates unset. New production captures these details as a snapshot.</p>
+        <p className="hint">
+          A value of 0 leaves best-before dates unset. New production captures
+          these details as a snapshot.
+        </p>
       </div>
       <div className="conversion-box">
         <h3>Batch labor & overhead</h3>
@@ -1586,17 +1875,45 @@ function RecipeFields({ recipe: r = {}, items, data, save }) {
       <p className="hint">
         Enter quantities for the whole batch, including boxes, utensils, and
         napkins. Decimals and fractions such as 0.5, 1/2, 1 1/2, and ½ are
-        accepted. Cost reflects the amount used; packages show what you need to buy.
+        accepted. Cost reflects the amount used; packages show what you need to
+        buy.
       </p>
       <div className="recipe-preset-tools">
-        {[...(data.recipeComponents || []).map((preset) => ({ ...preset, kind: "component" })), ...(data.packagingPresets || []).map((preset) => ({ ...preset, kind: "packaging" }))].map((preset) => <button type="button" className="preset-chip" key={preset.id} onClick={() => setLines([...lines, ...preset.lines.map((line) => ({ ...line, key: uid() }))])}>+ {preset.name} <small>{preset.kind === "component" ? "sub-recipe" : "packaging"}</small></button>)}
+        {[
+          ...(data.recipeComponents || []).map((preset) => ({
+            ...preset,
+            kind: "component",
+          })),
+          ...(data.packagingPresets || []).map((preset) => ({
+            ...preset,
+            kind: "packaging",
+          })),
+        ].map((preset) => (
+          <button
+            type="button"
+            className="preset-chip"
+            key={preset.id}
+            onClick={() =>
+              setLines([
+                ...lines,
+                ...preset.lines.map((line) => ({ ...line, key: uid() })),
+              ])
+            }
+          >
+            + {preset.name}{" "}
+            <small>
+              {preset.kind === "component" ? "sub-recipe" : "packaging"}
+            </small>
+          </button>
+        ))}
       </div>
       {lines.map((l, index) => {
         let result, err;
         try {
           result = lineCost({ ...l, amount: parseQuantity(l.amount) }, items);
           total += result.cost;
-          if (items.find((item) => item.id === l.itemId)?.type === "packaging") packagingTotal += result.cost;
+          if (items.find((item) => item.id === l.itemId)?.type === "packaging")
+            packagingTotal += result.cost;
           else ingredientTotal += result.cost;
         } catch (e) {
           err = e.message;
@@ -1662,7 +1979,67 @@ function RecipeFields({ recipe: r = {}, items, data, save }) {
         <Plus size={16} />
         Add ingredient or packaging
       </button>
-      {!!lines.length && <div className="preset-save-actions"><span>Reuse these lines in other recipes:</span><button type="button" className="text-button" onClick={() => { const name = prompt("Name this sub-recipe (for example, Vanilla buttercream)"); if (name) save(saveRecipePreset(data, "component", { name, lines: lines.filter((line) => items.find((item) => item.id === line.itemId)?.type !== "packaging").map(({ itemId, amount, unit }) => ({ itemId, amount, unit })) })); }}>Save ingredients as sub-recipe</button><button type="button" className="text-button" onClick={() => { const name = prompt("Name this packaging preset (for example, Market box kit)"); if (name) save(saveRecipePreset(data, "packaging", { name, lines: lines.filter((line) => items.find((item) => item.id === line.itemId)?.type === "packaging").map(({ itemId, amount, unit }) => ({ itemId, amount, unit })) })); }}>Save packaging preset</button></div>}
+      {!!lines.length && (
+        <div className="preset-save-actions">
+          <span>Reuse these lines in other recipes:</span>
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => {
+              const name = prompt(
+                "Name this sub-recipe (for example, Vanilla buttercream)",
+              );
+              if (name)
+                save(
+                  saveRecipePreset(data, "component", {
+                    name,
+                    lines: lines
+                      .filter(
+                        (line) =>
+                          items.find((item) => item.id === line.itemId)
+                            ?.type !== "packaging",
+                      )
+                      .map(({ itemId, amount, unit }) => ({
+                        itemId,
+                        amount,
+                        unit,
+                      })),
+                  }),
+                );
+            }}
+          >
+            Save ingredients as sub-recipe
+          </button>
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => {
+              const name = prompt(
+                "Name this packaging preset (for example, Market box kit)",
+              );
+              if (name)
+                save(
+                  saveRecipePreset(data, "packaging", {
+                    name,
+                    lines: lines
+                      .filter(
+                        (line) =>
+                          items.find((item) => item.id === line.itemId)
+                            ?.type === "packaging",
+                      )
+                      .map(({ itemId, amount, unit }) => ({
+                        itemId,
+                        amount,
+                        unit,
+                      })),
+                  }),
+                );
+            }}
+          >
+            Save packaging preset
+          </button>
+        </div>
+      )}
       <div className="cost-summary">
         <span>
           Ingredients <b>{money(ingredientTotal)}</b>
@@ -1686,7 +2063,9 @@ function LockScreen({ config, onUnlock }) {
   return (
     <main className="lock-screen">
       <section className="panel lock-card">
-        <span className="brand-icon"><ChefHat /></span>
+        <span className="brand-icon">
+          <ChefHat />
+        </span>
         <span className="eyebrow">OWNER WORKSPACE</span>
         <h1>Bakery Ledger is locked</h1>
         <p>Enter your local PIN to continue.</p>
@@ -1716,7 +2095,11 @@ function LockScreen({ config, onUnlock }) {
               required
             />
           </label>
-          {error && <p className="error" role="alert">{error}</p>}
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
           <button className="primary">Unlock workspace</button>
         </form>
       </section>

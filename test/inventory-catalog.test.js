@@ -8,9 +8,7 @@ const fixture = () => ({
     { id: "stock", name: "Sugar", stock: 2 },
     { id: "free", name: "Sprinkles", stock: 0 },
   ],
-  recipes: [
-    { id: "cake", name: "Cake", lines: [{ itemId: "used" }] },
-  ],
+  recipes: [{ id: "cake", name: "Cake", lines: [{ itemId: "used" }] }],
   inventoryLots: [],
   purchaseHistory: [{ itemId: "free", itemName: "Sprinkles" }],
 });
@@ -22,6 +20,9 @@ test("inventory deletion protects recipe references and stock", () => {
 
 test("inventory deletion removes the catalog item and retains history", () => {
   const next = removeInventoryItem(fixture(), "free");
-  assert.equal(next.items.some((item) => item.id === "free"), false);
+  assert.equal(
+    next.items.some((item) => item.id === "free"),
+    false,
+  );
   assert.equal(next.purchaseHistory[0].itemName, "Sprinkles");
 });

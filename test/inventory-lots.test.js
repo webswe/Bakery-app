@@ -43,8 +43,20 @@ test("receipts preserve lot, supplier, cost and purchase tax snapshots", () => {
 
 test("lot consumption uses earliest expiry first without mutating input", () => {
   const lots = [
-    { id: "later", itemId: "milk", remaining: 4, expiryDate: "2026-12-01", receivedAt: "2026-10-01" },
-    { id: "first", itemId: "milk", remaining: 3, expiryDate: "2026-11-01", receivedAt: "2026-10-20" },
+    {
+      id: "later",
+      itemId: "milk",
+      remaining: 4,
+      expiryDate: "2026-12-01",
+      receivedAt: "2026-10-01",
+    },
+    {
+      id: "first",
+      itemId: "milk",
+      remaining: 3,
+      expiryDate: "2026-11-01",
+      receivedAt: "2026-10-20",
+    },
   ];
   const result = consumeLots(lots, "milk", 5);
   assert.equal(lots[0].remaining, 4);

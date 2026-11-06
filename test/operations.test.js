@@ -58,15 +58,10 @@ test("production creates a traceable finished lot and sales consume it", () => {
   const data = fixture();
   data.recipes[0].shelfLifeDays = 4;
   data.recipes[0].storageInstructions = "Keep refrigerated";
-  const made = produce(
-    data,
-    "cake",
-    1,
-    undefined,
-    undefined,
-    undefined,
-    { productionDate: "2026-10-27", productionPlanId: "plan" },
-  );
+  const made = produce(data, "cake", 1, undefined, undefined, undefined, {
+    productionDate: "2026-10-27",
+    productionPlanId: "plan",
+  });
   assert.equal(made.productLots[0].bestBefore, "2026-10-31");
   assert.equal(made.productionBatches[0].productionPlanId, "plan");
   assert.equal(made.productionBatches[0].productLotId, made.productLots[0].id);

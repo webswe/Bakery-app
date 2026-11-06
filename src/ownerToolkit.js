@@ -267,7 +267,7 @@ export function exportCsv(data, type) {
   ].join("\n");
 }
 
-export function parseCsv(text) {
+function parseCsv(text) {
   const rows = [];
   let row = [],
     cell = "",

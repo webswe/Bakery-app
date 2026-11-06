@@ -18,15 +18,21 @@ test("lot details occupy a full row and size columns from available space", () =
 });
 
 test("shared layout conventions: spacing scale, adaptive form rows, reachable modal footer", () => {
-  assert.match(css, /--space-4:16px/);
+  assert.match(css, /--space-4:\s*16px/);
   // Form rows size columns from available space; a flex-basis here turns into a height when stacked.
-  assert.match(css, /\.form-row\s*\{\s*display:grid;\s*grid-template-columns:repeat\(auto-fit,minmax\(min\(100%,180px\),1fr\)\)/);
+  assert.match(
+    css,
+    /\.form-row\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(100%,\s*180px\),\s*1fr\)\)/,
+  );
   assert.doesNotMatch(css, /\.form-row > label\s*\{\s*flex:1 1 180px/);
   // Stock form keeps a hard minimum so the table column cannot collapse the lot date inputs.
-  assert.match(css, /\.stock-form\s*\{\s*min-width:250px;\s*\}/);
-  assert.match(css, /\.modal-actions\s*\{\s*position:sticky/);
+  assert.match(css, /\.stock-form\s*\{\s*min-width:\s*250px;\s*\}/);
+  assert.match(css, /\.modal-actions\s*\{[^}]*position:\s*sticky/);
 });
 
 test("the later dashboard-actions rule removes the negative-margin overlap with the month picker", () => {
-  assert.match(css, /\.dashboard-actions\s*\{\s*margin:0 0 var\(--space-4\);\s*position:static/);
+  assert.match(
+    css,
+    /\.dashboard-actions\s*\{\s*margin:\s*0 0 var\(--space-4\);\s*position:\s*static/,
+  );
 });

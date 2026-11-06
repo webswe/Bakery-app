@@ -4,6 +4,7 @@ import { sell, fullCost } from "./operations.js";
 import { consumeLots } from "./inventoryLots.js";
 import { allocateDocumentNumber } from "./documentOps.js";
 import { consumeProductLots } from "./productLots.js";
+import { localDay } from "./dateUtils.js";
 export const checklistSteps = ["Bake", "Chill", "Decorate", "Pack"];
 const positive = (v, label, zero = false) => {
   const n = Number(v);
@@ -14,7 +15,7 @@ const positive = (v, label, zero = false) => {
 export function validDate(value) {
   if (
     !/^\d{4}-\d{2}-\d{2}$/.test(value || "") ||
-    new Date(value + "T12:00:00").toLocaleDateString("en-CA") !== value
+    localDay(new Date(value + "T12:00:00")) !== value
   )
     throw Error("Choose a valid date.");
   return value;
@@ -233,8 +234,7 @@ export function stockAlerts(data, day = localDate()) {
   const expiredLots = new Set(
     (data.inventoryLots || [])
       .filter(
-        (lot) =>
-          lot.remaining > 0 && lot.expiryDate && lot.expiryDate <= day,
+        (lot) => lot.remaining > 0 && lot.expiryDate && lot.expiryDate <= day,
       )
       .map((lot) => lot.itemId),
   );

@@ -59,7 +59,7 @@ function OrderIntake({ data, save, navigate }) {
   const dates = Array.from({ length: 7 }, (_, offset) => {
     const date = new Date(`${today()}T12:00:00`);
     date.setDate(date.getDate() + offset);
-    return date.toLocaleDateString("en-CA");
+    return localDay(date);
   });
   const moveRequest = (id, pickupDate) =>
     save({

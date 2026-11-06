@@ -12,12 +12,24 @@ import {
 } from "../src/ownerFeatures.js";
 
 test("daily snapshot separates earned revenue, cash, tax and costs", () => {
-  const result = dailySnapshot({
-    sales: [{ date: "2026-10-28", net: 100, tax: 7, total: 107, cost: 40, quantity: 8 }],
-    expenses: [{ date: "2026-10-28", amount: 10 }],
-    payments: [{ date: "2026-10-28", amount: 30, kind: "payment" }],
-    productionBatches: [{ producedAt: "2026-10-28", batches: 2 }],
-  }, "2026-10-28");
+  const result = dailySnapshot(
+    {
+      sales: [
+        {
+          date: "2026-10-28",
+          net: 100,
+          tax: 7,
+          total: 107,
+          cost: 40,
+          quantity: 8,
+        },
+      ],
+      expenses: [{ date: "2026-10-28", amount: 10 }],
+      payments: [{ date: "2026-10-28", amount: 30, kind: "payment" }],
+      productionBatches: [{ producedAt: "2026-10-28", batches: 2 }],
+    },
+    "2026-10-28",
+  );
   assert.equal(result.revenue, 100);
   assert.equal(result.tax, 7);
   assert.equal(result.cashReceived, 30);
@@ -27,15 +39,32 @@ test("daily snapshot separates earned revenue, cash, tax and costs", () => {
 test("price and expiry insights use recorded supplier and lot history", () => {
   const data = {
     purchaseHistory: [
-      { itemId: "cream", itemName: "Cream", supplier: "Dairy", date: "2026-10-01", finalPackageCost: 4 },
-      { itemId: "cream", itemName: "Cream", supplier: "Dairy", date: "2026-10-20", finalPackageCost: 5 },
+      {
+        itemId: "cream",
+        itemName: "Cream",
+        supplier: "Dairy",
+        date: "2026-10-01",
+        finalPackageCost: 4,
+      },
+      {
+        itemId: "cream",
+        itemName: "Cream",
+        supplier: "Dairy",
+        date: "2026-10-20",
+        finalPackageCost: 5,
+      },
     ],
-    inventoryLots: [{ id: "lot", itemId: "cream", remaining: 2, expiryDate: "2026-11-02" }],
+    inventoryLots: [
+      { id: "lot", itemId: "cream", remaining: 2, expiryDate: "2026-11-02" },
+    ],
     items: [{ id: "cream", name: "Cream" }],
     recipes: [{ id: "cake", name: "Cake", lines: [{ itemId: "cream" }] }],
   };
   assert.equal(priceChanges(data)[0].percent, 25);
-  assert.equal(expiryRecipeSuggestions(data, "2026-10-28").recipes[0].recipe.name, "Cake");
+  assert.equal(
+    expiryRecipeSuggestions(data, "2026-10-28").recipes[0].recipe.name,
+    "Cake",
+  );
 });
 
 test("packing, actual yield and seasonal targets remain on their source records", () => {
@@ -57,6 +86,8 @@ test("packing, actual yield and seasonal targets remain on their source records"
     targetPortions: 25,
   });
   assert.equal(data.seasonalPlans[0].batches, 5);
-  data = savePurchaseOrder(data, "2026-12-01", [{ supplier: "Dairy", estimate: 12 }]);
+  data = savePurchaseOrder(data, "2026-12-01", [
+    { supplier: "Dairy", estimate: 12 },
+  ]);
   assert.equal(data.purchaseOrders[0].estimatedTotal, 12);
 });

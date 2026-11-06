@@ -12,5 +12,8 @@ export function allocateDocumentNumber(data, kind, date) {
 
 export function displayDocumentNumber(record, kind) {
   const field = kind === "quote" ? "quoteNumber" : `${kind}Number`;
-  return record?.[field] || `${(prefixes[kind] || kind).toUpperCase()}-${String(record?.id || "DRAFT").slice(0, 8)}`;
+  return (
+    record?.[field] ||
+    `${(prefixes[kind] || kind).toUpperCase()}-${String(record?.id || "DRAFT").slice(0, 8)}`
+  );
 }

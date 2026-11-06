@@ -13,26 +13,16 @@ import { createLock, verifyPin } from "./security.js";
 import { addDays } from "./productLots.js";
 import { priceChanges } from "./ownerFeatures.js";
 import PrintAction from "./PrintAction.jsx";
+import { downloadBlob, money } from "./uiFormatters.js";
 
-const money = (n) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(n || 0);
 const qty = (n) => Number((n || 0).toFixed(3));
 const csvCell = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
 const download = (name, rows) => {
-  const url = URL.createObjectURL(
-    new Blob(
-      [rows.map((row) => row.map(csvCell).join(",")).join("\\r\\n")],
-      { type: "text/csv" },
-    ),
+  downloadBlob(
+    name,
+    rows.map((row) => row.map(csvCell).join(",")).join("\r\n"),
+    "text/csv",
   );
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = name;
-  anchor.click();
-  URL.revokeObjectURL(url);
 };
 
 export default function OwnerWorkspace({
@@ -122,7 +112,10 @@ function Calendar({ data }) {
             <div className="calendar-day" key={date}>
               <strong>{i + 1}</strong>
               {rows.map((row) => (
-                <span className={"calendar-event " + row.type.toLowerCase()} key={row.id}>
+                <span
+                  className={"calendar-event " + row.type.toLowerCase()}
+                  key={row.id}
+                >
                   <b>{row.type}</b>
                   {row.title}
                   <small>{row.detail}</small>
@@ -133,7 +126,9 @@ function Calendar({ data }) {
         })}
       </section>
       {!entries.length && (
-        <p className="panel empty">No pickups or production tasks this month.</p>
+        <p className="panel empty">
+          No pickups or production tasks this month.
+        </p>
       )}
     </>
   );
@@ -186,67 +181,162 @@ function PrepSheets({ data }) {
                 </div>
               </header>
               <div className="prep-summary">
-                <div><span>Batches</span><b>{plan.batches}</b></div>
-                <div><span>Expected yield</span><b>{(recipe?.yield || 0) * plan.batches}</b></div>
-                <div><span>Yield / batch</span><b>{recipe?.yield || 0}</b></div>
-                <div><span>Actual yield</span><b className="write-in">&nbsp;</b></div>
+                <div>
+                  <span>Batches</span>
+                  <b>{plan.batches}</b>
+                </div>
+                <div>
+                  <span>Expected yield</span>
+                  <b>{(recipe?.yield || 0) * plan.batches}</b>
+                </div>
+                <div>
+                  <span>Yield / batch</span>
+                  <b>{recipe?.yield || 0}</b>
+                </div>
+                <div>
+                  <span>Actual yield</span>
+                  <b className="write-in">&nbsp;</b>
+                </div>
               </div>
               {order && (
                 <div className="prep-customer">
-                  <span><small>CUSTOMER</small><b>{order.customer || "Customer order"}</b></span>
-                  <span><small>PICKUP</small><b>{order.pickupDate}</b></span>
-                  {order.notes && <span><small>ORDER NOTES</small><b>{order.notes}</b></span>}
+                  <span>
+                    <small>CUSTOMER</small>
+                    <b>{order.customer || "Customer order"}</b>
+                  </span>
+                  <span>
+                    <small>PICKUP</small>
+                    <b>{order.pickupDate}</b>
+                  </span>
+                  {order.notes && (
+                    <span>
+                      <small>ORDER NOTES</small>
+                      <b>{order.notes}</b>
+                    </span>
+                  )}
                 </div>
               )}
               <section className="prep-section">
                 <h3>Scaled ingredients & packaging</h3>
-                <div className="prep-ingredient-head"><span>CHECK</span><span>ITEM</span><span>QUANTITY</span></div>
+                <div className="prep-ingredient-head">
+                  <span>CHECK</span>
+                  <span>ITEM</span>
+                  <span>QUANTITY</span>
+                </div>
                 {recipe?.lines.map((line, index) => (
                   <div className="prep-ingredient" key={index}>
                     <i aria-hidden="true" />
-                    <span>{items.find((item) => item.id === line.itemId)?.name || "Missing item"}</span>
-                    <b>{qty(line.amount * plan.batches)} {line.unit}</b>
+                    <span>
+                      {items.find((item) => item.id === line.itemId)?.name ||
+                        "Missing item"}
+                    </span>
+                    <b>
+                      {qty(line.amount * plan.batches)} {line.unit}
+                    </b>
                   </div>
                 ))}
               </section>
               <div className="prep-method">
                 <h3>Method & timing</h3>
                 <div className="prep-timing">
-                  <span><small>PREP</small><b>{recipe?.prepMinutes || 0} min</b></span>
-                  <span><small>BAKE</small><b>{recipe?.bakeMinutes || 0} min</b></span>
-                  <span><small>COOL</small><b>{recipe?.coolingMinutes || 0} min</b></span>
-                  <span><small>TEMPERATURE</small><b>{recipe?.bakeTemperature || "—"}</b></span>
+                  <span>
+                    <small>PREP</small>
+                    <b>{recipe?.prepMinutes || 0} min</b>
+                  </span>
+                  <span>
+                    <small>BAKE</small>
+                    <b>{recipe?.bakeMinutes || 0} min</b>
+                  </span>
+                  <span>
+                    <small>COOL</small>
+                    <b>{recipe?.coolingMinutes || 0} min</b>
+                  </span>
+                  <span>
+                    <small>TEMPERATURE</small>
+                    <b>{recipe?.bakeTemperature || "—"}</b>
+                  </span>
                 </div>
-                {recipe?.equipment && <p><b>Equipment:</b> {recipe.equipment}</p>}
-                <div className="method-steps">{recipe?.method || "No method saved."}</div>
+                {recipe?.equipment && (
+                  <p>
+                    <b>Equipment:</b> {recipe.equipment}
+                  </p>
+                )}
+                <div className="method-steps">
+                  {recipe?.method || "No method saved."}
+                </div>
               </div>
               <div className="prep-safety">
-                <p><small>ALLERGENS</small><b>{recipe?.allergens || "Not specified"}</b></p>
-                <p><small>STORAGE</small><b>{recipe?.storageInstructions || "Not specified"}</b></p>
-                <p><small>KITCHEN NOTES</small><b>{plan.notes || "—"}</b></p>
+                <p>
+                  <small>ALLERGENS</small>
+                  <b>{recipe?.allergens || "Not specified"}</b>
+                </p>
+                <p>
+                  <small>STORAGE</small>
+                  <b>{recipe?.storageInstructions || "Not specified"}</b>
+                </p>
+                <p>
+                  <small>KITCHEN NOTES</small>
+                  <b>{plan.notes || "—"}</b>
+                </p>
               </div>
               <div className="prep-checks">
-                {["Mixed", "Baked", "Cooled", "Decorated", "Packed", "Final count"].map((step) => (
-                  <span key={step}><i /> {step}</span>
+                {[
+                  "Mixed",
+                  "Baked",
+                  "Cooled",
+                  "Decorated",
+                  "Packed",
+                  "Final count",
+                ].map((step) => (
+                  <span key={step}>
+                    <i /> {step}
+                  </span>
                 ))}
               </div>
               <div className="batch-label">
-                <div className="label-brand"><span>{profile.name || "Bakery Ledger"}</span><small>PRODUCT LABEL · CUT ON DOTTED LINE</small></div>
+                <div className="label-brand">
+                  <span>{profile.name || "Bakery Ledger"}</span>
+                  <small>PRODUCT LABEL · CUT ON DOTTED LINE</small>
+                </div>
                 <h3>{recipe?.name}</h3>
                 <div className="label-grid">
-                  <span><small>FOR</small><b>{order?.customer || "Bakery stock"}</b></span>
-                  <span><small>MADE</small><b>{date}</b></span>
-                  <span><small>{order ? "PICKUP" : "BEST BEFORE"}</small><b>{order?.pickupDate || addDays(date, recipe?.shelfLifeDays) || "Not set"}</b></span>
-                  <span><small>BEST BEFORE</small><b>{addDays(date, recipe?.shelfLifeDays) || "Not set"}</b></span>
+                  <span>
+                    <small>FOR</small>
+                    <b>{order?.customer || "Bakery stock"}</b>
+                  </span>
+                  <span>
+                    <small>MADE</small>
+                    <b>{date}</b>
+                  </span>
+                  <span>
+                    <small>{order ? "PICKUP" : "BEST BEFORE"}</small>
+                    <b>
+                      {order?.pickupDate ||
+                        addDays(date, recipe?.shelfLifeDays) ||
+                        "Not set"}
+                    </b>
+                  </span>
+                  <span>
+                    <small>BEST BEFORE</small>
+                    <b>{addDays(date, recipe?.shelfLifeDays) || "Not set"}</b>
+                  </span>
                 </div>
-                <p><small>ALLERGENS</small><b>{recipe?.allergens || "Not specified"}</b></p>
-                <p><small>STORAGE</small><b>{recipe?.storageInstructions || "Not specified"}</b></p>
+                <p>
+                  <small>ALLERGENS</small>
+                  <b>{recipe?.allergens || "Not specified"}</b>
+                </p>
+                <p>
+                  <small>STORAGE</small>
+                  <b>{recipe?.storageInstructions || "Not specified"}</b>
+                </p>
               </div>
             </article>
           );
         })}
       </div>
-      {!plans.length && <p className="panel empty">No production tasks for this date.</p>}
+      {!plans.length && (
+        <p className="panel empty">No production tasks for this date.</p>
+      )}
     </>
   );
 }
@@ -267,8 +357,8 @@ function InventoryLots({ data }) {
         <div>
           <h2>Delivery lots</h2>
           <p>
-            New receipts are consumed earliest-expiry first. Older aggregate stock
-            remains available as legacy stock.
+            New receipts are consumed earliest-expiry first. Older aggregate
+            stock remains available as legacy stock.
           </p>
         </div>
         <label className="inline-check">
@@ -311,12 +401,22 @@ function InventoryLots({ data }) {
               const item = data.items.find((i) => i.id === lot.itemId);
               return (
                 <tr key={lot.id}>
-                  <td><b>{item?.name || "Removed item"}</b></td>
+                  <td>
+                    <b>{item?.name || "Removed item"}</b>
+                  </td>
                   <td>{lot.receivedAt}</td>
-                  <td className={lot.expiryDate && lot.expiryDate <= localDate() ? "negative" : ""}>
+                  <td
+                    className={
+                      lot.expiryDate && lot.expiryDate <= localDate()
+                        ? "negative"
+                        : ""
+                    }
+                  >
                     {lot.expiryDate || "Not set"}
                   </td>
-                  <td>{qty(lot.remaining)} {lot.unit}</td>
+                  <td>
+                    {qty(lot.remaining)} {lot.unit}
+                  </td>
                   <td>{lot.supplier || "—"}</td>
                   <td>{money(lot.packagePrice)} / package</td>
                 </tr>
@@ -334,14 +434,18 @@ function SupplierPrices({ data }) {
     b.date.localeCompare(a.date),
   );
   const changes = priceChanges(data);
-  const supplierTotals = Object.values(rows.reduce((result, row) => {
-    const supplier = row.supplier || "Unassigned supplier";
-    result[supplier] ??= { supplier, orders: 0, spend: 0, latest: "" };
-    result[supplier].orders += 1;
-    result[supplier].spend += (row.finalPackageCost || row.packagePrice || 0) * (row.packages || 1);
-    result[supplier].latest = result[supplier].latest > row.date ? result[supplier].latest : row.date;
-    return result;
-  }, {})).sort((a, b) => b.spend - a.spend);
+  const supplierTotals = Object.values(
+    rows.reduce((result, row) => {
+      const supplier = row.supplier || "Unassigned supplier";
+      result[supplier] ??= { supplier, orders: 0, spend: 0, latest: "" };
+      result[supplier].orders += 1;
+      result[supplier].spend +=
+        (row.finalPackageCost || row.packagePrice || 0) * (row.packages || 1);
+      result[supplier].latest =
+        result[supplier].latest > row.date ? result[supplier].latest : row.date;
+      return result;
+    }, {}),
+  ).sort((a, b) => b.spend - a.spend);
   return (
     <>
       <div className="planning-toolbar">
@@ -353,7 +457,14 @@ function SupplierPrices({ data }) {
           className="secondary"
           onClick={() =>
             download("supplier-prices.csv", [
-              ["Date", "Supplier", "Item", "Package price", "Final cost", "Packages"],
+              [
+                "Date",
+                "Supplier",
+                "Item",
+                "Package price",
+                "Final cost",
+                "Packages",
+              ],
               ...rows.map((row) => [
                 row.date,
                 row.supplier,
@@ -368,29 +479,91 @@ function SupplierPrices({ data }) {
           Export CSV
         </button>
       </div>
-      {!!changes.length && <section className="panel planning-form"><h2>Price movement alerts</h2><p>Compares each item’s two latest receipts from the same supplier.</p>{changes.slice(0, 8).map((row) => <div className="legend" key={`${row.itemName}-${row.supplier}`}><span><b>{row.itemName}</b><small>{row.supplier} · latest receipt {row.date}</small></span><b className={row.change > 0 ? "negative" : "positive"}>{row.change > 0 ? "+" : ""}{row.percent.toFixed(1)}% · {money(row.previous)} → {money(row.latest)}</b></div>)}</section>}
-      {!!supplierTotals.length && <section className="panel table-scroll"><h2>Vendor ordering history</h2><table><thead><tr><th>SUPPLIER</th><th>RECEIPTS</th><th>RECORDED SPEND</th><th>LATEST</th></tr></thead><tbody>{supplierTotals.map((row) => <tr key={row.supplier}><td><b>{row.supplier}</b></td><td>{row.orders}</td><td>{money(row.spend)}</td><td>{row.latest}</td></tr>)}</tbody></table></section>}
+      {!!changes.length && (
+        <section className="panel planning-form">
+          <h2>Price movement alerts</h2>
+          <p>
+            Compares each item’s two latest receipts from the same supplier.
+          </p>
+          {changes.slice(0, 8).map((row) => (
+            <div className="legend" key={`${row.itemName}-${row.supplier}`}>
+              <span>
+                <b>{row.itemName}</b>
+                <small>
+                  {row.supplier} · latest receipt {row.date}
+                </small>
+              </span>
+              <b className={row.change > 0 ? "negative" : "positive"}>
+                {row.change > 0 ? "+" : ""}
+                {row.percent.toFixed(1)}% · {money(row.previous)} →{" "}
+                {money(row.latest)}
+              </b>
+            </div>
+          ))}
+        </section>
+      )}
+      {!!supplierTotals.length && (
+        <section className="panel table-scroll">
+          <h2>Vendor ordering history</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>SUPPLIER</th>
+                <th>RECEIPTS</th>
+                <th>RECORDED SPEND</th>
+                <th>LATEST</th>
+              </tr>
+            </thead>
+            <tbody>
+              {supplierTotals.map((row) => (
+                <tr key={row.supplier}>
+                  <td>
+                    <b>{row.supplier}</b>
+                  </td>
+                  <td>{row.orders}</td>
+                  <td>{money(row.spend)}</td>
+                  <td>{row.latest}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
       <section className="panel table-scroll">
         <table>
-          <thead><tr><th>DATE</th><th>SUPPLIER</th><th>ITEM</th><th>ENTERED</th><th>FINAL COST</th></tr></thead>
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>SUPPLIER</th>
+              <th>ITEM</th>
+              <th>ENTERED</th>
+              <th>FINAL COST</th>
+            </tr>
+          </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.id}>
-                <td>{row.date}</td><td>{row.supplier || "—"}</td>
-                <td>{row.itemName}</td><td>{money(row.packagePrice)}</td>
+                <td>{row.date}</td>
+                <td>{row.supplier || "—"}</td>
+                <td>{row.itemName}</td>
+                <td>{money(row.packagePrice)}</td>
                 <td>{money(row.finalPackageCost)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
-      {!rows.length && <p className="panel empty">Receive a lot to start price history.</p>}
+      {!rows.length && (
+        <p className="panel empty">Receive a lot to start price history.</p>
+      )}
     </>
   );
 }
 
 function Payments({ data, act }) {
-  const openOrders = data.orders.filter((order) => order.status !== "cancelled");
+  const openOrders = data.orders.filter(
+    (order) => order.status !== "cancelled",
+  );
   const [orderId, setOrderId] = useState(openOrders[0]?.id || "");
   const [amount, setAmount] = useState("");
   const [kind, setKind] = useState("payment");
@@ -423,22 +596,62 @@ function Payments({ data, act }) {
           >
             <label>
               Order
-              <select value={orderId} onChange={(e) => setOrderId(e.target.value)} required>
+              <select
+                value={orderId}
+                onChange={(e) => setOrderId(e.target.value)}
+                required
+              >
                 <option value="">Choose an order</option>
                 {openOrders.map((item) => (
                   <option value={item.id} key={item.id}>
-                    {item.customer || item.recipeName} · balance {money(item.total - orderPaid(data, item))}
+                    {item.customer || item.recipeName} · balance{" "}
+                    {money(item.total - orderPaid(data, item))}
                   </option>
                 ))}
               </select>
             </label>
             <div className="form-row">
-              <label>Entry type<select value={kind} onChange={(e) => setKind(e.target.value)}><option value="payment">Payment</option><option value="refund">Refund</option></select></label>
-              <label>Amount<input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required /></label>
+              <label>
+                Entry type
+                <select value={kind} onChange={(e) => setKind(e.target.value)}>
+                  <option value="payment">Payment</option>
+                  <option value="refund">Refund</option>
+                </select>
+              </label>
+              <label>
+                Amount
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                />
+              </label>
             </div>
             <div className="form-row">
-              <label>Method<select value={method} onChange={(e) => setMethod(e.target.value)}><option>Cash</option><option>Card</option><option>Bank transfer</option><option>Other</option></select></label>
-              <label>Date<input type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></label>
+              <label>
+                Method
+                <select
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value)}
+                >
+                  <option>Cash</option>
+                  <option>Card</option>
+                  <option>Bank transfer</option>
+                  <option>Other</option>
+                </select>
+              </label>
+              <label>
+                Date
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                />
+              </label>
             </div>
             <button className="primary">Record {kind}</button>
           </form>
@@ -448,10 +661,14 @@ function Payments({ data, act }) {
           <h2>{order?.customer || "Choose an order"}</h2>
           {order && (
             <dl>
-              <dt>Order</dt><dd>{order.recipeName}</dd>
-              <dt>Total</dt><dd>{money(order.total)}</dd>
-              <dt>Paid</dt><dd>{money(orderPaid(data, order))}</dd>
-              <dt>Balance</dt><dd>{money(order.total - orderPaid(data, order))}</dd>
+              <dt>Order</dt>
+              <dd>{order.recipeName}</dd>
+              <dt>Total</dt>
+              <dd>{money(order.total)}</dd>
+              <dt>Paid</dt>
+              <dd>{money(orderPaid(data, order))}</dd>
+              <dt>Balance</dt>
+              <dd>{money(order.total - orderPaid(data, order))}</dd>
             </dl>
           )}
           <PrintAction>Preview receipt</PrintAction>
@@ -459,11 +676,36 @@ function Payments({ data, act }) {
       </div>
       <section className="panel table-scroll">
         <table>
-          <thead><tr><th>DATE</th><th>CUSTOMER</th><th>TYPE</th><th>METHOD</th><th>AMOUNT</th></tr></thead>
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>CUSTOMER</th>
+              <th>TYPE</th>
+              <th>METHOD</th>
+              <th>AMOUNT</th>
+            </tr>
+          </thead>
           <tbody>
             {entries.map((entry) => {
-              const linked = data.orders.find((item) => item.id === entry.orderId);
-              return <tr key={entry.id}><td>{entry.date}</td><td>{linked?.customer || linked?.recipeName}</td><td>{entry.kind}</td><td>{entry.method}</td><td className={entry.kind === "refund" ? "negative" : "positive"}>{entry.kind === "refund" ? "−" : ""}{money(entry.amount)}</td></tr>;
+              const linked = data.orders.find(
+                (item) => item.id === entry.orderId,
+              );
+              return (
+                <tr key={entry.id}>
+                  <td>{entry.date}</td>
+                  <td>{linked?.customer || linked?.recipeName}</td>
+                  <td>{entry.kind}</td>
+                  <td>{entry.method}</td>
+                  <td
+                    className={
+                      entry.kind === "refund" ? "negative" : "positive"
+                    }
+                  >
+                    {entry.kind === "refund" ? "−" : ""}
+                    {money(entry.amount)}
+                  </td>
+                </tr>
+              );
             })}
           </tbody>
         </table>
@@ -483,9 +725,38 @@ function TaxReport({ data }) {
   ];
   return (
     <>
-      <ReportHeader title="Tax summary" month={month} setMonth={setMonth} onExport={() => download(`tax-report-${month}.csv`, [["Metric", "Amount"], ...metrics, ["Taxable sales", report.taxableSales], ["Zero-tax sales", report.zeroTaxSales], ["Legacy sales count", report.legacySales]])} />
+      <ReportHeader
+        title="Tax summary"
+        month={month}
+        setMonth={setMonth}
+        onExport={() =>
+          download(`tax-report-${month}.csv`, [
+            ["Metric", "Amount"],
+            ...metrics,
+            ["Taxable sales", report.taxableSales],
+            ["Zero-tax sales", report.zeroTaxSales],
+            ["Legacy sales count", report.legacySales],
+          ])
+        }
+      />
       <MetricCards rows={metrics} />
-      <section className="panel planning-form"><h2>Tax basis</h2><p>Taxable sales: <b>{money(report.taxableSales)}</b></p><p>Zero-tax sales: <b>{money(report.zeroTaxSales)}</b></p><p>Historical sales without a saved tax breakdown: <b>{report.legacySales}</b></p><p className="hint">This report summarizes recorded transactions. It does not calculate remittances, credits, filing rules, or legal tax obligations.</p></section>
+      <section className="panel planning-form">
+        <h2>Tax basis</h2>
+        <p>
+          Taxable sales: <b>{money(report.taxableSales)}</b>
+        </p>
+        <p>
+          Zero-tax sales: <b>{money(report.zeroTaxSales)}</b>
+        </p>
+        <p>
+          Historical sales without a saved tax breakdown:{" "}
+          <b>{report.legacySales}</b>
+        </p>
+        <p className="hint">
+          This report summarizes recorded transactions. It does not calculate
+          remittances, credits, filing rules, or legal tax obligations.
+        </p>
+      </section>
     </>
   );
 }
@@ -495,9 +766,34 @@ function WasteReport({ data }) {
   const report = wasteAnalysis(data, month);
   return (
     <>
-      <ReportHeader title="Waste analysis" month={month} setMonth={setMonth} onExport={() => download(`waste-${month}.csv`, [["Date", "Item", "Reason", "Quantity", "Unit", "Cost"], ...report.rows.map((row) => [row.date, row.name, row.reason, row.amount, row.unit, row.cost])])} />
-      <MetricCards rows={[["Total waste cost", report.total], ["Waste entries", report.rows.length]]} />
-      <div className="planning-layout"><Breakdown title="By reason" rows={report.byReason} /><Breakdown title="By item" rows={report.byItem} /></div>
+      <ReportHeader
+        title="Waste analysis"
+        month={month}
+        setMonth={setMonth}
+        onExport={() =>
+          download(`waste-${month}.csv`, [
+            ["Date", "Item", "Reason", "Quantity", "Unit", "Cost"],
+            ...report.rows.map((row) => [
+              row.date,
+              row.name,
+              row.reason,
+              row.amount,
+              row.unit,
+              row.cost,
+            ]),
+          ])
+        }
+      />
+      <MetricCards
+        rows={[
+          ["Total waste cost", report.total],
+          ["Waste entries", report.rows.length],
+        ]}
+      />
+      <div className="planning-layout">
+        <Breakdown title="By reason" rows={report.byReason} />
+        <Breakdown title="By item" rows={report.byItem} />
+      </div>
     </>
   );
 }
@@ -507,9 +803,53 @@ function Forecast({ data }) {
   const report = ownerForecast(data, start);
   return (
     <>
-      <div className="planning-toolbar"><div><h2>Seven-day owner forecast</h2><p>Expected orders, cash still due, production cost, and minimum-stock purchasing.</p></div><label>Week starts<input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></label></div>
-      <MetricCards rows={[["Expected order revenue", report.expectedRevenue], ["Already received", report.received], ["Still due", report.outstanding], ["Planned production cost", report.plannedCost], ["Minimum-stock purchases", report.purchaseCash], ["Projected margin", report.projectedMargin]]} />
-      <section className="panel planning-form"><h2>{report.start} through {report.end}</h2>{report.orders.map((order) => <div className="legend" key={order.id}><span>{order.customer || order.recipeName}<small>{order.pickupDate}</small></span><b>{money(order.total)}</b></div>)}{!report.orders.length && <p>No open orders in this period.</p>}<p className="hint">Projected margin excludes unplanned purchases, refunds, taxes due, and operating expenses. It is a working forecast, not an accounting statement.</p></section>
+      <div className="planning-toolbar">
+        <div>
+          <h2>Seven-day owner forecast</h2>
+          <p>
+            Expected orders, cash still due, production cost, and minimum-stock
+            purchasing.
+          </p>
+        </div>
+        <label>
+          Week starts
+          <input
+            type="date"
+            value={start}
+            onChange={(e) => setStart(e.target.value)}
+          />
+        </label>
+      </div>
+      <MetricCards
+        rows={[
+          ["Expected order revenue", report.expectedRevenue],
+          ["Already received", report.received],
+          ["Still due", report.outstanding],
+          ["Planned production cost", report.plannedCost],
+          ["Minimum-stock purchases", report.purchaseCash],
+          ["Projected margin", report.projectedMargin],
+        ]}
+      />
+      <section className="panel planning-form">
+        <h2>
+          {report.start} through {report.end}
+        </h2>
+        {report.orders.map((order) => (
+          <div className="legend" key={order.id}>
+            <span>
+              {order.customer || order.recipeName}
+              <small>{order.pickupDate}</small>
+            </span>
+            <b>{money(order.total)}</b>
+          </div>
+        ))}
+        {!report.orders.length && <p>No open orders in this period.</p>}
+        <p className="hint">
+          Projected margin excludes unplanned purchases, refunds, taxes due, and
+          operating expenses. It is a working forecast, not an accounting
+          statement.
+        </p>
+      </section>
     </>
   );
 }
@@ -542,25 +882,125 @@ function Security({ config, setConfig, lockNow }) {
   return (
     <section className="panel planning-form security-panel">
       <h2>Optional local PIN lock</h2>
-      <p>Protects this device when the bakery computer is unattended. The salted PIN hash stays in local browser storage and is not included in workspace exports.</p>
+      <p>
+        Protects this device when the bakery computer is unattended. The salted
+        PIN hash stays in local browser storage and is not included in workspace
+        exports.
+      </p>
       <form onSubmit={save}>
-        {config && <label>Current PIN<input type="password" inputMode="numeric" value={currentPin} onChange={(e) => setCurrentPin(e.target.value)} required /></label>}
-        <label>{config ? "New PIN" : "PIN"}<input type="password" inputMode="numeric" pattern="[0-9]{4,8}" value={pin} onChange={(e) => setPin(e.target.value)} required /></label>
-        <label>Lock after inactivity (minutes)<input type="number" min="1" max="240" value={minutes} onChange={(e) => setMinutes(e.target.value)} required /></label>
-        <button className="primary">{config ? "Change PIN lock" : "Enable PIN lock"}</button>
+        {config && (
+          <label>
+            Current PIN
+            <input
+              type="password"
+              inputMode="numeric"
+              value={currentPin}
+              onChange={(e) => setCurrentPin(e.target.value)}
+              required
+            />
+          </label>
+        )}
+        <label>
+          {config ? "New PIN" : "PIN"}
+          <input
+            type="password"
+            inputMode="numeric"
+            pattern="[0-9]{4,8}"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Lock after inactivity (minutes)
+          <input
+            type="number"
+            min="1"
+            max="240"
+            value={minutes}
+            onChange={(e) => setMinutes(e.target.value)}
+            required
+          />
+        </label>
+        <button className="primary">
+          {config ? "Change PIN lock" : "Enable PIN lock"}
+        </button>
       </form>
       {message && <p role="status">{message}</p>}
-      {config && <div className="planning-actions"><button className="secondary" onClick={lockNow}>Lock now</button><button className="text-button" onClick={remove}>Remove PIN lock</button></div>}
+      {config && (
+        <div className="planning-actions">
+          <button className="secondary" onClick={lockNow}>
+            Lock now
+          </button>
+          <button className="text-button" onClick={remove}>
+            Remove PIN lock
+          </button>
+        </div>
+      )}
     </section>
   );
 }
 
 function ReportHeader({ title, month, setMonth, onExport }) {
-  return <div className="planning-toolbar"><div><h2>{title}</h2><p>Based on locally recorded bakery transactions.</p></div><div className="planning-actions"><label>Month<input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /></label><button className="secondary" onClick={onExport}>Export CSV</button></div></div>;
+  return (
+    <div className="planning-toolbar">
+      <div>
+        <h2>{title}</h2>
+        <p>Based on locally recorded bakery transactions.</p>
+      </div>
+      <div className="planning-actions">
+        <label>
+          Month
+          <input
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+          />
+        </label>
+        <button className="secondary" onClick={onExport}>
+          Export CSV
+        </button>
+      </div>
+    </div>
+  );
 }
 function MetricCards({ rows }) {
-  return <div className="stats planning-stats">{rows.map(([label, value]) => <div className="stat" key={label}><div>{label}</div><strong>{typeof value === "number" && !Number.isInteger(value) ? money(value) : typeof value === "number" && /cost|revenue|received|due|margin|receipts|sales|tax|purchases/i.test(label) ? money(value) : value}</strong></div>)}</div>;
+  return (
+    <div className="stats planning-stats">
+      {rows.map(([label, value]) => (
+        <div className="stat" key={label}>
+          <div>{label}</div>
+          <strong>
+            {typeof value === "number" && !Number.isInteger(value)
+              ? money(value)
+              : typeof value === "number" &&
+                  /cost|revenue|received|due|margin|receipts|sales|tax|purchases/i.test(
+                    label,
+                  )
+                ? money(value)
+                : value}
+          </strong>
+        </div>
+      ))}
+    </div>
+  );
 }
 function Breakdown({ title, rows }) {
-  return <section className="panel planning-form"><h2>{title}</h2>{rows.map((row) => <div className="legend" key={row.label}><span>{row.label}<small>{row.count} entr{row.count === 1 ? "y" : "ies"}</small></span><b>{money(row.cost)}</b></div>)}{!rows.length && <p>No waste recorded.</p>}</section>;
+  return (
+    <section className="panel planning-form">
+      <h2>{title}</h2>
+      {rows.map((row) => (
+        <div className="legend" key={row.label}>
+          <span>
+            {row.label}
+            <small>
+              {row.count} entr{row.count === 1 ? "y" : "ies"}
+            </small>
+          </span>
+          <b>{money(row.cost)}</b>
+        </div>
+      ))}
+      {!rows.length && <p>No waste recorded.</p>}
+    </section>
+  );
 }

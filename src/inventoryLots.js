@@ -1,4 +1,5 @@
 import { purchaseTax } from "./taxation.js";
+import { localDay } from "./dateUtils.js";
 
 const number = (value, label, allowZero = false) => {
   const n = Number(value);
@@ -29,10 +30,7 @@ export function receiveInventory(data, itemId, input) {
     input.packagePrice === "" || input.packagePrice == null
       ? item.price
       : number(input.packagePrice, "package price", true);
-  const receivedAt = date(
-    input.receivedAt || new Date().toLocaleDateString("en-CA"),
-    "received date",
-  );
+  const receivedAt = date(input.receivedAt || localDay(), "received date");
   if (input.expiryDate) date(input.expiryDate, "expiry date");
   const lot = {
     id: crypto.randomUUID(),

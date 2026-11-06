@@ -1,8 +1,5 @@
-export const MAX_REFERENCE_IMAGE_BYTES = 1_500_000;
-
-export function localDay(value = new Date()) {
-  return value.toLocaleDateString("en-CA");
-}
+const MAX_REFERENCE_IMAGE_BYTES = 1_500_000;
+export { localDay } from "./dateUtils.js";
 
 export function money(value) {
   return new Intl.NumberFormat("en-US", {
