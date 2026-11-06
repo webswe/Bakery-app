@@ -80,6 +80,7 @@ const BakeryOperationsWorkspace = lazy(
 const BusinessIntelligenceWorkspace = lazy(
   () => import("./BusinessIntelligenceWorkspace.jsx"),
 );
+const UserGuideWorkspace = lazy(() => import("./UserGuideWorkspace.jsx"));
 const uid = () => crypto.randomUUID();
 const lockKey = "bakery-ledger-lock-v1";
 const tutorialKey = "bakery-ledger-tutorial-v1";
@@ -314,6 +315,11 @@ function App() {
     const scroll = () => setShowBackToTop(window.scrollY > 500);
     const shortcut = (event) => {
       if (document.querySelector('[aria-modal="true"]')) return;
+      if (event.key === "F1") {
+        event.preventDefault();
+        navigate("User guide");
+        return;
+      }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         quickNav.current?.focus();
@@ -737,6 +743,12 @@ function App() {
           <button className="text-button" onClick={() => setShowTutorial(true)}>
             Open tutorial
           </button>
+          <button
+            className="text-button"
+            onClick={() => navigate("User guide")}
+          >
+            User guide · F1
+          </button>
           {lockConfig && (
             <button className="text-button" onClick={() => setLocked(true)}>
               Lock workspace
@@ -866,6 +878,10 @@ function App() {
               navigate={navigate}
               startTour={() => setShowTutorial(true)}
             />
+          ) : page === "User guide" ? (
+            <Suspense fallback={<p className="panel empty">Opening guide…</p>}>
+              <UserGuideWorkspace navigate={navigate} />
+            </Suspense>
           ) : page === "Help & support" ? (
             <SupportWorkspace data={data} page={page} />
           ) : ownerToolkitPages.includes(page) ? (

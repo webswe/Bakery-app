@@ -113,6 +113,7 @@ export const sections = [
     name: "Settings",
     pages: [
       "Tutorial",
+      "User guide",
       "Help & support",
       "Business profile",
       "Bakery profiles",
@@ -483,6 +484,11 @@ export const pages = {
     label: "Getting started",
     description:
       "Follow the owner workflow from initial setup through production, fulfillment and monthly review.",
+  },
+  "User guide": {
+    label: "User guide",
+    description:
+      "Search plain-language instructions for setup, daily work, pricing, production, finance, backups, and troubleshooting.",
   },
   "Help & support": {
     label: "Help & support",
