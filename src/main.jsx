@@ -22,6 +22,7 @@ import QuickSearch from "./QuickSearch.jsx";
 import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
 import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
+import SupportWorkspace from "./SupportWorkspace.jsx";
 import BakeryOperationsWorkspace from "./BakeryOperationsWorkspace.jsx";
 import { saveRecipePreset, saveRecipeRevision } from "./bakeryOperations.js";
 import { NotificationCenter, PinnedShortcuts, QuickActionMenu, UndoToast } from "./WorkspaceUtilities.jsx";
@@ -723,6 +724,8 @@ function App() {
               navigate={navigate}
               startTour={() => setShowTutorial(true)}
             />
+          ) : page === "Help & support" ? (
+            <SupportWorkspace data={data} page={page} />
           ) : page === "Customers" ? (
             <CustomerWorkspace data={data} save={save} navigate={navigate} />
           ) : page === "Documents" ? (

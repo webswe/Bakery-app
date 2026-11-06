@@ -1,6 +1,7 @@
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
 const { autoUpdater } = require("electron-updater");
 const path = require("node:path");
+const fs = require("node:fs/promises");
 const { releaseNotes } = require("./release-notes.cjs");
 
 let mainWindow;
@@ -40,6 +41,22 @@ ipcMain.handle("updates:check", checkForUpdates);
 ipcMain.handle("updates:install", () => {
   if (updateState.state === "downloaded") autoUpdater.quitAndInstall();
   return updateState;
+});
+ipcMain.handle("support:app-info", () => ({
+  version: app.getVersion(),
+  platform: `${process.platform} ${process.getSystemVersion?.() || ""}`.trim(),
+}));
+ipcMain.handle("support:save-report", async (_event, report) => {
+  const folder = path.join(app.getPath("documents"), "Bakery Ledger Support Reports");
+  await fs.mkdir(folder, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const target = path.join(folder, `Bakery-Ledger-support-${stamp}.txt`);
+  await fs.writeFile(target, String(report || ""), "utf8");
+  return { path: target };
+});
+ipcMain.handle("support:open-email", (_event, address, subject, body) => {
+  const target = `mailto:${encodeURIComponent(String(address || ""))}?subject=${encodeURIComponent(String(subject || ""))}&body=${encodeURIComponent(String(body || ""))}`;
+  return shell.openExternal(target);
 });
 
 app.whenReady().then(() => {

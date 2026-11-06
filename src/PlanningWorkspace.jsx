@@ -1,5 +1,5 @@
 import { purchaseTax } from "./taxation.js";
-import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
   localDate,
   inventoryForecast,
@@ -574,7 +574,9 @@ function DailyPlanner({ data, act }) {
     [editing, setEditing] = useState(null),
     [recipeId, setRecipeId] = useState(data.recipes[0]?.id || ""),
     [batches, setBatches] = useState(1),
-    [notes, setNotes] = useState("");
+    [notes, setNotes] = useState(""),
+    [editNotice, setEditNotice] = useState("");
+  const editorRef = useRef(null);
   const plans = data.productionPlans.filter((p) => p.date === day);
   const pending = plans.filter((p) => p.status === "planned");
   const forecast = inventoryForecast(data, day || localDate());
@@ -589,6 +591,15 @@ function DailyPlanner({ data, act }) {
     setEditing(null);
     setBatches(1);
     setNotes("");
+    setEditNotice("");
+  }
+  function editPlan(plan) {
+    setEditing(plan.id);
+    setRecipeId(plan.recipeId);
+    setBatches(plan.batches);
+    setNotes(plan.notes || "");
+    setEditNotice(`Editing ${plan.recipeName || "production task"}. Change the details, then select Save task.`);
+    requestAnimationFrame(() => editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
   return (
     <>
@@ -630,7 +641,7 @@ function DailyPlanner({ data, act }) {
         ))}
       </div>
       <div className="planning-layout">
-        <section className="panel planning-form">
+        <section className="panel planning-form" ref={editorRef} tabIndex={-1}>
           <h2>
             {editing ? "Edit production task" : "Add a dessert to the day"}
           </h2>
@@ -649,6 +660,7 @@ function DailyPlanner({ data, act }) {
                 reset();
             }}
           >
+            {editNotice && <p className="draft-status" role="status">{editNotice}</p>}
             <RecipeSelect data={data} value={recipeId} onChange={setRecipeId} />
             <label>
               Whole batches
@@ -785,12 +797,7 @@ function DailyPlanner({ data, act }) {
                     </button>
                     <button
                       className="secondary"
-                      onClick={() => {
-                        setEditing(p.id);
-                        setRecipeId(p.recipeId);
-                        setBatches(p.batches);
-                        setNotes(p.notes || "");
-                      }}
+                      onClick={() => editPlan(p)}
                     >
                       Edit
                     </button>

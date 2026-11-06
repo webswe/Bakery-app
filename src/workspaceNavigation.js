@@ -41,7 +41,7 @@ export const sections = [
   },
   {
     name: "Settings",
-    pages: ["Tutorial", "Business profile", "App customization", "Cost settings", "Tax settings", "Equipment care", "Archive", "App updates", "Backups", "Security"],
+    pages: ["Tutorial", "Help & support", "Business profile", "App customization", "Cost settings", "Tax settings", "Equipment care", "Archive", "App updates", "Backups", "Security"],
   },
 ];
 export const pages = {
@@ -255,6 +255,7 @@ export const pages = {
     description:
       "Follow the owner workflow from initial setup through production, fulfillment and monthly review.",
   },
+  "Help & support": { label: "Help & support", description: "Create a privacy-safe report, retry the steps, and open an email draft for support." },
   "Business profile": {
     label: "Business profile",
     description:

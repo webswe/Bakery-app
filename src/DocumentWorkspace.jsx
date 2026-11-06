@@ -156,6 +156,7 @@ export function BusinessProfileWorkspace({ data, save }) {
         <label>Bakery name<input name="name" defaultValue={profile.name || ""} required /></label>
         <label>Address<textarea name="address" defaultValue={profile.address || ""} /></label>
         <div className="form-row"><label>Phone<input name="phone" defaultValue={profile.phone || ""} /></label><label>Email<input name="email" type="email" defaultValue={profile.email || ""} /></label></div>
+        <label>Support email <span className="hint">Used only to address Help & support email drafts</span><input name="supportEmail" type="email" defaultValue={profile.supportEmail || ""} placeholder="support@yourbakery.com" /></label>
         <label>Tax / registration number<input name="taxId" defaultValue={profile.taxId || ""} /></label>
         <label>Document footer<textarea name="footer" defaultValue={profile.footer || ""} placeholder="Payment terms, pickup policy, or thank-you message" /></label>
         <button className="primary">Save business profile</button>

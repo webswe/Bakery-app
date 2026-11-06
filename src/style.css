@@ -1935,6 +1935,8 @@ nav button { flex-shrink:0; }
 .update-progress i { display:block; height:100%; border-radius:inherit; background:#3e766a; transition:width .2s ease; }
 .release-notes { padding:26px; }
 .release-notes > div { color:#4e6670; line-height:1.7; white-space:pre-wrap; }
+.support-report-preview { padding:var(--space-5); }
+.support-report-preview pre { max-height:420px; overflow:auto; padding:14px; border:1px solid #dbe5e8; border-radius:8px; background:#f7fafb; color:#49636e; font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace; white-space:pre-wrap; }
 .spin { animation:update-spin 1s linear infinite; }
 @keyframes update-spin { to { transform:rotate(360deg); } }
 .snapshot-ledger { display:grid; grid-template-columns:1fr auto; gap:12px 24px; }
