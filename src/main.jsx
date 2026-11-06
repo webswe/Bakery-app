@@ -40,6 +40,8 @@ import {
   sectionFor,
   readRoute,
   routeHash,
+  ownerToolkitPages,
+  bakeryOperationsPages,
 } from "./workspaceNavigation.js";
 import React, { lazy, Suspense, useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
@@ -727,7 +729,7 @@ function App() {
             />
           ) : page === "Help & support" ? (
             <SupportWorkspace data={data} page={page} />
-          ) : ["Order intake", "Production timeline", "Recurring prep", "Substitutions", "Label studio", "Kitchen binder", "Cost alerts", "Sales trends", "Data tools"].includes(page) ? (
+          ) : ownerToolkitPages.includes(page) ? (
             <Suspense fallback={<p className="panel empty">Opening owner tools…</p>}><OwnerToolkitWorkspace data={data} save={save} page={page} navigate={navigate} /></Suspense>
           ) : page === "Customers" ? (
             <CustomerWorkspace data={data} save={save} navigate={navigate} />
@@ -743,7 +745,7 @@ function App() {
             <OwnerCommandCenter data={data} save={save} />
           ) : page === "App updates" ? (
             <UpdateWorkspace />
-          ) : ["Recipe lab", "Allergen matrix", "Capacity planner", "Kitchen timers", "Daily closeout", "Equipment care", "Menu profitability", "Purchase orders", "Archive"].includes(page) ? (
+          ) : bakeryOperationsPages.includes(page) ? (
             <Suspense fallback={<p className="panel empty">Opening bakery operations…</p>}><BakeryOperationsWorkspace data={data} save={save} page={page} open={open} navigate={navigate} /></Suspense>
           ) : ["Daily snapshot", "Use soon", "Packing", "Batch yields", "Seasonal plans"].includes(page) ? (
             <OwnerEnhancements data={data} save={save} page={page} navigate={navigate} />

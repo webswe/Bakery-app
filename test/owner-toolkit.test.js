@@ -39,3 +39,10 @@ test("order intake, CSV round-trip, trends and backup preview preserve records",
   assert.equal(salesTrend(source).at(-1).revenue, 6);
   assert.equal(backupSummary(JSON.stringify(source)).counts.recipes, 1);
 });
+
+test("CSV imports reject the wrong template before changing records", () => {
+  assert.throws(
+    () => importCsv(data(), "ingredients", '"id","name"\n"1","Flour"'),
+    /missing required column/i,
+  );
+});

@@ -1,3 +1,6 @@
+export const ownerToolkitPages = ["Order intake", "Production timeline", "Recurring prep", "Substitutions", "Label studio", "Kitchen binder", "Cost alerts", "Sales trends", "Data tools"];
+export const bakeryOperationsPages = ["Recipe lab", "Allergen matrix", "Capacity planner", "Kitchen timers", "Daily closeout", "Equipment care", "Menu profitability", "Purchase orders", "Archive"];
+
 export const sections = [
   { name: "Overview", pages: ["Overview", "Goals & tasks"] },
   { name: "Sales", pages: ["Order intake", "Orders", "Quotes", "Customers", "Packing", "Documents", "Payments"] },
