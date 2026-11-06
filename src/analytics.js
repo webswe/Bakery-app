@@ -37,7 +37,7 @@ export function migrateData(data) {
     orders: data.orders || [],
     customers: data.customers || [],
     documentCounters: data.documentCounters || {},
-    businessProfile: data.businessProfile || {},
+    businessProfile: { supportEmail: "botaa109@gmail.com", ...(data.businessProfile || {}) },
     payments: data.payments || [],
     waste: data.waste || [],
     inventoryLots: data.inventoryLots || [],
