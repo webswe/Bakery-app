@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld("bakeryDesktop", {
     ipcRenderer.invoke("support:save-report", report),
   openSupportEmail: (address, subject, body) =>
     ipcRenderer.invoke("support:open-email", address, subject, body),
+  createDeviceBackup: (workspace, day) =>
+    ipcRenderer.invoke("backup:create-device", workspace, day),
+  restoreDeviceBackup: () => ipcRenderer.invoke("backup:restore-device"),
   onUpdateStatus: (listener) => {
     const handler = (_event, status) => listener(status);
     ipcRenderer.on(statusChannel, handler);

@@ -76,6 +76,8 @@ export function migrateData(data) {
     recurringTasks: data.recurringTasks || [],
     substitutions: data.substitutions || [],
     recipePhotos: data.recipePhotos || [],
+    businessProfiles: data.businessProfiles || [],
+    changeLog: data.changeLog || [],
     movements: data.movements || [],
     settings: { hourlyWage: 0, electricityRate: 0, ...(data.settings || {}) },
     taxRates: data.taxRates || { food: data.tax ?? 0, other: data.tax ?? 0 },

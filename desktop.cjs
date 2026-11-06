@@ -1,4 +1,11 @@
-const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  safeStorage,
+  shell,
+} = require("electron");
 const { autoUpdater } = require("electron-updater");
 const path = require("node:path");
 const fs = require("node:fs/promises");
@@ -67,6 +74,43 @@ ipcMain.handle("support:save-report", async (_event, report) => {
 ipcMain.handle("support:open-email", (_event, address, subject, body) => {
   const target = `mailto:${encodeURIComponent(String(address || ""))}?subject=${encodeURIComponent(String(subject || ""))}&body=${encodeURIComponent(String(body || ""))}`;
   return shell.openExternal(target);
+});
+ipcMain.handle("backup:create-device", async (_event, workspace, day) => {
+  if (!safeStorage.isEncryptionAvailable())
+    return { available: false, message: "Device encryption is unavailable." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(day || "")))
+    throw Error("Invalid backup date.");
+  const folder = path.join(app.getPath("documents"), "Bakery Ledger Backups");
+  await fs.mkdir(folder, { recursive: true });
+  const target = path.join(folder, `Bakery-Ledger-device-${day}.bkl-device`);
+  const encrypted = safeStorage.encryptString(JSON.stringify(workspace));
+  await fs.writeFile(target, encrypted);
+  const files = (await fs.readdir(folder))
+    .filter((name) =>
+      /^Bakery-Ledger-device-\d{4}-\d{2}-\d{2}\.bkl-device$/.test(name),
+    )
+    .sort();
+  for (const old of files.slice(0, -30))
+    await fs.unlink(path.join(folder, old));
+  return { available: true, path: target, kept: Math.min(30, files.length) };
+});
+ipcMain.handle("backup:restore-device", async () => {
+  if (!safeStorage.isEncryptionAvailable())
+    throw Error("Device encryption is unavailable.");
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Open a Bakery Ledger device backup",
+    defaultPath: path.join(app.getPath("documents"), "Bakery Ledger Backups"),
+    properties: ["openFile"],
+    filters: [
+      { name: "Bakery Ledger device backup", extensions: ["bkl-device"] },
+    ],
+  });
+  if (result.canceled || !result.filePaths[0]) return null;
+  const encrypted = await fs.readFile(result.filePaths[0]);
+  return {
+    path: result.filePaths[0],
+    workspace: JSON.parse(safeStorage.decryptString(encrypted)),
+  };
 });
 
 app.whenReady().then(() => {

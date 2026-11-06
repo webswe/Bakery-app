@@ -20,9 +20,25 @@ export const bakeryOperationsPages = [
   "Purchase orders",
   "Archive",
 ];
+export const businessIntelligencePages = [
+  "Financial center",
+  "Smart schedule",
+  "Production performance",
+  "Receiving",
+  "Supplier insights",
+  "Waste coach",
+  "Trace labels",
+  "Bakery profiles",
+  "Secure backups",
+  "Change history",
+  "Setup checklist",
+];
 
 export const sections = [
-  { name: "Overview", pages: ["Overview", "Goals & tasks"] },
+  {
+    name: "Overview",
+    pages: ["Overview", "Goals & tasks", "Financial center"],
+  },
   {
     name: "Sales",
     pages: [
@@ -40,7 +56,9 @@ export const sections = [
     pages: [
       "Calendar",
       "Daily planner",
+      "Smart schedule",
       "Production timeline",
+      "Production performance",
       "Recurring prep",
       "Prep sheets",
       "Kitchen binder",
@@ -52,6 +70,7 @@ export const sections = [
       "Recipe lab",
       "Allergen matrix",
       "Label studio",
+      "Trace labels",
       "Recipe scaling",
       "Capacity planner",
       "Kitchen timers",
@@ -64,7 +83,9 @@ export const sections = [
       "Inventory dashboard",
       "Inventory",
       "Inventory lots",
+      "Receiving",
       "Supplier prices",
+      "Supplier insights",
       "Shopping list",
       "Purchase orders",
       "Substitutions",
@@ -85,6 +106,7 @@ export const sections = [
       "Sales trends",
       "Tax report",
       "Waste analysis",
+      "Waste coach",
     ],
   },
   {
@@ -93,11 +115,15 @@ export const sections = [
       "Tutorial",
       "Help & support",
       "Business profile",
+      "Bakery profiles",
       "App customization",
       "Cost settings",
       "Tax settings",
       "Equipment care",
       "Data tools",
+      "Secure backups",
+      "Change history",
+      "Setup checklist",
       "Archive",
       "App updates",
       "Backups",
@@ -119,6 +145,11 @@ export const pages = {
       "Keep owner follow-ups, deadlines and working business targets beside the daily bakery workflow.",
     next: "Overview",
     nextLabel: "Return to dashboard",
+  },
+  "Financial center": {
+    label: "Goals & finances",
+    description:
+      "Track revenue, profit, cash, balances, expenses, waste, and progress toward the owner goals that matter.",
   },
   "Order intake": {
     label: "Order intake",
@@ -172,6 +203,16 @@ export const pages = {
       "Organize batches, follow kitchen checklists and record completed production.",
     next: "Shopping list",
     nextLabel: "Review shopping list",
+  },
+  "Smart schedule": {
+    label: "Smart schedule",
+    description:
+      "Turn upcoming accepted orders into production tasks at the right time without disturbing work already planned.",
+  },
+  "Production performance": {
+    label: "Plan vs actual",
+    description:
+      "Compare planned yields and dates with completed kitchen results so future plans become more realistic.",
   },
   "Production timeline": {
     label: "Production timeline",
@@ -242,6 +283,11 @@ export const pages = {
     label: "Label studio",
     description:
       "Customize and print consistent product labels with allergens, storage and batch details.",
+  },
+  "Trace labels": {
+    label: "QR trace labels",
+    description:
+      "Print scannable batch labels for finished products without putting customer details in the code.",
   },
   "Capacity planner": {
     label: "Capacity planner",
@@ -392,6 +438,41 @@ export const pages = {
     label: "Data tools",
     description:
       "Export or import CSV records and inspect backup contents before recovery.",
+  },
+  Receiving: {
+    label: "Receive deliveries",
+    description:
+      "Receive supplier packages once and update stock, lots, costs, movements, and price history together.",
+  },
+  "Supplier insights": {
+    label: "Supplier insights",
+    description:
+      "Compare normalized supplier prices and see which low-stock ingredients need a buying decision.",
+  },
+  "Waste coach": {
+    label: "Waste coach",
+    description:
+      "Find repeated waste patterns and turn each one into a practical prevention step.",
+  },
+  "Bakery profiles": {
+    label: "Bakery profiles",
+    description:
+      "Save and switch business identity and appearance presets for different brands or locations.",
+  },
+  "Secure backups": {
+    label: "Secure backups",
+    description:
+      "Download password-protected workspace backups and maintain a clear recovery routine.",
+  },
+  "Change history": {
+    label: "Change history",
+    description:
+      "Review a compact timeline of the parts of the workspace that changed.",
+  },
+  "Setup checklist": {
+    label: "Owner setup checklist",
+    description:
+      "Complete the core bakery setup so forecasts, goals, pricing, and recovery tools work well.",
   },
   Archive: {
     label: "Archive",

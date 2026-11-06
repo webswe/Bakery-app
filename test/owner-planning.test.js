@@ -43,6 +43,14 @@ test("owner goals normalize invalid and negative values", () => {
       monthlyProfit: -10,
       weeklyBatches: "bad",
     }),
-    { monthlyRevenue: 2500, monthlyProfit: 0, weeklyBatches: 0 },
+    {
+      monthlyRevenue: 2500,
+      monthlyProfit: 0,
+      targetMargin: 0,
+      cashReserve: 0,
+      maxWastePercent: 0,
+      weeklyBatches: 0,
+      weeklyOwnerHours: 0,
+    },
   );
 });

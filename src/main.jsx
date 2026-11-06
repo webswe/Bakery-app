@@ -49,7 +49,9 @@ import {
   routeHash,
   ownerToolkitPages,
   bakeryOperationsPages,
+  businessIntelligencePages,
 } from "./workspaceNavigation.js";
+import { withChangeLog } from "./businessIntelligence.js";
 import React, { lazy, Suspense, useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -74,6 +76,9 @@ import "./style.css";
 const OwnerToolkitWorkspace = lazy(() => import("./OwnerToolkitWorkspace.jsx"));
 const BakeryOperationsWorkspace = lazy(
   () => import("./BakeryOperationsWorkspace.jsx"),
+);
+const BusinessIntelligenceWorkspace = lazy(
+  () => import("./BusinessIntelligenceWorkspace.jsx"),
 );
 const uid = () => crypto.randomUUID();
 const lockKey = "bakery-ledger-lock-v1";
@@ -339,6 +344,21 @@ function App() {
       events.forEach((name) => window.removeEventListener(name, reset));
     };
   }, [lockConfig, locked]);
+  useEffect(() => {
+    const desktop = window.bakeryDesktop;
+    if (!desktop?.createDeviceBackup) return;
+    const day = today();
+    const key = "bakery-ledger-device-backup-day-v1";
+    if (localStorage.getItem(key) === day) return;
+    desktop
+      .createDeviceBackup(data, day)
+      .then((result) => {
+        if (result?.available) localStorage.setItem(key, day);
+      })
+      .catch(() => {
+        /* a portable backup remains available in Secure backups */
+      });
+  }, [data]);
   function setLockConfig(next) {
     if (next) localStorage.setItem(lockKey, JSON.stringify(next));
     else localStorage.removeItem(lockKey);
@@ -351,8 +371,9 @@ function App() {
   }
   function save(next, restoring = false) {
     try {
-      persistWorkspace(localStorage, next, today(), restoring);
-      setData(next);
+      const savedData = restoring ? next : withChangeLog(data, next);
+      persistWorkspace(localStorage, savedData, today(), restoring);
+      setData(savedData);
       setSavedAt(new Date());
       setError("");
       return true;
@@ -872,6 +893,20 @@ function App() {
             <OwnerCommandCenter data={data} save={save} />
           ) : page === "App updates" ? (
             <UpdateWorkspace />
+          ) : businessIntelligencePages.includes(page) ? (
+            <Suspense
+              fallback={
+                <p className="panel empty">Opening owner intelligence…</p>
+              }
+            >
+              <BusinessIntelligenceWorkspace
+                data={data}
+                save={save}
+                page={page}
+                navigate={navigate}
+                restoreData={(next) => save(migrateData(next), true)}
+              />
+            </Suspense>
           ) : bakeryOperationsPages.includes(page) ? (
             <Suspense
               fallback={

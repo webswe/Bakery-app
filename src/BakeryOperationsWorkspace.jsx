@@ -620,6 +620,31 @@ function DailyCloseout({ data, save, navigate }) {
   const [date, setDate] = useState(today());
   const saved =
     (data.closeouts || []).find((entry) => entry.date === date) || {};
+  const cashPayments = (data.payments || [])
+    .filter(
+      (entry) =>
+        entry.date === date && String(entry.method).toLowerCase() === "cash",
+    )
+    .reduce(
+      (sum, entry) =>
+        sum +
+        (entry.kind === "refund"
+          ? -Number(entry.amount || 0)
+          : Number(entry.amount || 0)),
+      0,
+    );
+  const directCash = (data.sales || [])
+    .filter(
+      (entry) =>
+        entry.date === date &&
+        String(entry.paymentMethod || entry.method).toLowerCase() === "cash",
+    )
+    .reduce((sum, entry) => sum + Number(entry.total || entry.net || 0), 0);
+  const expectedCash =
+    Number(saved.openingFloat || 0) +
+    cashPayments +
+    directCash -
+    Number(saved.cashPayouts || 0);
   const checks = [
     "Payments reviewed",
     "Pickups completed",
@@ -650,6 +675,14 @@ function DailyCloseout({ data, save, navigate }) {
             saveCloseout(data, {
               date,
               checks: checks.filter((item) => form.get(item) === "on"),
+              openingFloat: Number(form.get("openingFloat") || 0),
+              cashPayouts: Number(form.get("cashPayouts") || 0),
+              countedCash: Number(form.get("countedCash") || 0),
+              expectedCash:
+                Number(form.get("openingFloat") || 0) +
+                cashPayments +
+                directCash -
+                Number(form.get("cashPayouts") || 0),
               cashNote: form.get("cashNote"),
               tomorrowNote: form.get("tomorrowNote"),
             }),
@@ -666,6 +699,60 @@ function DailyCloseout({ data, save, navigate }) {
             <span>{item}</span>
           </label>
         ))}
+        <div className="form-row closeout-money-grid">
+          <label>
+            Opening cash
+            <input
+              name="openingFloat"
+              type="number"
+              min="0"
+              step="0.01"
+              defaultValue={saved.openingFloat || ""}
+            />
+          </label>
+          <label>
+            Cash payouts
+            <input
+              name="cashPayouts"
+              type="number"
+              min="0"
+              step="0.01"
+              defaultValue={saved.cashPayouts || ""}
+            />
+          </label>
+          <label>
+            Counted cash
+            <input
+              name="countedCash"
+              type="number"
+              min="0"
+              step="0.01"
+              defaultValue={saved.countedCash || ""}
+            />
+          </label>
+        </div>
+        <div className="closeout-reconciliation">
+          <span>
+            Recorded cash activity <b>{money(cashPayments + directCash)}</b>
+          </span>
+          <span>
+            Expected drawer <b>{money(expectedCash)}</b>
+          </span>
+          {saved.countedCash != null && (
+            <span>
+              Saved difference{" "}
+              <b
+                className={
+                  Math.abs(saved.countedCash - saved.expectedCash) > 0.01
+                    ? "negative"
+                    : "positive-text"
+                }
+              >
+                {money(saved.countedCash - saved.expectedCash)}
+              </b>
+            </span>
+          )}
+        </div>
         <label>
           Cash / payment note
           <textarea name="cashNote" defaultValue={saved.cashNote || ""} />

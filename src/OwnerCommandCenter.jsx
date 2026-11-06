@@ -108,6 +108,50 @@ export default function OwnerCommandCenter({ data, save }) {
               />
             </label>
           </div>
+          <div className="form-row">
+            <label>
+              Target profit margin (%)
+              <input
+                name="targetMargin"
+                type="number"
+                min="0"
+                max="95"
+                step="0.1"
+                defaultValue={goals.targetMargin || ""}
+              />
+            </label>
+            <label>
+              Cash reserve goal ($)
+              <input
+                name="cashReserve"
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={goals.cashReserve || ""}
+              />
+            </label>
+            <label>
+              Maximum waste (% of revenue)
+              <input
+                name="maxWastePercent"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                defaultValue={goals.maxWastePercent || ""}
+              />
+            </label>
+            <label>
+              Weekly owner-hours limit
+              <input
+                name="weeklyOwnerHours"
+                type="number"
+                min="0"
+                step="0.5"
+                defaultValue={goals.weeklyOwnerHours || ""}
+              />
+            </label>
+          </div>
           <button className="primary">Save goals</button>
         </form>
       </section>

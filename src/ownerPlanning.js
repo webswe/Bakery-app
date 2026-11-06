@@ -69,6 +69,10 @@ export function normalizeOwnerGoals(value = {}) {
   return {
     monthlyRevenue: number(value.monthlyRevenue),
     monthlyProfit: number(value.monthlyProfit),
+    targetMargin: number(value.targetMargin),
+    cashReserve: number(value.cashReserve),
+    maxWastePercent: number(value.maxWastePercent),
     weeklyBatches: number(value.weeklyBatches),
+    weeklyOwnerHours: number(value.weeklyOwnerHours),
   };
 }
