@@ -118,7 +118,6 @@ const QuickSearch = forwardRef(function QuickSearch(
       <input
         ref={ref}
         value={query}
-        onPointerDown={(event) => event.currentTarget.focus()}
         onFocus={() => setOpen(true)}
         onChange={(event) => {
           setQuery(event.target.value);

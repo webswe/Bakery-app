@@ -122,7 +122,6 @@ export default function CustomerWorkspace({ data, save, navigate }) {
               aria-label="Search customers"
               placeholder="Search customers"
               value={query}
-              onPointerDown={(event) => event.currentTarget.focus()}
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>

@@ -18,7 +18,7 @@ const base = () => ({
       unit: "g",
       price: 4,
       stock: 500,
-      minimumStock: 600,
+      minStock: 600,
       tax: 0,
     },
   ],
@@ -71,6 +71,24 @@ test("financial center keeps tax outside revenue and reports goal progress", () 
   assert.equal(report.profit, 250);
   assert.equal(report.progress.revenue, 50);
   assert.equal(report.wastePercent, 2.4);
+});
+
+test("financial center includes earlier deposits when calculating order balances", () => {
+  const data = base();
+  data.orders.push({
+    id: "order",
+    pickupDate: "2026-11-20",
+    status: "open",
+    total: 300,
+  });
+  data.payments.push({
+    id: "deposit",
+    orderId: "order",
+    date: "2026-10-20",
+    kind: "payment",
+    amount: 100,
+  });
+  assert.equal(financialCenter(data, "2026-11").outstanding, 200);
 });
 
 test("scheduler creates one linked plan for an unplanned accepted order", () => {

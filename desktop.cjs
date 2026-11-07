@@ -129,6 +129,9 @@ app.whenReady().then(() => {
   });
   mainWindow.loadFile(path.join(__dirname, "dist", "index.html"));
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  mainWindow.on("focus", () => {
+    if (!mainWindow.webContents.isDestroyed()) mainWindow.webContents.focus();
+  });
 
   autoUpdater.autoDownload = true;
   autoUpdater.on("checking-for-update", () =>

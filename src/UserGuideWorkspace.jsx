@@ -433,5 +433,3 @@ export default function UserGuideWorkspace({ navigate }) {
     </div>
   );
 }
-
-export { guideSections };

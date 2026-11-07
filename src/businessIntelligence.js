@@ -1,11 +1,10 @@
 import { monthlySummary } from "./analytics.js";
-import { fullCost } from "./operations.js";
 import { savePlan } from "./planning.js";
 import { localDay } from "./dateUtils.js";
 
 const number = (value) => Math.max(0, Number(value) || 0);
 
-export function normalizeBusinessGoals(value = {}) {
+function normalizeBusinessGoals(value = {}) {
   return {
     monthlyRevenue: number(value.monthlyRevenue),
     monthlyProfit: number(value.monthlyProfit),
@@ -19,10 +18,10 @@ export function normalizeBusinessGoals(value = {}) {
 
 export function financialCenter(data, month) {
   const summary = monthlySummary(data, month);
-  const payments = (data.payments || []).filter((row) =>
+  const monthPayments = (data.payments || []).filter((row) =>
     row.date?.startsWith(month),
   );
-  const cashIn = payments.reduce(
+  const cashIn = monthPayments.reduce(
     (sum, row) =>
       sum + (row.kind === "refund" ? -number(row.amount) : number(row.amount)),
     0,
@@ -52,7 +51,7 @@ export function financialCenter(data, month) {
           order.pickupDate?.startsWith(month),
       )
       .reduce((sum, order) => {
-        const paid = payments
+        const paid = (data.payments || [])
           .filter((row) => row.orderId === order.id)
           .reduce(
             (total, row) =>
@@ -169,7 +168,7 @@ export function scheduleSuggestions(data, startDate = localDay(), days = 14) {
         ? measuredMinutes.reduce((sum, value) => sum + value, 0) /
           measuredMinutes.length
         : minutes;
-      const leadDays = minutes > 360 ? 2 : 1;
+      const leadDays = minutesPerBatch > 360 ? 2 : 1;
       const batches = Math.max(
         1,
         Math.ceil(
@@ -334,7 +333,7 @@ export function supplierInsights(data) {
         best: offers[0],
         current,
         reorder: current
-          ? number(current.stock) <= number(current.minimumStock)
+          ? number(current.stock) <= number(current.minStock)
           : false,
       };
     })
@@ -376,7 +375,7 @@ export function wasteCoaching(data, month) {
     .sort((a, b) => b.cost - a.cost);
 }
 
-export function changeSummary(previous, next) {
+function changeSummary(previous, next) {
   const ignored = new Set(["changeLog"]);
   return Object.keys(next)
     .filter(
@@ -524,15 +523,4 @@ export function setupProgress(data) {
       (checks.filter((row) => row.complete).length / checks.length) * 100,
     ),
   };
-}
-
-export function estimatedOrderCost(data, order) {
-  const recipe = data.recipes.find(
-    (row) => row.id === order.recipeId || row.name === order.recipeName,
-  );
-  if (!recipe) return 0;
-  return (
-    fullCost(recipe, data.items, data.settings) *
-    Math.max(1, Math.ceil(number(order.portions) / (recipe.yield || 1)))
-  );
 }

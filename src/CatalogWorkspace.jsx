@@ -84,7 +84,6 @@ function CatalogWorkspace({ data, page, open, recipeCost, save }) {
               aria-label={`Search ${page}`}
               placeholder="Search your collection"
               value={query}
-              onPointerDown={(event) => event.currentTarget.focus()}
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>

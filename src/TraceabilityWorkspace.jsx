@@ -38,7 +38,6 @@ export default function TraceabilityWorkspace({ data }) {
           Find a batch
           <input
             value={query}
-            onPointerDown={(event) => event.currentTarget.focus()}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Batch, recipe or date"
           />
