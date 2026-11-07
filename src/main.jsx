@@ -88,6 +88,14 @@ const BusinessIntelligenceWorkspace = lazy(
 );
 const UserGuideWorkspace = lazy(() => import("./UserGuideWorkspace.jsx"));
 const uid = () => crypto.randomUUID();
+const stockPrimaryPages = [
+  "Inventory dashboard",
+  "Inventory",
+  "Receiving",
+  "Shopping list",
+  "Ingredients",
+  "Packaging",
+];
 const lockKey = "bakery-ledger-lock-v1";
 const tutorialKey = "bakery-ledger-tutorial-v1";
 const modalDraftKey = (type, value) =>
@@ -209,6 +217,14 @@ function App() {
     [month, setMonth] = useState(today().slice(0, 7));
   const section = sectionFor(page),
     info = pages[page];
+  const sectionTabs =
+    section.name === "Stock"
+      ? section.pages.filter((name) => stockPrimaryPages.includes(name))
+      : section.pages;
+  const extraSectionTabs =
+    section.name === "Stock"
+      ? section.pages.filter((name) => !stockPrimaryPages.includes(name))
+      : [];
   function navigate(nextPage, context = {}) {
     if (
       modalDirty &&
@@ -844,7 +860,7 @@ function App() {
               className="workspace-tabs"
               aria-label={section.name + " pages"}
             >
-              {section.pages.map((name) => (
+              {sectionTabs.map((name) => (
                 <button
                   key={name}
                   aria-current={page === name ? "page" : undefined}
@@ -854,6 +870,23 @@ function App() {
                   {pages[name].label}
                 </button>
               ))}
+              {!!extraSectionTabs.length && (
+                <select
+                  className={extraSectionTabs.includes(page) ? "active" : ""}
+                  aria-label="More stock pages"
+                  value={extraSectionTabs.includes(page) ? page : ""}
+                  onChange={(event) => navigate(event.target.value)}
+                >
+                  <option value="" disabled>
+                    More stock tools…
+                  </option>
+                  {extraSectionTabs.map((name) => (
+                    <option value={name} key={name}>
+                      {pages[name].label}
+                    </option>
+                  ))}
+                </select>
+              )}
             </nav>
           )}
           <PinnedShortcuts

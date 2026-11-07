@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   addDays,
+  adjustFinishedStock,
   consumeProductLots,
   createProductLot,
   finishedProductAlerts,
@@ -57,5 +58,46 @@ test("finished stock is consumed by earliest best-before date", () => {
   assert.equal(
     finishedProductAlerts({ productLots: lots }, "2026-10-30")[0].expired,
     true,
+  );
+});
+
+test("finished stock adjustments add and remove traceable portions", () => {
+  const data = {
+    recipes: [
+      { id: "cake", name: "Cake", shelfLifeDays: 3, yield: 8, lines: [] },
+    ],
+    products: {},
+    productLots: [],
+    movements: [],
+  };
+  const added = adjustFinishedStock(data, "cake", {
+    direction: "add",
+    quantity: 6,
+    unitCost: 2,
+    date: "2026-11-07",
+    reason: "Opening count",
+  });
+  assert.deepEqual(added.products.cake, { quantity: 6, value: 12 });
+  assert.equal(added.productLots[0].remaining, 6);
+  assert.equal(added.productLots[0].bestBefore, "2026-11-10");
+  assert.equal(added.movements[0].delta, 6);
+
+  const removed = adjustFinishedStock(added, "cake", {
+    direction: "remove",
+    quantity: 2,
+    date: "2026-11-08",
+    reason: "Damaged",
+  });
+  assert.deepEqual(removed.products.cake, { quantity: 4, value: 8 });
+  assert.equal(removed.productLots[0].remaining, 4);
+  assert.equal(removed.movements.at(-1).delta, -2);
+  assert.throws(
+    () =>
+      adjustFinishedStock(removed, "cake", {
+        direction: "remove",
+        quantity: 5,
+        reason: "Count correction",
+      }),
+    /Only 4 portions/,
   );
 });

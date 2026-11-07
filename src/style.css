@@ -4441,6 +4441,106 @@ nav button {
 .workspace-tabs button {
   min-height: 40px;
 }
+.workspace-tabs select {
+  min-height: 40px;
+  padding: 0 30px 0 12px;
+  border: 1px solid #d6e0e3;
+  border-radius: 7px;
+  background: #fff;
+  color: #55707b;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+.workspace-tabs select.active {
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+  background: var(--app-soft);
+}
+
+.conversion-summary {
+  max-width: 360px;
+  color: #84918a !important;
+}
+.stock-row-actions,
+.finished-stock-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.stock-row-actions + .stock-form {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #dce6e8;
+  border-radius: 8px;
+  background: #f7faf9;
+}
+.stock-activity {
+  margin-top: 16px;
+  padding: 0;
+}
+.stock-activity > summary,
+.finished-lot-list > summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  color: #496571;
+  font-weight: 700;
+}
+.stock-activity > .legend,
+.stock-activity > p {
+  margin-right: 16px;
+  margin-left: 16px;
+}
+.stock-activity[open] {
+  padding-bottom: 12px;
+}
+.finished-lot-list {
+  padding: 0;
+}
+.finished-lot-list > div,
+.finished-lot-list > p {
+  margin-right: 14px;
+  margin-left: 14px;
+}
+.finished-stock-controls {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 8px;
+}
+.stock-action-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #d6e3e1;
+  border-radius: 9px;
+  background: #f6faf8;
+}
+.stock-action-panel > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+.stock-action-panel small {
+  color: #71827a;
+  line-height: 1.45;
+}
+.stock-action-panel label {
+  display: grid;
+  gap: 5px;
+  color: #587069;
+  font-size: 11px;
+  font-weight: 700;
+}
+.stock-action-panel input,
+.stock-action-panel select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid #d5dfdc;
+  border-radius: 6px;
+  background: #fff;
+  color: #354f48;
+}
 
 .quick-search {
   position: relative;

@@ -255,7 +255,7 @@ export const pages = {
   "Product stock": {
     label: "Finished stock",
     description:
-      "Review prepared desserts and captured costs. Fulfill an order or record a direct sale.",
+      "Review prepared desserts, record completed batches, and add or remove count corrections before selling or fulfilling orders.",
     action: "Record a sale",
     modal: "sale",
     next: "Orders",

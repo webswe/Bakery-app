@@ -1,6 +1,6 @@
 import { directSaleTotals, purchaseTax } from "./taxation.js";
 import { receiveInventory, reconcileLots } from "./inventoryLots.js";
-import { finishedProductAlerts } from "./productLots.js";
+import { adjustFinishedStock, finishedProductAlerts } from "./productLots.js";
 import React, { useDeferredValue, useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { addPresets, availability, produce, fullCost } from "./operations.js";
@@ -187,6 +187,8 @@ export function SaleFields({ data }) {
 export default function Operations({ data, save, open, tab }) {
   const [error, setError] = useState(""),
     [q, setQ] = useState(""),
+    [activeStockId, setActiveStockId] = useState(""),
+    [activeProductAction, setActiveProductAction] = useState(""),
     [showInventoryGuide, setShowInventoryGuide] = useState(
       () =>
         localStorage.getItem("bakery-ledger-inventory-guide-dismissed") !==
@@ -196,10 +198,12 @@ export default function Operations({ data, save, open, tab }) {
   function act(fn) {
     try {
       const next = fn();
-      save(next);
+      if (save(next) === false) return false;
       setError("");
+      return true;
     } catch (e) {
       setError(e.message);
+      return false;
     }
   }
   return (
@@ -262,8 +266,7 @@ export default function Operations({ data, save, open, tab }) {
                 <tr>
                   <th>ITEM</th>
                   <th>ON HAND</th>
-                  <th>CONVERSION</th>
-                  <th>MANAGE</th>
+                  <th>STOCK ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
@@ -281,6 +284,9 @@ export default function Operations({ data, save, open, tab }) {
                             ? "Purchase price required"
                             : `${money(purchaseTax(i).total)} / ${i.amount} ${i.unit} (final cost)`}
                         </small>
+                        <small className="conversion-summary">
+                          {conversionSummary(i)}
+                        </small>
                       </td>
                       <td>
                         <b>
@@ -289,67 +295,68 @@ export default function Operations({ data, save, open, tab }) {
                         <small>{!i.stock ? "Out of stock" : ""}</small>
                       </td>
                       <td>
-                        {i.gramsPerCan ? `${i.gramsPerCan} g / can · ` : ""}
-                        {i.gramsPerTbsp
-                          ? `${i.gramsPerTbsp} g / tbsp`
-                          : i.gramsPerTsp
-                            ? `${i.gramsPerTsp} g / tsp`
-                            : i.gramsPerCup
-                              ? `${i.gramsPerCup} g / US cup`
-                              : i.density
-                                ? `${i.density} g/ml`
-                                : "Same-unit conversions"}
-                      </td>
-                      <td>
-                        <StockForm
-                          item={i}
-                          apply={(form, kind) =>
-                            act(() =>
-                              kind === "receive"
-                                ? receiveInventory(data, i.id, form)
-                                : {
-                                    ...data,
-                                    inventoryLots: reconcileLots(
-                                      data.inventoryLots || [],
-                                      i.id,
-                                      +form.quantity,
-                                    ),
-                                    items: data.items.map((x) =>
-                                      x.id === i.id
-                                        ? { ...x, stock: +form.quantity }
-                                        : x,
-                                    ),
-                                    movements: [
-                                      ...data.movements,
-                                      {
-                                        id: crypto.randomUUID(),
-                                        date: new Date().toISOString(),
-                                        name: i.name,
-                                        kind: "Count",
-                                        quantity: +form.quantity,
-                                        unit: i.unit,
-                                      },
-                                    ],
-                                  },
-                            )
-                          }
-                        />
-                        <button
-                          className="text-button"
-                          onClick={() => open("item", i)}
-                        >
-                          Edit price & conversion
-                        </button>
+                        <div className="stock-row-actions">
+                          <button
+                            className="secondary"
+                            onClick={() =>
+                              setActiveStockId((current) =>
+                                current === i.id ? "" : i.id,
+                              )
+                            }
+                          >
+                            {activeStockId === i.id ? "Close" : "Update stock"}
+                          </button>
+                          <button
+                            className="text-button"
+                            onClick={() => open("item", i)}
+                          >
+                            Edit item
+                          </button>
+                        </div>
+                        {activeStockId === i.id && (
+                          <StockForm
+                            item={i}
+                            onDone={() => setActiveStockId("")}
+                            apply={(form, kind) =>
+                              act(() =>
+                                kind === "receive"
+                                  ? receiveInventory(data, i.id, form)
+                                  : {
+                                      ...data,
+                                      inventoryLots: reconcileLots(
+                                        data.inventoryLots || [],
+                                        i.id,
+                                        +form.quantity,
+                                      ),
+                                      items: data.items.map((x) =>
+                                        x.id === i.id
+                                          ? { ...x, stock: +form.quantity }
+                                          : x,
+                                      ),
+                                      movements: [
+                                        ...data.movements,
+                                        {
+                                          id: crypto.randomUUID(),
+                                          date: new Date().toISOString(),
+                                          name: i.name,
+                                          kind: "Count",
+                                          quantity: +form.quantity,
+                                          unit: i.unit,
+                                        },
+                                      ],
+                                    },
+                              )
+                            }
+                          />
+                        )}
                       </td>
                     </tr>
                   ))}
               </tbody>
             </table>
           </div>
-          <section className="panel" style={{ marginTop: 20 }}>
-            <div className="panel-heading">
-              <h2>Recent stock activity</h2>
-            </div>
+          <details className="panel stock-activity">
+            <summary>Recent stock activity</summary>
             {data.movements
               .slice(-15)
               .reverse()
@@ -357,16 +364,19 @@ export default function Operations({ data, save, open, tab }) {
                 <div className="legend" key={m.id}>
                   <span>
                     {m.kind} · {m.name}
+                    {m.reason ? ` · ${m.reason}` : ""}
                   </span>
                   <b>
-                    {m.quantity} {m.unit || "portions"} · {m.date.slice(0, 10)}
+                    {m.delta > 0 ? "+" : ""}
+                    {m.delta ?? m.quantity} {m.unit || "portions"} ·{" "}
+                    {m.effectiveDate || m.date.slice(0, 10)}
                   </b>
                 </div>
               ))}
             {!data.movements.length && (
               <p className="accounting-note">No stock movements yet.</p>
             )}
-          </section>
+          </details>
         </>
       ) : tab === "Cost settings" ? (
         <section className="panel operations-settings">
@@ -449,39 +459,43 @@ export default function Operations({ data, save, open, tab }) {
                   <span className="pill">{r.category}</span>
                   <h3>{r.name}</h3>
                   <dl>
-                    <dt>Finished portions available</dt>
-                    <dd>{stock.quantity}</dd>
-                    <dt>Batches you can make</dt>
-                    <dd>{a.batches}</dd>
-                    <dt>Potential portions</dt>
-                    <dd>{a.portions}</dd>
-                    <dt>Full batch cost</dt>
-                    <dd>
-                      {cost === undefined ? "Needs conversion" : money(cost)}
-                    </dd>
-                    <dt>Labor / electricity / overhead</dt>
-                    <dd>
-                      {money(
-                        ((r.laborMinutes || 0) / 60) * data.settings.hourlyWage,
-                      )}{" "}
-                      /{" "}
-                      {money(
-                        (r.electricityKwh || 0) * data.settings.electricityRate,
-                      )}{" "}
-                      / {money(r.overheadPerBatch || 0)}
-                    </dd>
-                    <dt>Full cost per portion</dt>
-                    <dd>{cost === undefined ? "—" : money(cost / r.yield)}</dd>
-                    <dt>Stock value</dt>
-                    <dd>{money(stock.value)}</dd>
-                    <dt>Finished lots</dt>
-                    <dd>
-                      {productLots.length ||
-                        (stock.quantity ? "Legacy stock" : 0)}
-                    </dd>
+                    {tab === "Product stock" ? (
+                      <>
+                        <dt>Available</dt>
+                        <dd>{stock.quantity} portions</dd>
+                        <dt>Stock value</dt>
+                        <dd>{money(stock.value)}</dd>
+                        <dt>Average captured cost</dt>
+                        <dd>
+                          {stock.quantity
+                            ? money(stock.value / stock.quantity)
+                            : "—"}
+                        </dd>
+                        <dt>Next best-before</dt>
+                        <dd>{productLots[0]?.bestBefore || "Not tracked"}</dd>
+                      </>
+                    ) : (
+                      <>
+                        <dt>Batches you can make</dt>
+                        <dd>{a.batches}</dd>
+                        <dt>Potential portions</dt>
+                        <dd>{a.portions}</dd>
+                        <dt>Full batch cost</dt>
+                        <dd>
+                          {cost === undefined
+                            ? "Needs conversion"
+                            : money(cost)}
+                        </dd>
+                        <dt>Full cost per portion</dt>
+                        <dd>
+                          {cost === undefined ? "—" : money(cost / r.yield)}
+                        </dd>
+                      </>
+                    )}
                   </dl>
                   {tab === "Product stock" && productLots.length > 0 && (
-                    <div className="finished-lot-list">
+                    <details className="finished-lot-list">
+                      <summary>{productLots.length} finished lot(s)</summary>
                       {productLots.slice(0, 4).map((lot) => (
                         <div
                           className={
@@ -507,9 +521,11 @@ export default function Operations({ data, save, open, tab }) {
                         </p>
                       )}
                       {r.storageInstructions && <p>{r.storageInstructions}</p>}
-                    </div>
+                    </details>
                   )}
-                  {a.error && <div className="error">{a.error}</div>}
+                  {tab === "Can make" && a.error && (
+                    <div className="error">{a.error}</div>
+                  )}
                   {tab === "Can make" && (
                     <div className="requirements">
                       {Object.entries(a.needs || {}).map(([id, n]) => {
@@ -526,33 +542,54 @@ export default function Operations({ data, save, open, tab }) {
                       })}
                     </div>
                   )}
-                  <form
-                    className="production-form"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const f = new FormData(e.target);
-                      act(() => produce(data, r.id, +f.get("batches")));
-                    }}
-                  >
-                    <input
-                      aria-label={`Batches of ${r.name}`}
-                      name="batches"
-                      type="number"
-                      min="1"
-                      max={a.batches || 1}
-                      step="1"
-                      defaultValue="1"
-                      required
+                  {tab === "Can make" ? (
+                    <form
+                      className="production-form"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const f = new FormData(e.target);
+                        act(() => produce(data, r.id, +f.get("batches")));
+                      }}
+                    >
+                      <input
+                        aria-label={`Batches of ${r.name}`}
+                        name="batches"
+                        type="number"
+                        min="1"
+                        max={a.batches || 1}
+                        step="1"
+                        defaultValue="1"
+                        required
+                      />
+                      <button className="primary" disabled={!a.batches}>
+                        Record production
+                      </button>
+                    </form>
+                  ) : (
+                    <FinishedStockControls
+                      recipe={r}
+                      stock={stock}
+                      availability={a}
+                      active={activeProductAction}
+                      setActive={setActiveProductAction}
+                      recordProduction={(batches) =>
+                        act(() => produce(data, r.id, batches))
+                      }
+                      adjust={(input) =>
+                        act(() =>
+                          adjustFinishedStock(data, r.id, {
+                            ...input,
+                            unitCost: cost === undefined ? 0 : cost / r.yield,
+                          }),
+                        )
+                      }
                     />
-                    <button className="primary" disabled={!a.batches}>
-                      Record production
-                    </button>
-                  </form>
+                  )}
                   <button
                     className="text-button"
                     onClick={() => open("recipe", r)}
                   >
-                    Edit recipe & batch costs
+                    Edit recipe
                   </button>
                 </section>
               );
@@ -565,7 +602,20 @@ export default function Operations({ data, save, open, tab }) {
     </>
   );
 }
-function StockForm({ item, apply }) {
+function conversionSummary(item) {
+  const values = [
+    item.gramsPerCan && `${item.gramsPerCan} g/can`,
+    item.gramsPerCup && `${item.gramsPerCup} g/cup`,
+    item.gramsPerTbsp && `${item.gramsPerTbsp} g/tbsp`,
+    item.gramsPerTsp && `${item.gramsPerTsp} g/tsp`,
+    item.gramsPerStick && `${item.gramsPerStick} g/stick`,
+    item.gramsPerEach && `${item.gramsPerEach} g/each`,
+    item.density && `${item.density} g/ml`,
+  ].filter(Boolean);
+  return values.length ? values.join(" · ") : "No custom conversion";
+}
+
+function StockForm({ item, apply, onDone }) {
   const [n, setN] = useState(""),
     [kind, setKind] = useState("receive"),
     [details, setDetails] = useState(false);
@@ -575,7 +625,7 @@ function StockForm({ item, apply }) {
       onSubmit={(e) => {
         e.preventDefault();
         const fields = Object.fromEntries(new FormData(e.currentTarget));
-        apply(
+        const saved = apply(
           kind === "receive"
             ? {
                 packages: +n,
@@ -587,7 +637,10 @@ function StockForm({ item, apply }) {
             : { quantity: +n },
           kind,
         );
-        setN("");
+        if (saved !== false) {
+          setN("");
+          onDone?.();
+        }
       }}
     >
       <select
@@ -655,5 +708,170 @@ function StockForm({ item, apply }) {
         </>
       )}
     </form>
+  );
+}
+
+function FinishedStockControls({
+  recipe,
+  stock,
+  availability,
+  active,
+  setActive,
+  recordProduction,
+  adjust,
+}) {
+  const [direction, setDirection] = useState(
+    stock.quantity > 0 ? "remove" : "add",
+  );
+  const productionKey = `${recipe.id}:produce`;
+  const adjustmentKey = `${recipe.id}:adjust`;
+  const close = () => setActive("");
+  return (
+    <div className="finished-stock-controls">
+      <div className="finished-stock-actions">
+        <button
+          className="primary"
+          onClick={() =>
+            setActive(active === productionKey ? "" : productionKey)
+          }
+        >
+          + Record made
+        </button>
+        <button
+          className="secondary"
+          onClick={() =>
+            setActive(active === adjustmentKey ? "" : adjustmentKey)
+          }
+        >
+          Adjust count
+        </button>
+      </div>
+      {active === productionKey && (
+        <form
+          className="stock-action-panel"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const batches = Number(
+              new FormData(event.currentTarget).get("batches"),
+            );
+            if (recordProduction(batches) !== false) close();
+          }}
+        >
+          <div>
+            <b>Record completed production</b>
+            <small>
+              Adds finished portions and deducts the recipe ingredients and
+              packaging.
+            </small>
+            {availability.error && (
+              <small className="negative">{availability.error}</small>
+            )}
+          </div>
+          <label>
+            Batches
+            <input
+              name="batches"
+              type="number"
+              min="1"
+              max={availability.batches || 1}
+              step="1"
+              defaultValue="1"
+              required
+            />
+          </label>
+          <div className="planning-actions">
+            <button className="primary" disabled={!availability.batches}>
+              Add made stock
+            </button>
+            <button type="button" className="text-button" onClick={close}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+      {active === adjustmentKey && (
+        <form
+          className="stock-action-panel"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const input = Object.fromEntries(new FormData(event.currentTarget));
+            if (adjust(input) !== false) close();
+          }}
+        >
+          <div>
+            <b>Correct the finished count</b>
+            <small>
+              Use for damage, samples, returns, opening counts, or count
+              corrections.
+            </small>
+          </div>
+          <div className="form-row">
+            <label>
+              Action
+              <select
+                name="direction"
+                value={direction}
+                onChange={(event) => setDirection(event.target.value)}
+              >
+                <option value="remove">Remove portions</option>
+                <option value="add">Add portions</option>
+              </select>
+            </label>
+            <label>
+              Portions
+              <input
+                name="quantity"
+                type="number"
+                min="1"
+                max={direction === "remove" ? stock.quantity || 1 : undefined}
+                step="1"
+                required
+              />
+            </label>
+            <label>
+              Date
+              <input
+                name="date"
+                type="date"
+                defaultValue={localDay()}
+                required
+              />
+            </label>
+          </div>
+          <label>
+            Reason
+            <select name="reason" required>
+              {direction === "remove" ? (
+                <>
+                  <option>Damaged</option>
+                  <option>Sampled</option>
+                  <option>Expired</option>
+                  <option>Donated</option>
+                  <option>Count correction</option>
+                </>
+              ) : (
+                <>
+                  <option>Opening count</option>
+                  <option>Returned to stock</option>
+                  <option>Count correction</option>
+                </>
+              )}
+            </select>
+          </label>
+          <label>
+            Note (optional)
+            <input name="note" placeholder="What happened?" />
+          </label>
+          <div className="planning-actions">
+            <button className="primary">
+              {direction === "remove" ? "Remove stock" : "Add stock"}
+            </button>
+            <button type="button" className="text-button" onClick={close}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
