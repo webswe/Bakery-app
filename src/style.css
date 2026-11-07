@@ -2092,6 +2092,43 @@ nav button {
   align-items: center;
   gap: 8px;
 }
+.production-editor,
+.production-coverage {
+  align-self: start;
+}
+.production-editor > summary,
+.production-coverage > summary,
+.production-checklist > summary {
+  cursor: pointer;
+  color: #345e58;
+  font-weight: 700;
+}
+.production-editor > summary,
+.production-coverage > summary {
+  padding: 2px 0 14px;
+  font-size: 14px;
+}
+.production-editor[open] > summary,
+.production-coverage[open] > summary {
+  border-bottom: 1px solid #e1e9e6;
+  margin-bottom: 16px;
+}
+.production-checklist {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+.production-checklist > summary {
+  padding: 10px 12px;
+  background: #f5f8f7;
+  font-size: 11px;
+}
+.production-checklist > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  padding: 12px;
+}
 .print-only {
   display: none !important;
 }

@@ -96,6 +96,14 @@ const stockPrimaryPages = [
   "Ingredients",
   "Packaging",
 ];
+const kitchenPrimaryPages = [
+  "Calendar",
+  "Daily planner",
+  "Smart schedule",
+  "Prep sheets",
+  "Product stock",
+  "Recipes",
+];
 const lockKey = "bakery-ledger-lock-v1";
 const tutorialKey = "bakery-ledger-tutorial-v1";
 const modalDraftKey = (type, value) =>
@@ -217,14 +225,18 @@ function App() {
     [month, setMonth] = useState(today().slice(0, 7));
   const section = sectionFor(page),
     info = pages[page];
-  const sectionTabs =
+  const primaryPages =
     section.name === "Stock"
-      ? section.pages.filter((name) => stockPrimaryPages.includes(name))
-      : section.pages;
-  const extraSectionTabs =
-    section.name === "Stock"
-      ? section.pages.filter((name) => !stockPrimaryPages.includes(name))
-      : [];
+      ? stockPrimaryPages
+      : section.name === "Kitchen"
+        ? kitchenPrimaryPages
+        : null;
+  const sectionTabs = primaryPages
+    ? section.pages.filter((name) => primaryPages.includes(name))
+    : section.pages;
+  const extraSectionTabs = primaryPages
+    ? section.pages.filter((name) => !primaryPages.includes(name))
+    : [];
   function navigate(nextPage, context = {}) {
     if (
       modalDirty &&
@@ -873,12 +885,12 @@ function App() {
               {!!extraSectionTabs.length && (
                 <select
                   className={extraSectionTabs.includes(page) ? "active" : ""}
-                  aria-label="More stock pages"
+                  aria-label={`More ${section.name.toLowerCase()} pages`}
                   value={extraSectionTabs.includes(page) ? page : ""}
                   onChange={(event) => navigate(event.target.value)}
                 >
                   <option value="" disabled>
-                    More stock tools…
+                    More {section.name.toLowerCase()} tools…
                   </option>
                   {extraSectionTabs.map((name) => (
                     <option value={name} key={name}>

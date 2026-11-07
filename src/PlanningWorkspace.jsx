@@ -609,7 +609,8 @@ function DailyPlanner({ data, act }) {
     [recipeId, setRecipeId] = useState(data.recipes[0]?.id || ""),
     [batches, setBatches] = useState(1),
     [notes, setNotes] = useState(""),
-    [editNotice, setEditNotice] = useState("");
+    [editNotice, setEditNotice] = useState(""),
+    [showAdd, setShowAdd] = useState(false);
   const editorRef = useRef(null);
   const plans = data.productionPlans.filter((p) => p.date === day);
   const pending = plans.filter((p) => p.status === "planned");
@@ -626,9 +627,11 @@ function DailyPlanner({ data, act }) {
     setBatches(1);
     setNotes("");
     setEditNotice("");
+    setShowAdd(false);
   }
   function editPlan(plan) {
     setEditing(plan.id);
+    setShowAdd(true);
     setRecipeId(plan.recipeId);
     setBatches(plan.batches);
     setNotes(plan.notes || "");
@@ -679,7 +682,18 @@ function DailyPlanner({ data, act }) {
         ))}
       </div>
       <div className="planning-layout">
-        <section className="panel planning-form" ref={editorRef} tabIndex={-1}>
+        <details
+          className="panel planning-form production-editor"
+          ref={editorRef}
+          tabIndex={-1}
+          open={!!editing || showAdd || !plans.length}
+          onToggle={(event) => {
+            if (!editing) setShowAdd(event.currentTarget.open);
+          }}
+        >
+          <summary>
+            {editing ? "Edit production task" : "Add a dessert batch"}
+          </summary>
           <h2>
             {editing ? "Edit production task" : "Add a dessert to the day"}
           </h2>
@@ -734,9 +748,13 @@ function DailyPlanner({ data, act }) {
               )}
             </div>
           </form>
-        </section>
-        <section className="panel planning-form">
-          <h2>Shopping for your production plan</h2>
+        </details>
+        <details
+          className="panel planning-form production-coverage"
+          key={day}
+          open={shortages.length > 0 || forecast.errors.length > 0}
+        >
+          <summary>Shopping coverage</summary>
           <p className="hint">
             Includes every pending task through {day}, including earlier dates.
             Completing a task consumes stock immediately.
@@ -766,7 +784,7 @@ function DailyPlanner({ data, act }) {
               this day.
             </p>
           )}
-        </section>
+        </details>
       </div>
       <div className="section-top">
         <h2>Production for {day}</h2>
@@ -808,21 +826,30 @@ function DailyPlanner({ data, act }) {
                       ? "Fix recipe conversions to calculate cost"
                       : "Estimated production cost " + money(cost)}
                   </small>
-                  <fieldset className="production-checklist">
-                    <legend>Kitchen checklist</legend>
-                    {checklistSteps.map((step) => (
-                      <label key={step}>
-                        <input
-                          type="checkbox"
-                          checked={!!p.checklist?.[step]}
-                          onChange={() =>
-                            act(() => toggleChecklist(data, p.id, step))
-                          }
-                        />
-                        {step}
-                      </label>
-                    ))}
-                  </fieldset>
+                  <details className="production-checklist">
+                    <summary>
+                      Kitchen checklist ·{" "}
+                      {
+                        checklistSteps.filter((step) => p.checklist?.[step])
+                          .length
+                      }
+                      /{checklistSteps.length}
+                    </summary>
+                    <div>
+                      {checklistSteps.map((step) => (
+                        <label key={step}>
+                          <input
+                            type="checkbox"
+                            checked={!!p.checklist?.[step]}
+                            onChange={() =>
+                              act(() => toggleChecklist(data, p.id, step))
+                            }
+                          />
+                          {step}
+                        </label>
+                      ))}
+                    </div>
+                  </details>
                   <div className="planning-actions">
                     <button
                       className="primary"
