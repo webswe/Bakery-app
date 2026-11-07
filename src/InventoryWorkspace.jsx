@@ -291,11 +291,15 @@ export default function Operations({ data, save, open, tab }) {
                       </td>
                       <td>
                         {i.gramsPerCan ? `${i.gramsPerCan} g / can · ` : ""}
-                        {i.gramsPerCup
-                          ? `${i.gramsPerCup} g / US cup`
-                          : i.density
-                            ? `${i.density} g/ml`
-                            : "Same-unit conversions"}
+                        {i.gramsPerTbsp
+                          ? `${i.gramsPerTbsp} g / tbsp`
+                          : i.gramsPerTsp
+                            ? `${i.gramsPerTsp} g / tsp`
+                            : i.gramsPerCup
+                              ? `${i.gramsPerCup} g / US cup`
+                              : i.density
+                                ? `${i.density} g/ml`
+                                : "Same-unit conversions"}
                       </td>
                       <td>
                         <StockForm

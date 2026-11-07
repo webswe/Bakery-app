@@ -55,7 +55,7 @@ const guideSections = [
       "Create an item using the package size and package price shown by the supplier.",
       "Choose Ingredient or Packaging so it appears in the right catalog.",
       "Set minimum stock to control shortage and reorder warnings.",
-      "Add grams per cup, density, or grams per can when recipes use a different unit.",
+      "Add grams per cup, tablespoon, teaspoon, density, or can when recipes use a different unit. For butter, grams per tablespoon gives the clearest result.",
       "For condensed or evaporated milk, enter the can’s actual gram weight rather than relying on a fixed default.",
     ],
     tips: [

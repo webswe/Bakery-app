@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { convert, lineCost, recipeCost } from "../src/costing.js";
+import { convert, convertItem, lineCost, recipeCost } from "../src/costing.js";
 test("two US cups calculate package count with density and tax", () => {
   const r = lineCost({ itemId: "milk", amount: 2, unit: "cup" }, [
     {
@@ -48,6 +48,31 @@ test("two cups of flour are costed from a 2kg bag using grams per cup", () => {
   assert.ok(Math.abs(r.cost - 0.6) < 1e-12);
   assert.equal(r.packs, 1);
   assert.equal(r.purchase, 5);
+});
+test("direct spoon and stick weights cost butter without requiring density", () => {
+  const butter = {
+    id: "butter",
+    amount: 454,
+    unit: "g",
+    price: 5,
+    gramsPerTbsp: 14.2,
+    gramsPerTsp: 4.7,
+    gramsPerStick: 113.4,
+    taxIncluded: true,
+  };
+  assert.equal(convertItem(2, "tbsp", "g", butter), 28.4);
+  assert.equal(convertItem(28.4, "g", "tbsp", butter), 2);
+  assert.equal(convertItem(1, "stick", "g", butter), 113.4);
+  assert.ok(
+    Math.abs(convertItem(8, "tbsp", "stick", butter) - 113.6 / 113.4) < 1e-12,
+  );
+  assert.equal(convertItem(16, "floz", "cup", butter), 2);
+  assert.ok(
+    Math.abs(
+      lineCost({ itemId: "butter", amount: 2, unit: "tbsp" }, [butter]).cost -
+        (28.4 / 454) * 5,
+    ) < 1e-12,
+  );
 });
 test("food and other purchase rates apply independently", () => {
   const items = [

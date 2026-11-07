@@ -70,7 +70,13 @@ import {
   Star,
   X,
 } from "lucide-react";
-import { units, lineCost, recipeCost, convertItem } from "./costing.js";
+import {
+  units,
+  unitLabels,
+  lineCost,
+  recipeCost,
+  convertItem,
+} from "./costing.js";
 import { localDay, money } from "./uiFormatters.js";
 import "./style.css";
 const OwnerToolkitWorkspace = lazy(() => import("./OwnerToolkitWorkspace.jsx"));
@@ -520,8 +526,11 @@ function App() {
           tax: +f.tax || 0,
           taxCategory: f.taxCategory,
           gramsPerCup: +f.gramsPerCup || null,
+          gramsPerTbsp: +f.gramsPerTbsp || null,
+          gramsPerTsp: +f.gramsPerTsp || null,
           gramsPerEach: +f.gramsPerEach || null,
           gramsPerCan: +f.gramsPerCan || null,
+          gramsPerStick: +f.gramsPerStick || null,
           supplier: f.supplier.trim(),
           minStock: +f.minStock || 0,
           expiryDate: f.expiryDate,
@@ -1406,7 +1415,9 @@ function UnitSelect({ name, value, onChange }) {
   return (
     <select name={name} defaultValue={value || "g"} onChange={onChange}>
       {Object.keys(units).map((u) => (
-        <option key={u}>{u}</option>
+        <option key={u} value={u}>
+          {unitLabels[u]}
+        </option>
       ))}
     </select>
   );
@@ -1607,26 +1618,49 @@ function ItemFields({ item: i = {}, taxRates }) {
             placeholder="e.g. 397 condensed / 354 evaporated"
           />
         </label>
-        <h3>Cup-to-weight conversion</h3>
+        <h3>Kitchen-measure conversions</h3>
         <p>
-          How much does one US cup of this ingredient weigh? This lets us cost
-          cups against a bag sold in grams or kilograms.
+          Add the measures you use in recipes. A direct tablespoon value is
+          especially useful for butter, shortening, and nut butters.
         </p>
-        <label>
-          Grams per cup
-          <input
-            name="gramsPerCup"
-            type="number"
-            min="0.001"
-            step="any"
-            defaultValue={i.gramsPerCup}
-            placeholder="e.g. 120 for all-purpose flour"
-          />
-        </label>
+        <div className="form-row">
+          <label>
+            Grams per US cup
+            <input
+              name="gramsPerCup"
+              type="number"
+              min="0.001"
+              step="any"
+              defaultValue={i.gramsPerCup}
+              placeholder="e.g. 120 flour"
+            />
+          </label>
+          <label>
+            Grams per tablespoon
+            <input
+              name="gramsPerTbsp"
+              type="number"
+              min="0.001"
+              step="any"
+              defaultValue={i.gramsPerTbsp}
+              placeholder="e.g. 14.2 butter"
+            />
+          </label>
+          <label>
+            Grams per teaspoon
+            <input
+              name="gramsPerTsp"
+              type="number"
+              min="0.001"
+              step="any"
+              defaultValue={i.gramsPerTsp}
+              placeholder="e.g. 4.7 butter"
+            />
+          </label>
+        </div>
         <p className="hint">
-          Example: a 2 kg bag at $5, with 120 g per cup → 2 cups use 240 g and
-          cost $0.60 before extra tax. Weigh your own ingredient for the most
-          accurate result.
+          Example: butter at 14.2 g per tablespoon means 2 tbsp uses 28.4 g.
+          Weigh your own ingredient for the most accurate result.
         </p>
         <details>
           <summary>Advanced: density and individual pieces</summary>
@@ -1639,6 +1673,17 @@ function ItemFields({ item: i = {}, taxRates }) {
               step="any"
               defaultValue={i.gramsPerEach}
               placeholder="e.g. 50 for a shelled egg"
+            />
+          </label>
+          <label>
+            Grams per stick (optional)
+            <input
+              name="gramsPerStick"
+              type="number"
+              min="0.001"
+              step="any"
+              defaultValue={i.gramsPerStick}
+              placeholder="e.g. 113.4 for US butter"
             />
           </label>
           <label>
@@ -1655,8 +1700,8 @@ function ItemFields({ item: i = {}, taxRates }) {
         </details>
       </div>
       <p className="hint">
-        US cups and spoons. Use “each” for individual containers and utensils.
-        Grams per cup takes priority over density.
+        US cups and spoons. Use “stick” for ingredients such as butter. Direct
+        measure values take priority over density for that exact measure.
       </p>
     </>
   );
