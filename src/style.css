@@ -6568,6 +6568,13 @@ button.secondary {
   background: #f4f7f8;
   color: #74878f;
 }
+.finished-lot-list > div {
+  align-items: center;
+}
+.finished-lot-list .lot-discard {
+  justify-self: end;
+  color: #a64f43;
+}
 @media (max-width: 1000px) {
   .capacity-board article {
     grid-template-columns: 1fr 1fr;

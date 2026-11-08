@@ -4,6 +4,8 @@ import {
   archiveCompletedRecords,
   capacityForecast,
   menuProfitability,
+  removeRecipe,
+  recipeRemovalStatus,
   restoreArchive,
   saveCloseout,
   saveRecipeRevision,
@@ -64,6 +66,23 @@ test("recipe revisions preserve the previous recipe", () => {
   const result = saveRecipeRevision(data, data.recipes[0], next);
   assert.equal(result.recipeVersions.length, 1);
   assert.equal(result.recipeVersions[0].recipe.yield, 10);
+});
+
+test("recipes can be removed only after active work is cleared", () => {
+  const data = base();
+  const status = recipeRemovalStatus(data, "cake");
+  assert.match(status.blockers.join(" "), /planned production task/);
+  assert.throws(() => removeRecipe(data, "cake"), /Resolve/);
+
+  const removable = {
+    ...data,
+    productionPlans: [],
+    quotes: [],
+    products: { cake: { quantity: 0, value: 0 } },
+  };
+  const result = removeRecipe(removable, "cake");
+  assert.equal(result.recipes.length, 0);
+  assert.equal(result.products.cake, undefined);
 });
 
 test("capacity forecast highlights overloaded stations", () => {

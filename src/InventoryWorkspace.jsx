@@ -1,6 +1,10 @@
 import { directSaleTotals, purchaseTax } from "./taxation.js";
 import { receiveInventory, reconcileLots } from "./inventoryLots.js";
-import { adjustFinishedStock, finishedProductAlerts } from "./productLots.js";
+import {
+  adjustFinishedStock,
+  discardProductLot,
+  finishedProductAlerts,
+} from "./productLots.js";
 import React, { useDeferredValue, useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { addPresets, availability, produce, fullCost } from "./operations.js";
@@ -513,6 +517,24 @@ export default function Operations({ data, save, open, tab }) {
                               ? `Best before ${lot.bestBefore}`
                               : "No shelf life set"}
                           </b>
+                          <button
+                            className="text-button lot-discard"
+                            type="button"
+                            onClick={() => {
+                              if (
+                                confirm(
+                                  `Remove all ${lot.remaining} portions from this baked lot? This records the lot as discarded and updates finished stock.`,
+                                )
+                              )
+                                act(() =>
+                                  discardProductLot(data, lot.id, {
+                                    reason: "Discarded whole baked lot",
+                                  }),
+                                );
+                            }}
+                          >
+                            Remove whole lot
+                          </button>
                         </div>
                       ))}
                       {expiryAlerts.some((lot) => lot.expired) && (

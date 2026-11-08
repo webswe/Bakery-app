@@ -54,6 +54,49 @@ export function restoreRecipeRevision(data, revisionId) {
   };
 }
 
+export function recipeRemovalStatus(data, recipeId) {
+  const recipe = (data.recipes || []).find((entry) => entry.id === recipeId);
+  if (!recipe) throw Error("Recipe is missing.");
+  const planned = (data.productionPlans || []).filter(
+    (plan) => plan.recipeId === recipeId && plan.status === "planned",
+  ).length;
+  const openOrders = (data.orders || []).filter(
+    (order) => order.recipeId === recipeId && order.status === "open",
+  ).length;
+  const savedQuotes = (data.quotes || []).filter(
+    (quote) => quote.recipeId === recipeId,
+  ).length;
+  const stock = Number(data.products?.[recipeId]?.quantity) || 0;
+  const lotStock = (data.productLots || [])
+    .filter((lot) => lot.recipeId === recipeId)
+    .reduce((total, lot) => total + (Number(lot.remaining) || 0), 0);
+  const blockers = [
+    planned && `${planned} planned production task${planned === 1 ? "" : "s"}`,
+    openOrders && `${openOrders} open order${openOrders === 1 ? "" : "s"}`,
+    savedQuotes && `${savedQuotes} saved quote${savedQuotes === 1 ? "" : "s"}`,
+    stock > 0 || lotStock > 0 ? "finished stock on hand" : "",
+  ].filter(Boolean);
+  return { recipe, blockers };
+}
+
+export function removeRecipe(data, recipeId) {
+  const { recipe, blockers } = recipeRemovalStatus(data, recipeId);
+  if (blockers.length)
+    throw Error(
+      `Resolve ${blockers.join(", ")} before removing ${recipe.name}.`,
+    );
+  const products = { ...(data.products || {}) };
+  delete products[recipeId];
+  return {
+    ...data,
+    products,
+    recipes: (data.recipes || []).filter((entry) => entry.id !== recipeId),
+    recipeVersions: (data.recipeVersions || []).filter(
+      (entry) => entry.recipeId !== recipeId,
+    ),
+  };
+}
+
 export function saveRecipePreset(data, kind, input) {
   if (!["component", "packaging"].includes(kind))
     throw Error("Unknown preset type.");

@@ -159,3 +159,55 @@ export function adjustFinishedStock(data, recipeId, input) {
     ],
   };
 }
+
+export function discardProductLot(data, lotId, input = {}) {
+  const lot = (data.productLots || []).find((entry) => entry.id === lotId);
+  if (!lot) throw Error("Finished lot is missing.");
+  const quantity = Number(lot.remaining) || 0;
+  if (!(quantity > 0)) throw Error("This finished lot has no stock left.");
+  const current = data.products?.[lot.recipeId] || { quantity: 0, value: 0 };
+  if (quantity > current.quantity + 1e-9)
+    throw Error("Finished-stock totals no longer match this lot.");
+  const unitCost = Number(lot.quantity)
+    ? (Number(lot.cost) || 0) / Number(lot.quantity)
+    : 0;
+  const valueChange = unitCost * quantity;
+  const reason = String(input.reason || "Discarded whole baked lot").trim();
+  return {
+    ...data,
+    products: {
+      ...(data.products || {}),
+      [lot.recipeId]: {
+        quantity: Math.max(0, current.quantity - quantity),
+        value: Math.max(0, current.value - valueChange),
+      },
+    },
+    productLots: (data.productLots || []).map((entry) =>
+      entry.id === lotId
+        ? {
+            ...entry,
+            remaining: 0,
+            discardedAt: new Date().toISOString(),
+            discardReason: reason,
+          }
+        : entry,
+    ),
+    movements: [
+      ...(data.movements || []),
+      {
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        effectiveDate: input.date || localDay(),
+        name: lot.recipeName || "Finished product",
+        recipeId: lot.recipeId,
+        productLotId: lot.id,
+        kind: "Finished lot discarded",
+        quantity,
+        delta: -quantity,
+        unit: "portions",
+        reason,
+        note: String(input.note || "").trim(),
+      },
+    ],
+  };
+}

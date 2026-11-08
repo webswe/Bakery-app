@@ -5,6 +5,7 @@ import {
   adjustFinishedStock,
   consumeProductLots,
   createProductLot,
+  discardProductLot,
   finishedProductAlerts,
   restoreProductLots,
 } from "../src/productLots.js";
@@ -100,4 +101,27 @@ test("finished stock adjustments add and remove traceable portions", () => {
       }),
     /Only 4 portions/,
   );
+});
+
+test("a whole baked lot can be discarded while retaining its trace record", () => {
+  const data = {
+    recipes: [{ id: "cake", name: "Cake", yield: 8, lines: [] }],
+    products: { cake: { quantity: 8, value: 20 } },
+    productLots: [
+      {
+        id: "lot-1",
+        recipeId: "cake",
+        recipeName: "Cake",
+        quantity: 8,
+        remaining: 8,
+        cost: 20,
+      },
+    ],
+    movements: [],
+  };
+  const result = discardProductLot(data, "lot-1");
+  assert.deepEqual(result.products.cake, { quantity: 0, value: 0 });
+  assert.equal(result.productLots[0].remaining, 0);
+  assert.equal(result.movements[0].kind, "Finished lot discarded");
+  assert.equal(result.movements[0].delta, -8);
 });

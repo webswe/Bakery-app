@@ -5,12 +5,20 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { ArrowUpRight, ChefHat, Printer, Search } from "lucide-react";
+import { ArrowUpRight, ChefHat, Printer, Search, Trash2 } from "lucide-react";
+import { recipeRemovalStatus } from "./bakeryOperations.js";
 import { purchaseMode, purchaseTax } from "./taxation.js";
 import { recipeCostDetails, recipeSaleDetails } from "./recipePricing.js";
 import { money } from "./uiFormatters.js";
 
-function CatalogWorkspace({ data, page, open, recipeCost, save }) {
+function CatalogWorkspace({
+  data,
+  page,
+  open,
+  recipeCost,
+  save,
+  removeRecipe,
+}) {
   const storageKey = `bakery-ledger-catalog-${page.toLocaleLowerCase().replaceAll(" ", "-")}`;
   const [query, setQuery] = useState(
     () => localStorage.getItem(`${storageKey}-query`) || "",
@@ -108,6 +116,7 @@ function CatalogWorkspace({ data, page, open, recipeCost, save }) {
           recipeCost={recipeCost}
           data={data}
           save={save}
+          removeRecipe={removeRecipe}
           selected={selected}
           toggle={toggle}
         />
@@ -153,6 +162,7 @@ const RecipeResults = memo(function RecipeResults({
   save,
   selected,
   toggle,
+  removeRecipe,
 }) {
   return (
     <div className="recipe-grid">
@@ -170,6 +180,10 @@ const RecipeResults = memo(function RecipeResults({
             data.items.find((item) => item.id === line.itemId)?.type ===
             "packaging",
         ).length;
+        const removal = recipeRemovalStatus(data, recipe.id);
+        const removalHint = removal.blockers.length
+          ? `Remove ${removal.blockers.join(", ")} first.`
+          : `Remove ${recipe.name}`;
         return (
           <section
             className={`panel recipe-card selectable-record ${selected.includes(recipe.id) ? "selected print-selected" : ""}`}
@@ -304,6 +318,22 @@ const RecipeResults = memo(function RecipeResults({
                 }
               >
                 Duplicate
+              </button>
+              <button
+                className="text-button recipe-remove"
+                disabled={removal.blockers.length > 0}
+                title={removalHint}
+                onClick={() => {
+                  if (
+                    confirm(
+                      `Remove “${recipe.name}”? Its recipe history will also be removed. You can undo this immediately from the confirmation bar.`,
+                    )
+                  )
+                    removeRecipe(recipe);
+                }}
+              >
+                <Trash2 size={15} />
+                Remove
               </button>
             </div>
           </section>
