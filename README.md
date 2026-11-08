@@ -1,71 +1,73 @@
 # Bakery Ledger
 
-### Can units, quotes and daily planning
+Bakery Ledger is a private, local-first desktop workspace for an owner, head chef, or baker. It brings recipes, ingredient costs, production, finished stock, direct sales, quotes, orders, and day-to-day business planning into one Windows app.
 
-- **Ingredients → Edit** now includes an editable **Grams per can** field. Choose `can` for purchase or recipe quantities, including fractional cans. Set the actual net weight from your label; common presets suggest 397 g for condensed milk and 354 g for evaporated milk. These are editable assumptions, not universal sizes. Existing ingredients keep their saved quantities and conversions. Adding common ingredients adds evaporated milk if missing. Changing a purchase unit converts existing on-hand stock using that ingredient's measurements.
-- **Inventory dashboard** combines ingredient and packaging demand across every pending production task through your selected date, including overdue tasks. It shows on-hand stock, planned consumption, remaining stock, first shortage date and whole packages to buy. Missing recipes/conversions are flagged as an incomplete forecast. Plans do not reserve or deduct stock; forecasts use current recipes and on-hand stock, without assuming incoming deliveries or sales demand.
-- **Quotes** calculates the cost of whole batches needed for requested portions, including recipe labor, electricity, overhead and optional additional order costs. Target margin is profit divided by the selling price before quote tax. Save customer references and notes with a price snapshot; later inventory prices do not rewrite it. Edit and save to recalculate with current costs. Quotes do not record sales or affect inventory.
-- **Daily planner** saves dessert batch tasks for each date, with kitchen notes, totals and a shared shopping list. Edit or remove pending tasks. **Complete production** consumes ingredients/packaging and adds finished portions through the same stock checks as Product stock; a completed task cannot be applied twice. Completion records actual activity when clicked, while retaining its planned date. Completed tasks remain as history.
+## What it helps with
 
-All records continue to use the existing `bakery-ledger-v1` local storage key. Migration only adds empty quote/plan collections to older workspaces, preserving inventory, recipes, taxes, finished stock and financial history. JSON exports/restores include the new records. Mobile navigation keeps page names visible and scrolls horizontally; tools adapt to narrow screens. Source modules use distinct filenames and explicit local import extensions for Windows.
+- Build recipes with package, can, cup, spoon, weight, and count measurements.
+- Price every dessert from ingredients, packaging, labour, utilities, and overhead.
+- Plan production, print prep sheets and labels, and create a shopping list from upcoming work.
+- Receive stock, track lots and expiry dates, adjust finished products, and correct accidentally added batches.
+- Create quotes and customer orders, track deposits and payments, then fulfil from finished stock.
+- Record one or several dessert types in a single sale, with tax, payment method, customer, and sales channel.
+- Review revenue, margin, tax collected, waste, production performance, and owner goals.
+- Store encrypted device backups, export portable JSON backups, and create privacy-safe support reports.
 
-A local-first bakery business desktop app. Includes ingredient and packaging purchases, separate saved food and other tax rates, recipes with batch and portion costs, package purchase estimates, sales, operating expenses, and monthly profit/loss. Starts with sample inventory and a recipe; financial records start empty. Currency is USD; cups/spoons use US volume measures. Weight/volume conversions use grams per US cup or ingredient density in g/ml. For example, enter 120 g/cup for flour: 2 cups use 240 g from a 2 kg bag. Weigh your ingredient to confirm this value. Tax settings provide separate Food and Other defaults for future purchases; editing them does not rewrite existing item taxes or historical sales. The dashboard includes daily revenue/cost bars, monthly profit/loss, product performance, average sale, portions sold, and previous-month revenue comparison. Recipe yield means sellable portions, not individual ingredients. Costs use proportional consumption; purchase estimates round each recipe line up to whole packages and do not track pantry stock. Add each ingredient once per recipe to avoid duplicate purchase estimates. Profit excludes labor unless recorded as an operating expense. Record sales and expenses on a consistent tax basis; this is not tax accounting software.
+## Privacy and data
 
-## Develop
+Bakery Ledger stores bakery records on the current device. It has no account, cloud sync, analytics, or automatic data upload. Exports, backups, and support reports are under the owner’s control.
 
-Node 22+ and npm. Use the existing checkout; no worktree is needed.
+Support reports contain the app version, operating system, current page, and the details entered by the reporter. They do not automatically include recipes, customer details, inventory, sales, or backups.
 
-```
+## Get the Windows app
+
+Download the latest installer from [Releases](https://github.com/webswe/Bakery-app/releases). Run `Bakery-Ledger-Setup-<version>.exe`, then open **Bakery Ledger** from the Start menu.
+
+The installed app checks GitHub Releases for updates. When an update is ready, choose **Restart and update**. Existing bakery data stays on the device during an update.
+
+## Getting started
+
+1. Open the in-app tutorial or press `F1`.
+2. Complete your Business profile and cost settings.
+3. Add ingredients, packaging, package sizes, and current stock.
+4. Build recipes, then use **Daily planner** to schedule production.
+5. Complete production to create finished stock.
+6. Use **Record a sale** for completed sales, or **Quotes** and **Customer orders** for deposits, invoices, and planned pickups.
+
+Export a backup from **Settings → Backups & recovery** before major changes.
+
+## Report a problem
+
+Open **Help & support** in Bakery Ledger, describe what you were trying to do, and save the generated report. You can attach the report to the prepared email draft for support at `botaa109@gmail.com`.
+
+## Develop locally
+
+Requirements: Node.js 22+ and npm.
+
+```bash
 npm ci
 npm test
 npm run build
 npm run dev
 ```
 
-`npm run desktop` opens the built application on a machine with a graphical desktop. Records persist in localStorage on the current device. Export JSON backups regularly, especially before switching between browser and desktop, which have separate storage. Restore replaces current records after confirmation. There is no account, cloud sync, or multiuser access.
+To create a Windows installer locally:
 
-## Windows executable and updates
+```bash
+npm run dist:win
+```
 
-On Windows, run `npm ci` then `npm run dist:win`. Find the branded NSIS installer `.exe` in `release/`. The GitHub Actions workflow builds a Windows release when a `v*` tag is pushed, or when run manually. Update package.json's version for each release; tag it with the same version. The workflow needs repository Actions enabled and its GITHUB_TOKEN contents-write permission. Publish the resulting GitHub release (electron-builder may create a draft) including the installer, blockmap and `latest.yml`; use the release body for the notes displayed inside Bakery Ledger. Packaged apps check the configured public GitHub release feed on launch, show download progress, and offer a restart when the update is ready. The same controls and release notes are available under **Settings → App updates**. Private repositories require a separate supported update distribution strategy; never embed a GitHub token in the app. Updates cannot be verified until releases are published.
+The installer is written to `release/`. Local browser and installed desktop builds use different storage areas; export a backup before moving records between them.
 
-For a trusted publisher name instead of a Windows SmartScreen “unknown publisher” warning, add a Windows code-signing certificate to the repository’s `WINDOWS_CERTIFICATE` Actions secret and its password to `WINDOWS_CERTIFICATE_PASSWORD`. The release workflow passes these to electron-builder without storing them in the repository. The installer remains buildable when the secrets are absent, but is unsigned.
+## Publish a release
 
-Version 1.3 adds a branded executable/installer icon and a sandboxed preload bridge for updater controls; web content does not receive direct Node or filesystem access. Updates keep the existing Electron application data directory, so installed versions continue using the same local bakery records.
+1. Update the version in `package.json` and `package-lock.json`.
+2. Run `npm run format:check`, `npm test`, and `npm run build`.
+3. Commit the release version, push `main`, and push a matching `v<version>` tag.
+4. GitHub Actions builds the Windows installer and creates the release assets.
 
-## Inventory and production (1.2)
+The update feed relies on public GitHub releases. Do not put a GitHub token in the app.
 
-Common ingredient presets include approximate US cup weights (and a 50 g shelled egg). Confirm these against your own ingredients; packing and brand change weight. Presets have no assumed purchase price or stock. New workspaces include them; existing workspaces can select **Inventory → Add common ingredients** without replacing their items. Edit actual package sizes, prices, cup weights, density, or grams per piece. All compatible weight/volume units convert automatically; cross-dimension conversions require an ingredient measurement. Count/weight conversions need grams per piece. No universal cup weight is assumed.
+## License
 
-1. Receive packages in **Inventory**, or use **Set on-hand quantity** for counts, spoilage, and corrections. Counts use the item's purchase unit (e.g. kg); receiving two 2 kg packages adds 4 kg. Stock activity is retained locally.
-2. Set your wage per hour and electricity price per kWh in **Cost settings**. In each recipe enter labor minutes, kWh consumed, and other overhead per batch. Full production cost includes all of these.
-3. **Can make** includes packaging and aggregates repeated recipe ingredients. It shows whole batches and individual ingredient shortages. **Record production** consumes the entire batch's ingredients/packaging and adds finished portions with captured costs. Set all preset purchase prices before production. Availability is per recipe independently, not a simultaneous production plan.
-4. **Product stock** shows available portions, stock value, and full costs. Sales choose the product, quantity, discount, date, customer/order reference, and payment method. The total is automatic; sales cannot exceed finished stock. Cost of sales uses the average captured cost of finished stock. Deleting a tracked sale restores its quantity and cost. Older sales are preserved without retroactively deducting stock.
-
-Labor and overhead included in production reach the profit dashboard when those products sell. Record only additional unallocated operating expenses; recording the same payroll/electricity as expenses as well will double-count it. This is an internal costing tool, not payroll or accrual accounting. Receiving ingredients updates stock only, not expenses (cost of goods is recognized on sale). Product stock currently changes through production and sales; there is no finished-product spoilage adjustment, purchase-order system, expiry tracking, or stock reservation. Export backups regularly.
-
-
-### Orders, purchasing and stock care
-
-**Orders** accepts a saved quote, captures its customer/price/portions, and creates a linked whole-batch task using the current recipe yield. Track total paid (including the initial deposit), balance due and pickup date. Rescheduling moves pending linked tasks; completed work stays in history. Fulfillment requires full payment and available finished stock, records one tracked sale, and removes unneeded pending tasks. Deposits are not separate revenue entries. Cancelled orders retain paid amounts for reference: reconcile refunds separately. Stock is shared, not reserved by order. Linked order sales and waste expenses cannot be deleted independently from the overview, preserving stock/accounting consistency.
-
-**Shopping list** combines pending production demand through the selected date with each item's minimum on-hand target. Whole-package estimates include the item's purchase tax and are grouped by supplier. Unpriced items remain clearly flagged. Export CSV or print the list. Checkmarks are a temporary shopping aid; receive purchases in Inventory to update stock.
-
-Set **Supplier**, **Minimum on hand** and **Current stock expiry** in an item's editor. Alerts flag stock at/below the minimum and stock expiring today or earlier; **Waste & expiry** also lists upcoming expiry dates. Expiry applies to all current stock for that item, not separate lots; update it when replenishing. Record spoiled ingredients/packaging in purchase units and unsold desserts in whole portions. Waste deducts stock and creates a captured waste expense: current purchase cost for ingredients, average finished-stock cost for desserts. Do not enter the same loss again as an operating expense.
-
-Pending tasks in **Daily planner** have saved Bake/Chill/Decorate/Pack checklists. These are optional kitchen reminders, independent of the stock-affecting Complete production action. **Recipe scaling** previews proportional quantities and allocated costs for any whole portion target without changing recipes or inventory. Round indivisible pieces/packaging and verify baking times before use; print the preview if helpful.
-
-**Backups** retains up to 14 dated automatic snapshots on this device. Before the first save each day, the previously saved workspace is captured. Download snapshots or the current workspace as JSON; restore a dated snapshot after confirmation. Export first before restoring, especially if changes made today matter. Browser storage limits can prevent a save; errors preserve the current stored workspace. These local snapshots are not cloud backups and do not survive clearing app storage. Existing JSON backups remain compatible; new exports include orders, waste and checklists. Automatic backup history is stored separately and is not nested in exports.
-
-### Workspace navigation
-
-The app is organized into five areas: **Overview** (today's work and financial reports), **Sales** (orders and quotes), **Kitchen** (production plan, batch availability, finished stock, recipes and scaling), **Stock** (stock overview, movements, shopping, ingredient/packaging catalogs and waste), and **Settings** (production costs, purchase taxes and backups/recovery). Page tabs keep related tools together. Older references to Inventory mean Stock → Stock movements; Product stock is now Kitchen → Finished stock; Can make is Kitchen → Batch availability.
-
-Use **Create order** on a saved quote to carry that quote into the order form. Accepted orders create production tasks; review shopping needs, receive purchases, complete production, then fulfill orders from finished stock. Related-page links make these handoffs explicit. Page URLs use local fragments, so reload and browser back/forward retain the selected page. Navigation changes do not migrate or rewrite saved business records. JSON import and downloads now live together in Settings → Backups & recovery.
-
-### Explicit purchase tax and customer sales tax
-
-Purchase items have three treatments: **Add tax to this price** (entered price plus rate), **Tax already included** (entered price stays final; the tax component is extracted using price ÷ (1 + rate)), and **Tax exempt / no tax** (zero purchase tax). The editor shows before-tax price, tax and final package cost; catalogs show final package costs. Purchase tax stays part of ingredient, packaging, inventory, production and waste costs. Proportional costing retains unrounded precision; displayed prices are formatted to cents.
-
-Existing items with the old `taxIncluded: true` flag remain **Previously saved: no extra tax** until explicitly edited, since the flag cannot identify included tax versus exemption. Their effective costs are unchanged. Rates remain stored when switching treatments. New items use add-tax treatment with the Food/Other purchase default. Item edits no longer silently rewrite category defaults; change defaults in **Settings → Tax settings**. Defaults do not rewrite existing inventory or historical finished-stock costs.
-
-A separate **Default customer sales tax** applies to new quotes and direct sales (0% for existing workspaces until configured). Recipe selling prices are before-tax prices for new direct sales. Discounts reduce the taxable amount; customer tax is then rounded to cents and added to the customer total. Quote/order prices retain their saved breakdown, regardless of later defaults or recipe-price changes. Newly recorded sales with a breakdown report revenue before customer tax, and list collected sales tax separately. Legacy sales and accepted orders without a saved breakdown retain their original totals and reporting basis; tax is not guessed retroactively. This displays recorded tax collected, not remittances, refunds, tax credits or a tax return.
+[MIT](LICENSE)
