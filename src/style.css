@@ -6585,3 +6585,192 @@ button.secondary {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===========================================================================
+   Interaction polish: make frequent owner workflows feel immediate and calm.
+   ========================================================================== */
+:root {
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --focus-ring: color-mix(in srgb, var(--app-accent) 28%, transparent);
+  --surface-hover: color-mix(in srgb, var(--app-soft) 56%, #fff);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+.shortcut-chip,
+.recent-chip,
+.utility-popover,
+.panel,
+.stat,
+.recipe-card,
+.saved-quote,
+.customer-card,
+.equipment-card,
+.purchase-order-card {
+  transition:
+    border-color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+button:not(:disabled):active {
+  transform: translateY(1px) scale(0.985);
+}
+
+button.primary:not(:disabled):hover {
+  filter: brightness(1.04);
+  box-shadow: 0 7px 16px color-mix(in srgb, var(--app-accent) 25%, transparent);
+  transform: translateY(-1px);
+}
+
+button.secondary:not(:disabled):hover,
+.pin-page:not(:disabled):hover,
+.notification-button:not(:disabled):hover,
+.header-action:not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--app-accent) 40%, #d7e2e6);
+  background: var(--surface-hover);
+  color: var(--app-accent);
+  transform: translateY(-1px);
+}
+
+nav button {
+  position: relative;
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+nav button::before {
+  position: absolute;
+  left: 4px;
+  width: 3px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--app-accent);
+  content: "";
+  opacity: 0;
+  transform: scaleY(0.4);
+  transition:
+    opacity 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+nav button:hover:not(.active) {
+  background: #eaf0eb;
+  color: #476346;
+}
+
+nav button.active::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+input,
+select,
+textarea {
+  transition:
+    border-color 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out),
+    background-color 160ms var(--ease-out);
+}
+
+input:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--app-accent) 31%, #d5e1e4);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 4px var(--focus-ring);
+}
+
+.panel:not(.table-scroll):hover,
+.stat:hover,
+.recipe-card:hover,
+.saved-quote:hover,
+.customer-card:hover,
+.equipment-card:hover,
+.purchase-order-card:hover {
+  border-color: color-mix(in srgb, var(--app-accent) 18%, #e3e7dc);
+  box-shadow: 0 8px 24px rgba(35, 66, 75, 0.055);
+}
+
+tr {
+  transition: background-color 130ms var(--ease-out);
+}
+
+tbody tr:hover {
+  background: color-mix(in srgb, var(--app-soft) 38%, #fff);
+}
+
+.table-scroll {
+  scrollbar-color: color-mix(in srgb, var(--app-accent) 43%, #cdd9d6)
+    transparent;
+  scrollbar-width: thin;
+}
+
+.table-scroll::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--app-accent) 43%, #cdd9d6);
+  background-clip: padding-box;
+}
+
+details > summary {
+  border-radius: 6px;
+  transition:
+    background-color 150ms var(--ease-out),
+    color 150ms var(--ease-out);
+}
+
+details > summary:hover {
+  background: color-mix(in srgb, var(--app-soft) 36%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .content > * {
+    animation: bakery-fade-in 220ms var(--ease-out) both;
+  }
+}
+
+@keyframes bakery-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
