@@ -6383,6 +6383,50 @@ button.secondary {
   color: #6c818a;
   line-height: 1.5;
 }
+.sale-entry-section {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #dce7e5;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #fbfdfc, #f3f8f6);
+}
+.sale-entry-details {
+  background: #fff;
+}
+.sale-entry-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.sale-entry-heading > span {
+  display: grid;
+  flex: 0 0 25px;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--app-accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+.sale-entry-heading h3 {
+  margin: 0;
+  color: #315e56;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+.sale-entry-heading p {
+  margin: 3px 0 0;
+  color: #6d8189;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.sale-entry-section > label {
+  margin: 0;
+}
 @media (max-width: 580px) {
   .recipe-cost-breakdown {
     grid-template-columns: 1fr;

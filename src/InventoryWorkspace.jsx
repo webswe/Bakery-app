@@ -33,177 +33,193 @@ export function SaleFields({ data }) {
   const total = totals?.total || 0;
   return (
     <>
-      <label>
-        Product
-        <select
-          name="recipe"
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-          required
-        >
-          {data.recipes.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name} · {data.products[r.id]?.quantity || 0} available
-            </option>
-          ))}
-        </select>
-      </label>
-      <div className="form-row">
-        <label>
-          Quantity ({sale.label}
-          {sellingUnits === 1 ? "" : "s"})
-          <input
-            type="number"
-            min="1"
-            max={availableSellingUnits || 1}
-            step="1"
-            value={sellingUnits}
-            onChange={(e) => setSellingUnits(+e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Discount ($)
-          <input
-            type="number"
-            min="0"
-            max={sale.salePrice * sellingUnits}
-            step="0.01"
-            value={discount}
-            onChange={(e) => setDiscount(+e.target.value)}
-          />
-        </label>
-      </div>
-      <input type="hidden" name="quantity" value={qty} />
-      <div className="sale-unit-summary">
-        <span>
-          {sellingUnits} {sale.label}
-          {sellingUnits === 1 ? "" : "s"}
-        </span>
-        <b>
-          {qty} individual portion{qty === 1 ? "" : "s"}
-        </b>
-        <small>
-          {money(sale.salePrice)} per {sale.label}. Packaging recipe lines are
-          already included in captured production cost.
-        </small>
-      </div>
-      <label>
-        Customer sales tax (%)
-        <input
-          name="taxRate"
-          type="number"
-          min="0"
-          max="100"
-          step="any"
-          value={rate}
-          onChange={(e) => setRate(e.target.value)}
-          required
-        />
-      </label>
-      <p className="hint">
-        Added after discounts. Recipe selling prices are before customer sales
-        tax. Use 0% for a sale with no tax; purchase-tax defaults do not apply
-        here.
-      </p>
-      {issue ? (
-        <p className="error" role="alert">
-          {issue}
-        </p>
-      ) : (
-        <div className="tax-breakdown">
-          <dl>
-            <dt>Subtotal</dt>
-            <dd>{money(totals.subtotal)}</dd>
-            <dt>Discount</dt>
-            <dd>−{money(totals.discount)}</dd>
-            <dt>Before sales tax</dt>
-            <dd>{money(totals.net)}</dd>
-            <dt>Sales tax ({rate}%)</dt>
-            <dd>{money(totals.tax)}</dd>
-            <dt>Customer total</dt>
-            <dd>{money(total)}</dd>
-          </dl>
+      <section className="sale-entry-section">
+        <div className="sale-entry-heading">
+          <span>1</span>
+          <div>
+            <h3>Items and price</h3>
+            <p>Choose what left the bakery and confirm the total.</p>
+          </div>
         </div>
-      )}
-      <input type="hidden" name="total" value={total} />
-      <input type="hidden" name="discount" value={discount} />
-      {!!data.customers?.length && (
         <label>
-          Customer book
+          Product
           <select
-            name="customerId"
-            value={customerId}
-            onChange={(event) => {
-              const customer = data.customers.find(
-                (item) => item.id === event.target.value,
-              );
-              setCustomerId(customer?.id || "");
-              if (customer) setCustomerName(customer.name);
-            }}
+            name="recipe"
+            value={id}
+            onChange={(e) => setId(e.target.value)}
+            required
           >
-            <option value="">New or walk-in customer</option>
-            {data.customers.map((customer) => (
-              <option value={customer.id} key={customer.id}>
-                {customer.name}
+            {data.recipes.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name} · {data.products[r.id]?.quantity || 0} available
               </option>
             ))}
           </select>
         </label>
-      )}
-      <label>
-        Customer name
-        <input
-          name="customer"
-          value={customerName}
-          onChange={(event) => {
-            setCustomerName(event.target.value);
-            const selected = data.customers?.find(
-              (item) => item.id === customerId,
-            );
-            if (selected?.name !== event.target.value) setCustomerId("");
-          }}
-          placeholder="Optional for walk-in sales"
-        />
-      </label>
-      <div className="form-row">
+        <div className="form-row">
+          <label>
+            Quantity ({sale.label}
+            {sellingUnits === 1 ? "" : "s"})
+            <input
+              type="number"
+              min="1"
+              max={availableSellingUnits || 1}
+              step="1"
+              value={sellingUnits}
+              onChange={(e) => setSellingUnits(+e.target.value)}
+              required
+            />
+          </label>
+          <label>
+            Discount ($)
+            <input
+              type="number"
+              min="0"
+              max={sale.salePrice * sellingUnits}
+              step="0.01"
+              value={discount}
+              onChange={(e) => setDiscount(+e.target.value)}
+            />
+          </label>
+        </div>
+        <input type="hidden" name="quantity" value={qty} />
+        <div className="sale-unit-summary">
+          <span>
+            {sellingUnits} {sale.label}
+            {sellingUnits === 1 ? "" : "s"}
+          </span>
+          <b>
+            {qty} individual portion{qty === 1 ? "" : "s"}
+          </b>
+          <small>
+            {stock} portions available · {money(sale.salePrice)} per{" "}
+            {sale.label}. Packaging recipe lines are already included in
+            captured production cost.
+          </small>
+        </div>
         <label>
-          Order type
-          <select
-            name="orderType"
-            value={orderType}
-            onChange={(event) => setOrderType(event.target.value)}
-          >
-            <option>Walk-in sale</option>
-            <option>Custom order</option>
-            <option>Pre-order pickup</option>
-            <option>Delivery</option>
-            <option>Wholesale</option>
-            <option>Market / pop-up</option>
-            <option>Catering</option>
-            <option>Other</option>
-          </select>
+          Customer sales tax (%)
+          <input
+            name="taxRate"
+            type="number"
+            min="0"
+            max="100"
+            step="any"
+            value={rate}
+            onChange={(e) => setRate(e.target.value)}
+            required
+          />
         </label>
+        <p className="hint">
+          Added after discounts. Recipe selling prices are before customer sales
+          tax. Use 0% for a sale with no tax.
+        </p>
+        {issue ? (
+          <p className="error" role="alert">
+            {issue}
+          </p>
+        ) : (
+          <div className="tax-breakdown">
+            <dl>
+              <dt>Subtotal</dt>
+              <dd>{money(totals.subtotal)}</dd>
+              <dt>Discount</dt>
+              <dd>−{money(totals.discount)}</dd>
+              <dt>Before sales tax</dt>
+              <dd>{money(totals.net)}</dd>
+              <dt>Sales tax ({rate}%)</dt>
+              <dd>{money(totals.tax)}</dd>
+              <dt>Customer total</dt>
+              <dd>{money(total)}</dd>
+            </dl>
+          </div>
+        )}
+        <input type="hidden" name="total" value={total} />
+        <input type="hidden" name="discount" value={discount} />
+      </section>
+      <section className="sale-entry-section sale-entry-details">
+        <div className="sale-entry-heading">
+          <span>2</span>
+          <div>
+            <h3>Order details</h3>
+            <p>Label the sale and add the customer when useful.</p>
+          </div>
+        </div>
+        {!!data.customers?.length && (
+          <label>
+            Customer book
+            <select
+              name="customerId"
+              value={customerId}
+              onChange={(event) => {
+                const customer = data.customers.find(
+                  (item) => item.id === event.target.value,
+                );
+                setCustomerId(customer?.id || "");
+                if (customer) setCustomerName(customer.name);
+              }}
+            >
+              <option value="">New or walk-in customer</option>
+              {data.customers.map((customer) => (
+                <option value={customer.id} key={customer.id}>
+                  {customer.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label>
-          Date
-          <input name="date" type="date" defaultValue={localDay()} required />
+          Customer name
+          <input
+            name="customer"
+            value={customerName}
+            onChange={(event) => {
+              setCustomerName(event.target.value);
+              const selected = data.customers?.find(
+                (item) => item.id === customerId,
+              );
+              if (selected?.name !== event.target.value) setCustomerId("");
+            }}
+            placeholder="Optional for walk-in sales"
+          />
         </label>
-        <label>
-          Payment
-          <select name="payment">
-            <option>Cash</option>
-            <option>Card</option>
-            <option>Bank transfer</option>
-            <option>Other</option>
-          </select>
-        </label>
-      </div>
-      <p className="hint">
-        {stock} portions available. Recording a sale deducts finished stock and
-        uses its production cost. Use Custom order or Pre-order pickup for a
-        sale you are recording directly; use Customer orders for deposits,
-        invoices, and scheduled production.
-      </p>
+        <div className="form-row">
+          <label>
+            Order type
+            <select
+              name="orderType"
+              value={orderType}
+              onChange={(event) => setOrderType(event.target.value)}
+            >
+              <option>Walk-in sale</option>
+              <option>Custom order</option>
+              <option>Pre-order pickup</option>
+              <option>Delivery</option>
+              <option>Wholesale</option>
+              <option>Market / pop-up</option>
+              <option>Catering</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <label>
+            Date
+            <input name="date" type="date" defaultValue={localDay()} required />
+          </label>
+          <label>
+            Payment
+            <select name="payment">
+              <option>Cash</option>
+              <option>Card</option>
+              <option>Bank transfer</option>
+              <option>Other</option>
+            </select>
+          </label>
+        </div>
+        <p className="hint">
+          Use Customer orders for deposits, invoices, and scheduled production.
+          This form records a completed finished-stock sale.
+        </p>
+      </section>
     </>
   );
 }
