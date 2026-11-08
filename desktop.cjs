@@ -132,6 +132,10 @@ app.whenReady().then(() => {
   mainWindow.on("focus", () => {
     if (!mainWindow.webContents.isDestroyed()) mainWindow.webContents.focus();
   });
+  mainWindow.webContents.on("before-input-event", () => {
+    if (mainWindow.isFocused() && !mainWindow.webContents.isFocused())
+      mainWindow.webContents.focus();
+  });
 
   autoUpdater.autoDownload = true;
   autoUpdater.on("checking-for-update", () =>
