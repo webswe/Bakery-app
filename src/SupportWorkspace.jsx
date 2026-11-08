@@ -5,17 +5,6 @@ import { downloadBlob } from "./uiFormatters.js";
 
 const localDateTime = () => new Date().toLocaleString();
 
-function recoverFieldFocus(event) {
-  const field = event.target;
-  if (!(
-    field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement
-  ))
-    return;
-  requestAnimationFrame(() => {
-    if (document.activeElement !== field) field.focus({ preventScroll: true });
-  });
-}
-
 export default function SupportWorkspace({ data, page }) {
   const [report, setReport] = useState("");
   const [notice, setNotice] = useState("");
@@ -63,7 +52,7 @@ export default function SupportWorkspace({ data, page }) {
           Create a report on this computer, then attach it to an email. Your
           recipes, customers, inventory, sales, and backups are never included.
         </p>
-        <form onSubmit={createReport} onPointerDownCapture={recoverFieldFocus}>
+        <form onSubmit={createReport}>
           <label>
             What were you trying to do?
             <textarea

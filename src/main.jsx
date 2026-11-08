@@ -112,6 +112,37 @@ const lockKey = "bakery-ledger-lock-v1";
 const tutorialKey = "bakery-ledger-tutorial-v1";
 const modalDraftKey = (type, value) =>
   `bakery-ledger-${type}-draft-${value?.id || "new"}-v1`;
+const nonTextInputTypes = new Set([
+  "button",
+  "checkbox",
+  "color",
+  "file",
+  "image",
+  "radio",
+  "range",
+  "reset",
+  "submit",
+]);
+function recoverTextFieldFocus(event) {
+  const field = event.target.closest?.(
+    "input, textarea, [contenteditable='true']",
+  );
+  if (
+    !field ||
+    field.disabled ||
+    field.readOnly ||
+    (field instanceof HTMLInputElement && nonTextInputTypes.has(field.type))
+  )
+    return;
+  requestAnimationFrame(() => {
+    if (
+      document.hasFocus() &&
+      field.isConnected &&
+      document.activeElement !== field
+    )
+      field.focus({ preventScroll: true });
+  });
+}
 const readLock = () => {
   try {
     return JSON.parse(localStorage.getItem(lockKey)) || null;
@@ -716,7 +747,7 @@ function App() {
   if (locked && lockConfig)
     return <LockScreen config={lockConfig} onUnlock={() => setLocked(false)} />;
   return (
-    <div className="app">
+    <div className="app" onPointerDownCapture={recoverTextFieldFocus}>
       <a className="skip-link" href="#workspace-title">
         Skip to workspace content
       </a>
