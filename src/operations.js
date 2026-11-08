@@ -256,8 +256,35 @@ export function sell(data, f) {
         payment: f.payment || "Cash",
         orderType:
           String(f.orderType || "Walk-in sale").trim() || "Walk-in sale",
+        saleBatchId: f.saleBatchId || "",
         productLotUsage: productLotResult.usage,
       },
     ],
   };
+}
+
+export function sellMany(data, input) {
+  if (!Array.isArray(input.lines) || !input.lines.length)
+    throw Error("Add at least one dessert to the sale.");
+  const saleBatchId = crypto.randomUUID();
+  return input.lines.reduce((next, line) => {
+    const recipe = next.recipes.find((entry) => entry.id === line.recipeId);
+    if (!recipe) throw Error("A selected dessert is missing.");
+    const quantity = Number(line.quantity);
+    const discount = Number(line.discount || 0);
+    const totals = directSaleTotals(
+      recipe.price,
+      quantity,
+      discount,
+      Number(input.taxRate || 0),
+    );
+    return sell(next, {
+      ...input,
+      recipe: recipe.id,
+      quantity,
+      discount,
+      total: totals.total,
+      saleBatchId,
+    });
+  }, data);
 }

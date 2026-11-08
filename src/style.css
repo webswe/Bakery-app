@@ -6427,6 +6427,36 @@ button.secondary {
 .sale-entry-section > label {
   margin: 0;
 }
+.sale-cart-lines {
+  display: grid;
+  gap: 10px;
+}
+.sale-cart-line {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid #d9e5e2;
+  border-radius: 8px;
+  background: #fff;
+}
+.sale-cart-line-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #42626a;
+  font-size: 12px;
+}
+.sale-cart-line .sale-unit-summary {
+  margin: 0;
+}
+.sale-add-line {
+  justify-self: start;
+}
+.sale-cart-total dd:last-child {
+  color: var(--app-accent);
+  font-size: 17px;
+}
 @media (max-width: 580px) {
   .recipe-cost-breakdown {
     grid-template-columns: 1fr;

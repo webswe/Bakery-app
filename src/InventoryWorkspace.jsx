@@ -5,32 +5,56 @@ import {
   removeAccidentalProductLot,
   finishedProductAlerts,
 } from "./productLots.js";
-import React, { useDeferredValue, useEffect, useState } from "react";
-import { X } from "lucide-react";
+import React, { useDeferredValue, useState } from "react";
+import { Plus, Trash2, X } from "lucide-react";
 import { addPresets, availability, produce, fullCost } from "./operations.js";
 import { recipeSaleDetails } from "./recipePricing.js";
 import { localDay, money } from "./uiFormatters.js";
 export function SaleFields({ data }) {
-  const [id, setId] = useState(data.recipes[0]?.id || ""),
-    [sellingUnits, setSellingUnits] = useState(1),
-    [discount, setDiscount] = useState(0),
+  const [lines, setLines] = useState(() => [
+      {
+        id: crypto.randomUUID(),
+        recipeId: data.recipes[0]?.id || "",
+        units: 1,
+        discount: 0,
+      },
+    ]),
     [rate, setRate] = useState(data.salesTaxRate ?? 0),
     [customerId, setCustomerId] = useState(""),
     [customerName, setCustomerName] = useState(""),
     [orderType, setOrderType] = useState("Walk-in sale");
-  const r = data.recipes.find((x) => x.id === id),
-    stock = data.products[id]?.quantity || 0;
-  const sale = recipeSaleDetails(r);
-  const qty = sellingUnits * sale.quantity;
-  const availableSellingUnits = Math.floor(stock / sale.quantity);
-  useEffect(() => setSellingUnits(1), [id]);
-  let totals, issue;
-  try {
-    totals = directSaleTotals(r?.price || 0, qty, discount, rate);
-  } catch (e) {
-    issue = e.message;
-  }
-  const total = totals?.total || 0;
+  const rows = lines.map((line) => {
+    const recipe = data.recipes.find((entry) => entry.id === line.recipeId);
+    const sale = recipeSaleDetails(recipe);
+    const stock = data.products[recipe?.id]?.quantity || 0;
+    const quantity = (Number(line.units) || 0) * sale.quantity;
+    let totals;
+    try {
+      totals = directSaleTotals(
+        recipe?.price || 0,
+        quantity,
+        line.discount,
+        rate,
+      );
+    } catch {
+      totals = { subtotal: 0, discount: 0, net: 0, tax: 0, total: 0 };
+    }
+    return { ...line, recipe, sale, stock, quantity, totals };
+  });
+  const totals = rows.reduce(
+    (sum, row) => ({
+      subtotal: sum.subtotal + row.totals.subtotal,
+      discount: sum.discount + row.totals.discount,
+      net: sum.net + row.totals.net,
+      tax: sum.tax + row.totals.tax,
+      total: sum.total + row.totals.total,
+    }),
+    { subtotal: 0, discount: 0, net: 0, tax: 0, total: 0 },
+  );
+  const patchLine = (id, patch) =>
+    setLines((current) =>
+      current.map((line) => (line.id === id ? { ...line, ...patch } : line)),
+    );
   return (
     <>
       <section className="sale-entry-section">
@@ -41,62 +65,117 @@ export function SaleFields({ data }) {
             <p>Choose what left the bakery and confirm the total.</p>
           </div>
         </div>
-        <label>
-          Product
-          <select
-            name="recipe"
-            value={id}
-            onChange={(e) => setId(e.target.value)}
-            required
-          >
-            {data.recipes.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name} · {data.products[r.id]?.quantity || 0} available
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="form-row">
-          <label>
-            Quantity ({sale.label}
-            {sellingUnits === 1 ? "" : "s"})
-            <input
-              type="number"
-              min="1"
-              max={availableSellingUnits || 1}
-              step="1"
-              value={sellingUnits}
-              onChange={(e) => setSellingUnits(+e.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Discount ($)
-            <input
-              type="number"
-              min="0"
-              max={sale.salePrice * sellingUnits}
-              step="0.01"
-              value={discount}
-              onChange={(e) => setDiscount(+e.target.value)}
-            />
-          </label>
+        <div className="sale-cart-lines">
+          {rows.map((row, index) => (
+            <div className="sale-cart-line" key={row.id}>
+              <div className="sale-cart-line-heading">
+                <b>Dessert {index + 1}</b>
+                {lines.length > 1 && (
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={() =>
+                      setLines((current) =>
+                        current.filter((line) => line.id !== row.id),
+                      )
+                    }
+                  >
+                    <Trash2 size={14} /> Remove
+                  </button>
+                )}
+              </div>
+              <label>
+                Dessert
+                <select
+                  value={row.recipeId}
+                  onChange={(event) =>
+                    patchLine(row.id, {
+                      recipeId: event.target.value,
+                      units: 1,
+                      discount: 0,
+                    })
+                  }
+                  required
+                >
+                  {data.recipes.map((recipe) => (
+                    <option key={recipe.id} value={recipe.id}>
+                      {recipe.name} · {data.products[recipe.id]?.quantity || 0}{" "}
+                      available
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="form-row">
+                <label>
+                  Quantity ({row.sale.label}
+                  {row.units === 1 ? "" : "s"})
+                  <input
+                    type="number"
+                    min="1"
+                    max={Math.max(1, Math.floor(row.stock / row.sale.quantity))}
+                    step="1"
+                    value={row.units}
+                    onChange={(event) =>
+                      patchLine(row.id, { units: +event.target.value })
+                    }
+                    required
+                  />
+                </label>
+                <label>
+                  Discount ($)
+                  <input
+                    type="number"
+                    min="0"
+                    max={row.sale.salePrice * row.units}
+                    step="0.01"
+                    value={row.discount}
+                    onChange={(event) =>
+                      patchLine(row.id, { discount: +event.target.value })
+                    }
+                  />
+                </label>
+              </div>
+              <div className="sale-unit-summary">
+                <span>
+                  {row.quantity} portion{row.quantity === 1 ? "" : "s"}
+                </span>
+                <b>{money(row.totals.total)}</b>
+                <small>
+                  {row.stock} portions available · {money(row.sale.salePrice)}{" "}
+                  per {row.sale.label}
+                </small>
+              </div>
+            </div>
+          ))}
         </div>
-        <input type="hidden" name="quantity" value={qty} />
-        <div className="sale-unit-summary">
-          <span>
-            {sellingUnits} {sale.label}
-            {sellingUnits === 1 ? "" : "s"}
-          </span>
-          <b>
-            {qty} individual portion{qty === 1 ? "" : "s"}
-          </b>
-          <small>
-            {stock} portions available · {money(sale.salePrice)} per{" "}
-            {sale.label}. Packaging recipe lines are already included in
-            captured production cost.
-          </small>
-        </div>
+        <button
+          type="button"
+          className="secondary sale-add-line"
+          onClick={() =>
+            setLines((current) => [
+              ...current,
+              {
+                id: crypto.randomUUID(),
+                recipeId: data.recipes[0]?.id || "",
+                units: 1,
+                discount: 0,
+              },
+            ])
+          }
+        >
+          <Plus size={16} /> Add another dessert
+        </button>
+        <input
+          type="hidden"
+          name="saleLines"
+          value={JSON.stringify(
+            rows.map((row) => ({
+              recipeId: row.recipeId,
+              quantity: row.quantity,
+              discount: row.discount,
+            })),
+          )}
+        />
         <label>
           Customer sales tax (%)
           <input
@@ -114,28 +193,20 @@ export function SaleFields({ data }) {
           Added after discounts. Recipe selling prices are before customer sales
           tax. Use 0% for a sale with no tax.
         </p>
-        {issue ? (
-          <p className="error" role="alert">
-            {issue}
-          </p>
-        ) : (
-          <div className="tax-breakdown">
-            <dl>
-              <dt>Subtotal</dt>
-              <dd>{money(totals.subtotal)}</dd>
-              <dt>Discount</dt>
-              <dd>−{money(totals.discount)}</dd>
-              <dt>Before sales tax</dt>
-              <dd>{money(totals.net)}</dd>
-              <dt>Sales tax ({rate}%)</dt>
-              <dd>{money(totals.tax)}</dd>
-              <dt>Customer total</dt>
-              <dd>{money(total)}</dd>
-            </dl>
-          </div>
-        )}
-        <input type="hidden" name="total" value={total} />
-        <input type="hidden" name="discount" value={discount} />
+        <div className="tax-breakdown sale-cart-total">
+          <dl>
+            <dt>
+              {rows.length} dessert type{rows.length === 1 ? "" : "s"}
+            </dt>
+            <dd>{money(totals.subtotal)}</dd>
+            <dt>Discount</dt>
+            <dd>−{money(totals.discount)}</dd>
+            <dt>Sales tax ({rate}%)</dt>
+            <dd>{money(totals.tax)}</dd>
+            <dt>Customer total</dt>
+            <dd>{money(totals.total)}</dd>
+          </dl>
+        </div>
       </section>
       <section className="sale-entry-section sale-entry-details">
         <div className="sale-entry-heading">

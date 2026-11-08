@@ -5,7 +5,7 @@ import {
   taxRate,
 } from "./taxation.js";
 import Operations, { SaleFields } from "./InventoryWorkspace.jsx";
-import { addPresets, sell, fullCost } from "./operations.js";
+import { addPresets, sellMany, fullCost } from "./operations.js";
 import Dashboard from "./Dashboard.jsx";
 import { migrateData } from "./analytics.js";
 import BakeryTools from "./BakeryTools.jsx";
@@ -689,10 +689,12 @@ function App() {
       }
       if (modal.type === "sale") {
         const customerResult = ensureCustomer(data, f);
+        const lines = JSON.parse(f.saleLines || "[]");
         persist(
-          sell(customerResult.data, {
+          sellMany(customerResult.data, {
             ...f,
             customerId: customerResult.customerId,
+            lines,
           }),
         );
       }

@@ -5,6 +5,7 @@ import {
   availability,
   produce,
   sell,
+  sellMany,
   fullCost,
 } from "../src/operations.js";
 import { lineCost } from "../src/costing.js";
@@ -90,6 +91,42 @@ test("sales consume weighted finished cost and prevent overselling", () => {
     () => sell(n, { recipe: "cake", quantity: 3, total: 15 }),
     /Not enough/,
   );
+});
+test("one checkout can record several desserts with a shared sale type", () => {
+  let data = produce(fixture(), "cake", 1);
+  data = {
+    ...data,
+    recipes: [
+      ...data.recipes,
+      { ...data.recipes[0], id: "cookie", name: "Cookie", price: 3 },
+    ],
+    products: { ...data.products, cookie: { quantity: 3, value: 6 } },
+    productLots: [
+      ...data.productLots,
+      {
+        id: "cookie-lot",
+        recipeId: "cookie",
+        recipeName: "Cookie",
+        quantity: 3,
+        remaining: 3,
+        cost: 6,
+      },
+    ],
+  };
+  const result = sellMany(data, {
+    date: "2026-10-27",
+    taxRate: 0,
+    orderType: "Market / pop-up",
+    lines: [
+      { recipeId: "cake", quantity: 2, discount: 0 },
+      { recipeId: "cookie", quantity: 1, discount: 0 },
+    ],
+  });
+  assert.equal(result.sales.length, 2);
+  assert.equal(result.products.cake.quantity, 2);
+  assert.equal(result.products.cookie.quantity, 2);
+  assert.ok(result.sales.every((sale) => sale.orderType === "Market / pop-up"));
+  assert.equal(result.sales[0].saleBatchId, result.sales[1].saleBatchId);
 });
 test("presets add no duplicates and never invent purchase prices", () => {
   let d = addPresets(fixture());
