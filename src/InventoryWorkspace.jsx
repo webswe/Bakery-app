@@ -2,7 +2,7 @@ import { directSaleTotals, purchaseTax } from "./taxation.js";
 import { receiveInventory, reconcileLots } from "./inventoryLots.js";
 import {
   adjustFinishedStock,
-  discardProductLot,
+  removeAccidentalProductLot,
   finishedProductAlerts,
 } from "./productLots.js";
 import React, { useDeferredValue, useEffect, useState } from "react";
@@ -523,17 +523,17 @@ export default function Operations({ data, save, open, tab }) {
                             onClick={() => {
                               if (
                                 confirm(
-                                  `Remove all ${lot.remaining} portions from this baked lot? This records the lot as discarded and updates finished stock.`,
+                                  `Remove this accidentally added lot and reverse all ${lot.remaining} portions? This corrects finished stock without recording waste.`,
                                 )
                               )
                                 act(() =>
-                                  discardProductLot(data, lot.id, {
-                                    reason: "Discarded whole baked lot",
+                                  removeAccidentalProductLot(data, lot.id, {
+                                    reason: "Accidentally added finished lot",
                                   }),
                                 );
                             }}
                           >
-                            Remove whole lot
+                            Remove lot
                           </button>
                         </div>
                       ))}

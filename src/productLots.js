@@ -160,7 +160,7 @@ export function adjustFinishedStock(data, recipeId, input) {
   };
 }
 
-export function discardProductLot(data, lotId, input = {}) {
+export function removeAccidentalProductLot(data, lotId, input = {}) {
   const lot = (data.productLots || []).find((entry) => entry.id === lotId);
   if (!lot) throw Error("Finished lot is missing.");
   const quantity = Number(lot.remaining) || 0;
@@ -172,7 +172,9 @@ export function discardProductLot(data, lotId, input = {}) {
     ? (Number(lot.cost) || 0) / Number(lot.quantity)
     : 0;
   const valueChange = unitCost * quantity;
-  const reason = String(input.reason || "Discarded whole baked lot").trim();
+  const reason = String(
+    input.reason || "Accidentally added finished lot",
+  ).trim();
   return {
     ...data,
     products: {
@@ -187,8 +189,8 @@ export function discardProductLot(data, lotId, input = {}) {
         ? {
             ...entry,
             remaining: 0,
-            discardedAt: new Date().toISOString(),
-            discardReason: reason,
+            removedAt: new Date().toISOString(),
+            removalReason: reason,
           }
         : entry,
     ),
@@ -201,7 +203,7 @@ export function discardProductLot(data, lotId, input = {}) {
         name: lot.recipeName || "Finished product",
         recipeId: lot.recipeId,
         productLotId: lot.id,
-        kind: "Finished lot discarded",
+        kind: "Finished lot removed",
         quantity,
         delta: -quantity,
         unit: "portions",
