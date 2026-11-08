@@ -25,7 +25,11 @@ import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
 import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
 import SupportWorkspace from "./SupportWorkspace.jsx";
-import { saveRecipePreset, saveRecipeRevision } from "./bakeryOperations.js";
+import {
+  removeRecipe,
+  saveRecipePreset,
+  saveRecipeRevision,
+} from "./bakeryOperations.js";
 import {
   NotificationCenter,
   PinnedShortcuts,
@@ -1236,6 +1240,16 @@ function App() {
               open={open}
               recipeCost={cost}
               save={save}
+              removeRecipe={(recipe) => {
+                try {
+                  saveWithUndo(
+                    removeRecipe(data, recipe.id),
+                    `${recipe.name} removed.`,
+                  );
+                } catch (err) {
+                  setError(err.message);
+                }
+              }}
             />
           )}
         </div>
