@@ -70,9 +70,11 @@ test("production creates a traceable finished lot and sales consume it", () => {
     quantity: 2,
     total: 10,
     date: "2026-10-28",
+    orderType: "Wholesale",
   });
   assert.equal(sold.productLots[0].remaining, 2);
   assert.equal(sold.sales.at(-1).productLotUsage[0].amount, 2);
+  assert.equal(sold.sales.at(-1).orderType, "Wholesale");
 });
 test("sales consume weighted finished cost and prevent overselling", () => {
   const d = produce(fixture(), "cake", 1);

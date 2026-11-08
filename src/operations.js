@@ -254,6 +254,8 @@ export function sell(data, f) {
         customer: f.customer || "",
         customerId: f.customerId || "",
         payment: f.payment || "Cash",
+        orderType:
+          String(f.orderType || "Walk-in sale").trim() || "Walk-in sale",
         productLotUsage: productLotResult.usage,
       },
     ],

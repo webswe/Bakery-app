@@ -1145,7 +1145,12 @@ function App() {
                           <tr key={s.id}>
                             <td>
                               <b>{s.name}</b>
-                              {s.quantity && <small>{s.quantity} sold</small>}
+                              {s.quantity && (
+                                <small>
+                                  {s.quantity} sold
+                                  {s.orderType ? ` · ${s.orderType}` : ""}
+                                </small>
+                              )}
                               {s.net != null && (
                                 <small>
                                   Before tax {money(s.net)} · Sales tax{" "}

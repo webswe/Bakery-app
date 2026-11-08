@@ -16,7 +16,8 @@ export function SaleFields({ data }) {
     [discount, setDiscount] = useState(0),
     [rate, setRate] = useState(data.salesTaxRate ?? 0),
     [customerId, setCustomerId] = useState(""),
-    [customerName, setCustomerName] = useState("");
+    [customerName, setCustomerName] = useState(""),
+    [orderType, setOrderType] = useState("Walk-in sale");
   const r = data.recipes.find((x) => x.id === id),
     stock = data.products[id]?.quantity || 0;
   const sale = recipeSaleDetails(r);
@@ -167,6 +168,23 @@ export function SaleFields({ data }) {
       </label>
       <div className="form-row">
         <label>
+          Order type
+          <select
+            name="orderType"
+            value={orderType}
+            onChange={(event) => setOrderType(event.target.value)}
+          >
+            <option>Walk-in sale</option>
+            <option>Custom order</option>
+            <option>Pre-order pickup</option>
+            <option>Delivery</option>
+            <option>Wholesale</option>
+            <option>Market / pop-up</option>
+            <option>Catering</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>
           Date
           <input name="date" type="date" defaultValue={localDay()} required />
         </label>
@@ -182,8 +200,9 @@ export function SaleFields({ data }) {
       </div>
       <p className="hint">
         {stock} portions available. Recording a sale deducts finished stock and
-        uses its production cost. Complete a batch in the production plan before
-        selling.
+        uses its production cost. Use Custom order or Pre-order pickup for a
+        sale you are recording directly; use Customer orders for deposits,
+        invoices, and scheduled production.
       </p>
     </>
   );
