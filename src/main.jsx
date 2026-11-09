@@ -779,15 +779,12 @@ function App() {
             <small>A little clarity. A lot of growth.</small>
           </span>
         </a>
-        <div className="workspace">
-          <span className="avatar">{bakeryInitial}</span>
-          <div>
-            {bakeryName}
-            <small>Your business workspace</small>
-          </div>
-          <span className="dot" />
+        <div className="sidebar-summary" aria-live="polite">
+          <span className="status-dot" />
+          <span>Working in</span>
+          <b>{section.name}</b>
         </div>
-        <div className="nav-label">WORKSPACE</div>
+        <div className="nav-label">MAIN MENU</div>
         <nav aria-label="Main workspace">
           {sections.map((group, index) => {
             const Icon = [
@@ -811,36 +808,35 @@ function App() {
             );
           })}
         </nav>
-        <div className="workspace-context" aria-live="polite">
-          <span>{section.name}</span>
-          <b>{info.label}</b>
-        </div>
-        {appearance.showTips && (
-          <div className="workspace-guide">
-            <p>Quote → Order → Produce → Fulfill</p>
-            <small>One connected workflow for your bakery.</small>
-          </div>
-        )}
-        <div className="workspace-local">
-          <span className="status-dot" /> Saved on this device
-          <small>USD · Local workspace</small>
-          <button className="text-button" onClick={() => navigate("Backups")}>
-            Backups & recovery
-          </button>
-          <button className="text-button" onClick={() => setShowTutorial(true)}>
-            Open tutorial
-          </button>
-          <button
-            className="text-button"
-            onClick={() => navigate("User guide")}
-          >
-            User guide · F1
-          </button>
-          {lockConfig && (
-            <button className="text-button" onClick={() => setLocked(true)}>
-              Lock workspace
-            </button>
+        <div className="sidebar-footer">
+          {appearance.showTips && (
+            <p className="sidebar-tip">Quote · Produce · Fulfill</p>
           )}
+          <span className="sidebar-saved">
+            <span className="status-dot" /> Saved on this device
+          </span>
+          <div className="sidebar-utilities">
+            <button className="text-button" onClick={() => navigate("Backups")}>
+              Backups
+            </button>
+            <button
+              className="text-button"
+              onClick={() => setShowTutorial(true)}
+            >
+              Tutorial
+            </button>
+            <button
+              className="text-button"
+              onClick={() => navigate("User guide")}
+            >
+              Guide
+            </button>
+            {lockConfig && (
+              <button className="text-button" onClick={() => setLocked(true)}>
+                Lock
+              </button>
+            )}
+          </div>
         </div>
       </aside>
       <main>
