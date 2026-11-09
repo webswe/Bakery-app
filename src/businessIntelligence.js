@@ -21,11 +21,16 @@ export function financialCenter(data, month) {
   const monthPayments = (data.payments || []).filter((row) =>
     row.date?.startsWith(month),
   );
-  const cashIn = monthPayments.reduce(
-    (sum, row) =>
-      sum + (row.kind === "refund" ? -number(row.amount) : number(row.amount)),
-    0,
-  );
+  const cashIn =
+    monthPayments.reduce(
+      (sum, row) =>
+        sum +
+        (row.kind === "refund" ? -number(row.amount) : number(row.amount)),
+      0,
+    ) +
+    summary.sales
+      .filter((sale) => !sale.orderId && sale.paymentStatus !== "unpaid")
+      .reduce((sum, sale) => sum + number(sale.total), 0);
   const wasteCost = (data.waste || [])
     .filter((row) => row.date?.startsWith(month))
     .reduce((sum, row) => sum + number(row.cost), 0);
@@ -43,26 +48,30 @@ export function financialCenter(data, month) {
   return {
     ...summary,
     cashIn,
-    outstanding: (data.orders || [])
-      .filter(
-        (order) =>
-          order.status !== "cancelled" &&
-          order.status !== "completed" &&
-          order.pickupDate?.startsWith(month),
-      )
-      .reduce((sum, order) => {
-        const paid = (data.payments || [])
-          .filter((row) => row.orderId === order.id)
-          .reduce(
-            (total, row) =>
-              total +
-              (row.kind === "refund"
-                ? -number(row.amount)
-                : number(row.amount)),
-            0,
-          );
-        return sum + Math.max(0, number(order.total) - paid);
-      }, 0),
+    outstanding:
+      (data.orders || [])
+        .filter(
+          (order) =>
+            order.status !== "cancelled" &&
+            order.status !== "completed" &&
+            order.pickupDate?.startsWith(month),
+        )
+        .reduce((sum, order) => {
+          const paid = (data.payments || [])
+            .filter((row) => row.orderId === order.id)
+            .reduce(
+              (total, row) =>
+                total +
+                (row.kind === "refund"
+                  ? -number(row.amount)
+                  : number(row.amount)),
+              0,
+            );
+          return sum + Math.max(0, number(order.total) - paid);
+        }, 0) +
+      summary.sales
+        .filter((sale) => !sale.orderId && sale.paymentStatus === "unpaid")
+        .reduce((sum, sale) => sum + number(sale.total), 0),
     wasteCost,
     wastePercent: summary.revenue ? (wasteCost / summary.revenue) * 100 : 0,
     margin,
@@ -114,7 +123,7 @@ export function financialGuidance(report) {
     notes.push({
       level: "info",
       title: "Pickup balances still need collection",
-      detail: `${report.outstanding.toFixed(2)} remains due on this month’s open orders.`,
+      detail: `${report.outstanding.toFixed(2)} remains due across open orders and unpaid direct sales.`,
     });
   if (!notes.length)
     notes.push({

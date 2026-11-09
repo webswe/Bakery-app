@@ -1182,6 +1182,9 @@ function App() {
                                 <small>
                                   {s.quantity} sold
                                   {s.orderType ? ` · ${s.orderType}` : ""}
+                                  {s.paymentStatus === "unpaid"
+                                    ? " · Payment due"
+                                    : ""}
                                 </small>
                               )}
                               {s.net != null && (
@@ -1203,6 +1206,33 @@ function App() {
                             </td>
                             <td>{money(s.total ?? s.amount)}</td>
                             <td>
+                              {s.type === "Sale" &&
+                                s.paymentStatus === "unpaid" && (
+                                  <button
+                                    className="secondary"
+                                    onClick={() =>
+                                      saveWithUndo(
+                                        {
+                                          ...data,
+                                          sales: data.sales.map((sale) =>
+                                            sale.id === s.id
+                                              ? {
+                                                  ...sale,
+                                                  paymentStatus: "paid",
+                                                  payment: "Payment recorded",
+                                                  paidAt:
+                                                    new Date().toISOString(),
+                                                }
+                                              : sale,
+                                          ),
+                                        },
+                                        "Sale marked paid.",
+                                      )
+                                    }
+                                  >
+                                    Mark paid
+                                  </button>
+                                )}
                               <button
                                 aria-label="Delete transaction"
                                 disabled={!!(s.orderId || s.wasteId)}

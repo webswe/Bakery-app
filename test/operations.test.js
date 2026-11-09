@@ -128,6 +128,18 @@ test("one checkout can record several desserts with a shared sale type", () => {
   assert.ok(result.sales.every((sale) => sale.orderType === "Market / pop-up"));
   assert.equal(result.sales[0].saleBatchId, result.sales[1].saleBatchId);
 });
+test("unpaid direct sales retain stock movement and a due status", () => {
+  const data = produce(fixture(), "cake", 1);
+  const result = sell(data, {
+    recipe: "cake",
+    quantity: 1,
+    total: 5,
+    paymentStatus: "unpaid",
+  });
+  assert.equal(result.products.cake.quantity, 3);
+  assert.equal(result.sales[0].paymentStatus, "unpaid");
+  assert.equal(result.sales[0].payment, "Unpaid");
+});
 test("presets add no duplicates and never invent purchase prices", () => {
   let d = addPresets(fixture());
   assert.ok(d.items.length > 20);

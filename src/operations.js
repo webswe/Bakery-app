@@ -229,6 +229,7 @@ export function sell(data, f) {
     r.id,
     quantity,
   );
+  const paymentStatus = f.paymentStatus === "unpaid" ? "unpaid" : "paid";
   return {
     ...data,
     products: {
@@ -253,7 +254,8 @@ export function sell(data, f) {
         stockTracked: true,
         customer: f.customer || "",
         customerId: f.customerId || "",
-        payment: f.payment || "Cash",
+        payment: paymentStatus === "unpaid" ? "Unpaid" : f.payment || "Cash",
+        paymentStatus,
         orderType:
           String(f.orderType || "Walk-in sale").trim() || "Walk-in sale",
         saleBatchId: f.saleBatchId || "",

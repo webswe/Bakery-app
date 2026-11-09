@@ -91,6 +91,32 @@ test("financial center includes earlier deposits when calculating order balances
   assert.equal(financialCenter(data, "2026-11").outstanding, 200);
 });
 
+test("unpaid direct sales are due but do not count as cash received", () => {
+  const data = base();
+  data.sales.push(
+    {
+      id: "paid",
+      date: "2026-11-01",
+      total: 20,
+      net: 20,
+      cost: 8,
+      quantity: 2,
+    },
+    {
+      id: "due",
+      date: "2026-11-02",
+      total: 30,
+      net: 30,
+      cost: 12,
+      quantity: 3,
+      paymentStatus: "unpaid",
+    },
+  );
+  const report = financialCenter(data, "2026-11");
+  assert.equal(report.cashIn, 20);
+  assert.equal(report.outstanding, 30);
+});
+
 test("scheduler creates one linked plan for an unplanned accepted order", () => {
   const data = base();
   data.orders.push({

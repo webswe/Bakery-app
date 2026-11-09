@@ -22,7 +22,8 @@ export function SaleFields({ data }) {
     [rate, setRate] = useState(data.salesTaxRate ?? 0),
     [customerId, setCustomerId] = useState(""),
     [customerName, setCustomerName] = useState(""),
-    [orderType, setOrderType] = useState("Walk-in sale");
+    [orderType, setOrderType] = useState("Walk-in sale"),
+    [paymentStatus, setPaymentStatus] = useState("paid");
   const rows = lines.map((line) => {
     const recipe = data.recipes.find((entry) => entry.id === line.recipeId);
     const sale = recipeSaleDetails(recipe);
@@ -277,8 +278,19 @@ export function SaleFields({ data }) {
             <input name="date" type="date" defaultValue={localDay()} required />
           </label>
           <label>
+            Payment status
+            <select
+              name="paymentStatus"
+              value={paymentStatus}
+              onChange={(event) => setPaymentStatus(event.target.value)}
+            >
+              <option value="paid">Paid now</option>
+              <option value="unpaid">Unpaid / due</option>
+            </select>
+          </label>
+          <label>
             Payment
-            <select name="payment">
+            <select name="payment" disabled={paymentStatus === "unpaid"}>
               <option>Cash</option>
               <option>Card</option>
               <option>Bank transfer</option>
@@ -287,8 +299,9 @@ export function SaleFields({ data }) {
           </label>
         </div>
         <p className="hint">
-          Use Customer orders for deposits, invoices, and scheduled production.
-          This form records a completed finished-stock sale.
+          {paymentStatus === "unpaid"
+            ? "This sale will be marked due and excluded from cash received until you mark it paid in Overview."
+            : "Use Customer orders for deposits, invoices, and scheduled production. This form records a completed finished-stock sale."}
         </p>
       </section>
     </>
