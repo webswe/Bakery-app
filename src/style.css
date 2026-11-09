@@ -6995,6 +6995,59 @@ nav button.active {
   color: #677d84;
   font-size: 13px;
 }
+
+/* Accessibility pass: supporting copy must remain comfortable to read. */
+:root {
+  color: #263a39;
+}
+p {
+  color: #526766;
+}
+small,
+td small,
+.hint {
+  color: #5b706f;
+}
+.eyebrow,
+.nav-label {
+  color: #58716b;
+}
+.workspace small,
+.brand small,
+.workspace-local small {
+  color: #5c706d;
+}
+nav button {
+  color: #425a55;
+}
+nav button.active {
+  color: #264e46;
+}
+.page-title p,
+.panel-heading p {
+  color: #506866;
+}
+.planning-form label,
+.planning-toolbar label {
+  color: #314d4b;
+}
+.planning-workspace input,
+.planning-workspace select,
+.planning-workspace textarea {
+  color: #243f3d;
+}
+th {
+  color: #49625f;
+}
+td {
+  color: #304846;
+}
+.workspace-tabs button {
+  color: #405b57;
+}
+.workspace-tabs button.active {
+  color: #1f5549;
+}
 .page-actions {
   align-self: center;
 }
