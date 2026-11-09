@@ -1,5 +1,9 @@
 import { directSaleTotals, purchaseTax } from "./taxation.js";
-import { receiveInventory, reconcileLots } from "./inventoryLots.js";
+import {
+  receiveInventory,
+  reconcileLots,
+  recordPersonalUse,
+} from "./inventoryLots.js";
 import {
   adjustFinishedStock,
   removeAccidentalProductLot,
@@ -450,30 +454,36 @@ export default function Operations({ data, save, open, tab }) {
                               act(() =>
                                 kind === "receive"
                                   ? receiveInventory(data, i.id, form)
-                                  : {
-                                      ...data,
-                                      inventoryLots: reconcileLots(
-                                        data.inventoryLots || [],
+                                  : kind === "personal"
+                                    ? recordPersonalUse(
+                                        data,
                                         i.id,
-                                        +form.quantity,
-                                      ),
-                                      items: data.items.map((x) =>
-                                        x.id === i.id
-                                          ? { ...x, stock: +form.quantity }
-                                          : x,
-                                      ),
-                                      movements: [
-                                        ...data.movements,
-                                        {
-                                          id: crypto.randomUUID(),
-                                          date: new Date().toISOString(),
-                                          name: i.name,
-                                          kind: "Count",
-                                          quantity: +form.quantity,
-                                          unit: i.unit,
-                                        },
-                                      ],
-                                    },
+                                        form.quantity,
+                                      )
+                                    : {
+                                        ...data,
+                                        inventoryLots: reconcileLots(
+                                          data.inventoryLots || [],
+                                          i.id,
+                                          +form.quantity,
+                                        ),
+                                        items: data.items.map((x) =>
+                                          x.id === i.id
+                                            ? { ...x, stock: +form.quantity }
+                                            : x,
+                                        ),
+                                        movements: [
+                                          ...data.movements,
+                                          {
+                                            id: crypto.randomUUID(),
+                                            date: new Date().toISOString(),
+                                            name: i.name,
+                                            kind: "Count",
+                                            quantity: +form.quantity,
+                                            unit: i.unit,
+                                          },
+                                        ],
+                                      },
                               )
                             }
                           />
@@ -797,6 +807,7 @@ function StockForm({ item, apply, onDone }) {
       >
         <option value="receive">Receive packages</option>
         <option value="count">Set on-hand quantity</option>
+        <option value="personal">Record personal use</option>
       </select>
       <input
         aria-label={`Stock quantity for ${item.name}`}
@@ -805,12 +816,19 @@ function StockForm({ item, apply, onDone }) {
         step="any"
         value={n}
         onChange={(e) => setN(e.target.value)}
+        max={kind === "personal" ? item.stock || 0 : undefined}
         placeholder={kind === "receive" ? "Packages" : item.unit}
         required
       />
       <button className="secondary" type="submit">
-        Save
+        {kind === "personal" ? "Record use" : "Save"}
       </button>
+      {kind === "personal" && (
+        <small className="hint">
+          Reduces on-hand stock and records a personal-use movement. It is not a
+          sale or waste entry.
+        </small>
+      )}
       {kind === "receive" && (
         <>
           <button

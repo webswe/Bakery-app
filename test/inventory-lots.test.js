@@ -5,6 +5,7 @@ import {
   lotAlerts,
   reconcileLots,
   receiveInventory,
+  recordPersonalUse,
 } from "../src/inventoryLots.js";
 
 const fixture = () => ({
@@ -75,4 +76,19 @@ test("lot consumption uses earliest expiry first without mutating input", () => 
     counted.reduce((sum, lot) => sum + lot.remaining, 0),
     2,
   );
+});
+
+test("personal use reduces stock and records a distinct movement", () => {
+  const data = {
+    items: [{ id: "flour", name: "Flour", stock: 5, unit: "kg" }],
+    inventoryLots: [
+      { id: "lot", itemId: "flour", remaining: 5, receivedAt: "2026-11-01" },
+    ],
+    movements: [],
+  };
+  const next = recordPersonalUse(data, "flour", 2);
+  assert.equal(next.items[0].stock, 3);
+  assert.equal(next.inventoryLots[0].remaining, 3);
+  assert.equal(next.movements[0].kind, "Personal use");
+  assert.throws(() => recordPersonalUse(data, "flour", 6), /Only 5/);
 });

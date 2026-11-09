@@ -108,6 +108,20 @@ const kitchenPrimaryPages = [
   "Product stock",
   "Recipes",
 ];
+const sectionPrimaryPages = {
+  Stock: stockPrimaryPages,
+  Kitchen: kitchenPrimaryPages,
+  Sales: ["Orders", "Receivables", "Quotes", "Customers"],
+  Reports: ["Daily snapshot", "Owner forecast", "Tax report", "Waste analysis"],
+  Settings: [
+    "Tutorial",
+    "User guide",
+    "Help & support",
+    "Business profile",
+    "App customization",
+    "Backups",
+  ],
+};
 const lockKey = "bakery-ledger-lock-v1";
 const tutorialKey = "bakery-ledger-tutorial-v1";
 const modalDraftKey = (type, value) =>
@@ -260,12 +274,7 @@ function App() {
     [month, setMonth] = useState(today().slice(0, 7));
   const section = sectionFor(page),
     info = pages[page];
-  const primaryPages =
-    section.name === "Stock"
-      ? stockPrimaryPages
-      : section.name === "Kitchen"
-        ? kitchenPrimaryPages
-        : null;
+  const primaryPages = sectionPrimaryPages[section.name] || null;
   const sectionTabs = primaryPages
     ? section.pages.filter((name) => primaryPages.includes(name))
     : section.pages;

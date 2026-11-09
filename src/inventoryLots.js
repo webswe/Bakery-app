@@ -139,6 +139,34 @@ export function reconcileLots(lots, itemId, stock) {
   return consumeLots(lots, itemId, tracked - stock).lots;
 }
 
+export function recordPersonalUse(data, itemId, quantity) {
+  const item = data.items.find((entry) => entry.id === itemId);
+  const amount = number(quantity, "personal-use quantity");
+  if (!item) throw Error("Inventory item is missing.");
+  if (amount > (item.stock || 0) + 1e-9)
+    throw Error(`Only ${item.stock || 0} ${item.unit} is available.`);
+  return {
+    ...data,
+    inventoryLots: consumeLots(data.inventoryLots || [], itemId, amount).lots,
+    items: data.items.map((entry) =>
+      entry.id === itemId ? { ...entry, stock: entry.stock - amount } : entry,
+    ),
+    movements: [
+      ...(data.movements || []),
+      {
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        name: item.name,
+        kind: "Personal use",
+        quantity: amount,
+        delta: -amount,
+        unit: item.unit,
+        reason: "Personal use",
+      },
+    ],
+  };
+}
+
 export function lotAlerts(data, day) {
   return (data.inventoryLots || [])
     .filter((lot) => lot.remaining > 0 && lot.expiryDate)
