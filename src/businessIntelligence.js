@@ -25,7 +25,11 @@ export function financialCenter(data, month) {
     monthPayments.reduce(
       (sum, row) =>
         sum +
-        (row.kind === "refund" ? -number(row.amount) : number(row.amount)),
+        (row.kind === "adjustment"
+          ? 0
+          : row.kind === "refund"
+            ? -number(row.amount)
+            : number(row.amount)),
       0,
     ) +
     summary.sales

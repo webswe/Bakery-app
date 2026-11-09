@@ -63,6 +63,20 @@ export default function Dashboard({ data, month, save, navigate }) {
   const totalStock = Math.max(1, data.items.length);
   const day = localDay();
   const tasks = taskSummary(data, day);
+  const receivables = data.sales.filter((sale) =>
+    ["unpaid", "partial"].includes(sale.paymentStatus),
+  );
+  const receivableDue = receivables.reduce((sum, sale) => {
+    const paid = (data.payments || [])
+      .filter((payment) => payment.saleId === sale.id)
+      .reduce(
+        (total, payment) =>
+          total +
+          (payment.kind === "refund" ? -payment.amount : payment.amount),
+        0,
+      );
+    return sum + Math.max(0, sale.total - paid);
+  }, 0);
   const goals = normalizeOwnerGoals(data.settings?.ownerGoals);
   const startOfWeek = new Date(`${day}T12:00:00`);
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
@@ -506,6 +520,12 @@ export default function Dashboard({ data, month, save, navigate }) {
                 alerts.length,
                 "Stock alerts",
                 "Low stock and expiry",
+              ],
+              [
+                "Receivables",
+                money(receivableDue),
+                "Payment due",
+                `${receivables.length} unpaid direct sale${receivables.length === 1 ? "" : "s"}`,
               ],
             ].map(([target, value, label, hint]) => (
               <button key={target} onClick={() => navigate(target)}>

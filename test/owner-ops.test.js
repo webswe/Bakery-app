@@ -108,7 +108,7 @@ test("direct receivables accept partial and final payments", () => {
         amount: 1,
         date: "2026-11-09",
       }),
-    /outstanding balance/,
+    /remaining balance/,
   );
 });
 

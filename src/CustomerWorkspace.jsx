@@ -128,6 +128,24 @@ export default function CustomerWorkspace({ data, save, navigate }) {
           <div className="customer-list">
             {customers.map((customer) => {
               const activity = customerActivity(data, customer);
+              const receivables = data.sales.filter(
+                (sale) =>
+                  sale.customerId === customer.id &&
+                  ["unpaid", "partial"].includes(sale.paymentStatus),
+              );
+              const balanceDue = receivables.reduce((sum, sale) => {
+                const paid = (data.payments || [])
+                  .filter((payment) => payment.saleId === sale.id)
+                  .reduce(
+                    (total, payment) =>
+                      total +
+                      (payment.kind === "refund"
+                        ? -payment.amount
+                        : payment.amount),
+                    0,
+                  );
+                return sum + Math.max(0, sale.total - paid);
+              }, 0);
               const lastOrder = [...activity.orders].sort((a, b) =>
                 (b.pickupDate || "").localeCompare(a.pickupDate || ""),
               )[0];
@@ -148,6 +166,12 @@ export default function CustomerWorkspace({ data, save, navigate }) {
                     <dd>{money(activity.orderTotal)}</dd>
                     <dt>Last activity</dt>
                     <dd>{activity.lastDate || "—"}</dd>
+                    {!!balanceDue && (
+                      <>
+                        <dt>Direct-sale balance</dt>
+                        <dd className="negative">{money(balanceDue)}</dd>
+                      </>
+                    )}
                   </dl>
                   {customer.allergies && (
                     <p className="customer-alert">

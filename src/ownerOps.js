@@ -61,20 +61,24 @@ export function directSalePaid(data, sale) {
 
 export function recordDirectSalePayment(data, saleId, input) {
   const sale = data.sales.find((entry) => entry.id === saleId);
-  if (!sale || !["unpaid", "partial"].includes(sale.paymentStatus))
-    throw Error("This sale has no outstanding balance.");
-  const amount = number(input.amount, "payment amount");
+  if (!sale) throw Error("This sale is unavailable.");
+  const amount = number(input.amount, "entry amount");
+  const kind = ["payment", "adjustment", "refund"].includes(input.kind)
+    ? input.kind
+    : "payment";
   const current = directSalePaid(data, sale);
-  if (current + amount > sale.total + 0.005)
-    throw Error("Payment exceeds the remaining balance.");
-  const nextPaid = current + amount;
+  if (kind === "refund" && amount > current + 0.005)
+    throw Error("Refund exceeds the amount collected.");
+  if (kind !== "refund" && current + amount > sale.total + 0.005)
+    throw Error("Entry exceeds the remaining balance.");
+  const nextPaid = current + (kind === "refund" ? -amount : amount);
   const complete = nextPaid >= sale.total - 0.005;
   const payment = {
     id: crypto.randomUUID(),
     saleId,
     date: validDate(input.date),
     amount,
-    kind: "payment",
+    kind,
     method: input.method || "Cash",
     note: input.note?.trim() || "",
   };
@@ -86,8 +90,17 @@ export function recordDirectSalePayment(data, saleId, input) {
         ? {
             ...entry,
             amountPaid: nextPaid,
-            paymentStatus: complete ? "paid" : "partial",
-            payment: complete ? input.method || "Payment recorded" : "Partial",
+            paymentStatus: complete
+              ? "paid"
+              : nextPaid > 0
+                ? "partial"
+                : "unpaid",
+            payment:
+              kind === "adjustment"
+                ? "Balance adjustment"
+                : complete
+                  ? input.method || "Payment recorded"
+                  : "Partial",
             ...(complete ? { paidAt: new Date().toISOString() } : {}),
           }
         : entry,

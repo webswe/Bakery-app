@@ -84,6 +84,7 @@ function Receivables({ data, act }) {
   );
   const [saleId, setSaleId] = useState(rows[0]?.id || "");
   const [amount, setAmount] = useState("");
+  const [kind, setKind] = useState("payment");
   const [method, setMethod] = useState("Cash");
   const [date, setDate] = useState(localDate());
   const [note, setNote] = useState("");
@@ -91,6 +92,9 @@ function Receivables({ data, act }) {
     if (!rows.some((sale) => sale.id === saleId)) setSaleId(rows[0]?.id || "");
   }, [rows, saleId]);
   const selected = data.sales.find((sale) => sale.id === saleId);
+  const selectedCustomer = data.customers?.find(
+    (customer) => customer.id === selected?.customerId,
+  );
   const paid = selected ? directSalePaid(data, selected) : 0;
   const balance = selected ? Math.max(0, selected.total - paid) : 0;
   const today = localDate();
@@ -130,6 +134,7 @@ function Receivables({ data, act }) {
                   act(() =>
                     recordDirectSalePayment(data, saleId, {
                       amount,
+                      kind,
                       method,
                       date,
                       note,
@@ -160,6 +165,17 @@ function Receivables({ data, act }) {
                 </select>
               </label>
               <div className="form-row">
+                <label>
+                  Entry type
+                  <select
+                    value={kind}
+                    onChange={(event) => setKind(event.target.value)}
+                  >
+                    <option value="payment">Payment received</option>
+                    <option value="adjustment">Balance adjustment</option>
+                    {paid > 0 && <option value="refund">Refund</option>}
+                  </select>
+                </label>
                 <label>
                   Amount
                   <input
@@ -195,15 +211,17 @@ function Receivables({ data, act }) {
                 />
               </label>
               <label>
-                Note
+                Note or reference
                 <input
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
-                  placeholder="Optional reference or reminder"
+                  placeholder="Bank reference, check number, or adjustment reason"
                 />
               </label>
               <div className="planning-actions">
-                <button className="primary">Record payment</button>
+                <button className="primary">
+                  Record {kind === "adjustment" ? "adjustment" : kind}
+                </button>
                 <button
                   type="button"
                   className="secondary"
@@ -220,24 +238,76 @@ function Receivables({ data, act }) {
         <section className="panel planning-form">
           <h2>Selected balance</h2>
           {selected ? (
-            <dl>
-              <dt>Customer</dt>
-              <dd>{selected.customer || "Walk-in / not saved"}</dd>
-              <dt>Sale total</dt>
-              <dd>{money(selected.total)}</dd>
-              <dt>Collected</dt>
-              <dd>{money(paid)}</dd>
-              <dt>Still due</dt>
-              <dd>{money(balance)}</dd>
-              <dt>Due date</dt>
-              <dd>{selected.dueDate || "Not set"}</dd>
-            </dl>
+            <>
+              <dl>
+                <dt>Customer</dt>
+                <dd>{selected.customer || "Walk-in / not saved"}</dd>
+                <dt>Sale total</dt>
+                <dd>{money(selected.total)}</dd>
+                <dt>Collected</dt>
+                <dd>{money(paid)}</dd>
+                <dt>Still due</dt>
+                <dd>{money(balance)}</dd>
+                <dt>Due date</dt>
+                <dd>{selected.dueDate || "Not set"}</dd>
+                <dt>Order type</dt>
+                <dd>{selected.orderType || "Direct sale"}</dd>
+              </dl>
+              <div className="planning-actions">
+                <button
+                  className="secondary"
+                  onClick={() => {
+                    const subject = encodeURIComponent(
+                      `Payment reminder from your bakery`,
+                    );
+                    const body = encodeURIComponent(
+                      `Hello ${selected.customer || ""},\n\nThis is a friendly reminder that ${money(balance)} remains due for ${selected.name}.${selected.dueDate ? ` The due date is ${selected.dueDate}.` : ""}\n\nThank you.`,
+                    );
+                    window.location.href = `mailto:${encodeURIComponent(selectedCustomer?.email || "")}?subject=${subject}&body=${body}`;
+                  }}
+                >
+                  Create reminder
+                </button>
+                <PrintAction>Print sale statement</PrintAction>
+              </div>
+            </>
           ) : (
             <p>Select an unpaid sale to review it.</p>
           )}
         </section>
       </div>
       <section className="panel table-scroll">
+        <div className="panel-heading">
+          <div>
+            <h2>Open direct-sale balances</h2>
+            <p>Export for bookkeeping or follow-up.</p>
+          </div>
+          <button
+            className="secondary"
+            onClick={() =>
+              download("bakery-ledger-receivables.csv", [
+                [
+                  "Sale date",
+                  "Dessert",
+                  "Customer",
+                  "Due date",
+                  "Collected",
+                  "Balance",
+                ],
+                ...rows.map((sale) => [
+                  sale.date,
+                  sale.name,
+                  sale.customer || "",
+                  sale.dueDate || "",
+                  directSalePaid(data, sale),
+                  sale.total - directSalePaid(data, sale),
+                ]),
+              ])
+            }
+          >
+            Export CSV
+          </button>
+        </div>
         <table>
           <thead>
             <tr>
