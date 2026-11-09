@@ -7048,6 +7048,408 @@ td {
 .workspace-tabs button.active {
   color: #1f5549;
 }
+
+/* ===========================================================================
+   Signature finish: shared foundations for a composed, premium workspace.
+   ========================================================================== */
+:root {
+  --premium-ink: #172b2a;
+  --premium-muted: #59706d;
+  --premium-line: color-mix(in srgb, var(--app-sidebar) 15%, #dce5e2);
+  --premium-gold: #c89f5b;
+  --premium-shadow: 0 16px 42px rgba(19, 42, 43, 0.075);
+  --premium-shadow-subtle: 0 5px 18px rgba(19, 42, 43, 0.045);
+}
+
+body {
+  color: var(--premium-ink);
+  background:
+    radial-gradient(
+      circle at 88% -10%,
+      color-mix(in srgb, var(--app-soft) 76%, transparent),
+      transparent 30%
+    ),
+    linear-gradient(135deg, #f8faf8, var(--app-canvas));
+}
+
+aside {
+  border-right: 0;
+  color: #e9f0ed;
+  background:
+    radial-gradient(
+      circle at 20% 0%,
+      color-mix(in srgb, var(--app-accent) 52%, transparent),
+      transparent 33%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--app-sidebar) 92%, #0d171a),
+      var(--app-sidebar)
+    );
+  box-shadow: 12px 0 34px rgba(14, 30, 32, 0.1);
+}
+
+.brand {
+  color: #fff;
+  font-family: "Libre Caslon Text", Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.7px;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 44px;
+  border: 1px solid color-mix(in srgb, var(--premium-gold) 68%, transparent);
+  border-radius: 13px;
+  background: linear-gradient(
+    145deg,
+    var(--app-accent),
+    color-mix(in srgb, var(--app-sidebar) 48%, var(--app-accent))
+  );
+  box-shadow: 0 9px 20px rgba(0, 0, 0, 0.2);
+}
+
+.brand small {
+  color: color-mix(in srgb, #fff 68%, var(--app-soft));
+  font-family: "DM Sans", sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.workspace {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.075);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+}
+
+.workspace small,
+.workspace-local small,
+.workspace-guide small {
+  color: rgba(232, 242, 238, 0.62);
+}
+
+.avatar,
+.header-avatar {
+  color: #fff;
+  background: color-mix(in srgb, var(--app-accent) 72%, #fff);
+}
+
+.dot,
+.status-dot {
+  background: #79d7aa;
+  box-shadow: 0 0 0 3px rgba(121, 215, 170, 0.12);
+}
+
+.nav-label {
+  color: rgba(232, 242, 238, 0.48);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+nav button,
+nav button:hover:not(.active) {
+  color: rgba(241, 247, 244, 0.76);
+  background: transparent;
+}
+
+nav button {
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+nav button:hover:not(.active) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.075);
+  transform: translateX(2px);
+}
+
+nav button.active {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.11);
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--app-accent) 75%, #fff),
+    color-mix(in srgb, var(--app-accent) 50%, transparent)
+  );
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.13);
+}
+
+nav button::before {
+  left: 0;
+  width: 3px;
+  height: 22px;
+  background: var(--premium-gold);
+}
+
+.workspace-context {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.11);
+}
+
+.workspace-context span,
+.workspace-guide,
+.workspace-local,
+.workspace-local button {
+  color: rgba(241, 247, 244, 0.75);
+}
+
+.workspace-context b {
+  color: #fff;
+}
+
+.workspace-guide {
+  border-top-color: rgba(255, 255, 255, 0.15);
+}
+
+main {
+  background: transparent;
+}
+
+header {
+  color: var(--premium-muted);
+  border-bottom-color: var(--premium-line);
+  background: color-mix(in srgb, #fff 84%, var(--app-canvas));
+  box-shadow: 0 5px 22px rgba(27, 48, 51, 0.045);
+}
+
+header b {
+  color: var(--premium-ink);
+  font-weight: 700;
+}
+
+.content {
+  max-width: 1560px;
+}
+
+.page-title {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--app-accent) 16%, #e2e9e5);
+  border-radius: 18px;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--app-soft) 92%, transparent),
+      transparent 34%
+    ),
+    linear-gradient(135deg, #fff, color-mix(in srgb, #fff 90%, var(--app-soft)));
+  box-shadow: var(--premium-shadow);
+}
+
+.page-title::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 72px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--app-accent), var(--premium-gold));
+  content: "";
+}
+
+.page-title h1 {
+  color: var(--premium-ink);
+  font-size: clamp(27px, 2.6vw, 35px);
+  letter-spacing: -1.1px;
+}
+
+.page-title p,
+.panel-heading p,
+p {
+  color: var(--premium-muted);
+}
+
+.eyebrow {
+  color: var(--app-accent);
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.primary {
+  min-height: 40px;
+  border: 1px solid color-mix(in srgb, var(--app-accent) 86%, #000);
+  border-radius: 9px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--app-accent) 90%, #fff),
+    var(--app-accent)
+  );
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--app-accent) 22%, transparent);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.secondary,
+.danger-button {
+  min-height: 40px;
+  border-radius: 9px;
+  font-weight: 650;
+}
+
+.secondary {
+  border-color: var(--premium-line);
+  color: var(--premium-ink);
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.panel,
+.stat {
+  border-color: color-mix(in srgb, var(--app-sidebar) 11%, #e2e9e5);
+  border-radius: 15px;
+  box-shadow: var(--premium-shadow-subtle);
+}
+
+.panel {
+  background: color-mix(in srgb, #fff 97%, var(--app-soft));
+}
+
+.panel-heading {
+  padding: 20px 22px;
+}
+
+.panel-heading h2,
+h2 {
+  color: var(--premium-ink);
+  font-weight: 700;
+}
+
+.stat {
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+  background: linear-gradient(
+    145deg,
+    #fff,
+    color-mix(in srgb, #fff 89%, var(--app-soft))
+  );
+}
+
+.stat::after {
+  position: absolute;
+  right: -22px;
+  bottom: -28px;
+  width: 88px;
+  height: 88px;
+  border: 15px solid color-mix(in srgb, var(--app-accent) 12%, transparent);
+  border-radius: 50%;
+  content: "";
+}
+
+.stat > div,
+.stat small {
+  color: var(--premium-muted);
+}
+
+.stat strong {
+  color: var(--premium-ink);
+  font-size: 30px;
+  font-weight: 650;
+}
+
+.stat.green {
+  border-color: color-mix(in srgb, var(--app-accent) 25%, #dce9df);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--app-soft) 85%, #fff),
+    #fff
+  );
+}
+
+.workspace-tabs {
+  gap: 7px;
+  padding: 5px 0 11px;
+  border-bottom-color: var(--premium-line);
+}
+
+.workspace-tabs button {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--premium-muted);
+  font-weight: 600;
+}
+
+.workspace-tabs button:hover:not(.active) {
+  color: var(--premium-ink);
+  background: color-mix(in srgb, var(--app-soft) 58%, #fff);
+  transform: none;
+}
+
+.workspace-tabs button.active {
+  border-color: color-mix(in srgb, var(--app-accent) 20%, #dce8e2);
+  color: var(--app-accent);
+  background: color-mix(in srgb, var(--app-soft) 72%, #fff);
+  box-shadow: inset 0 -2px var(--app-accent);
+}
+
+input,
+select,
+textarea,
+.section-top input,
+.modal input,
+.modal select,
+.modal textarea {
+  border-color: color-mix(in srgb, var(--app-sidebar) 16%, #d9e4e0);
+  border-radius: 8px;
+  color: var(--premium-ink);
+  background: color-mix(in srgb, #fff 96%, var(--app-soft));
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--premium-muted) 66%, #fff);
+}
+
+th {
+  color: var(--premium-muted);
+  background: color-mix(in srgb, var(--app-soft) 42%, #fff);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+}
+
+td {
+  color: #2d4643;
+}
+
+tbody tr:hover {
+  background: color-mix(in srgb, var(--app-soft) 50%, #fff);
+}
+
+.workflow-handoff {
+  border-color: color-mix(in srgb, var(--app-accent) 17%, #dce9e4);
+  border-radius: 12px;
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--app-soft) 72%, #fff),
+    #fff
+  );
+  color: var(--premium-muted);
+}
+
+.modal {
+  border: 1px solid color-mix(in srgb, var(--app-accent) 18%, #dbe7e2);
+  border-radius: 18px;
+  box-shadow: 0 28px 80px rgba(18, 38, 40, 0.24);
+}
+
+@media (max-width: 850px) {
+  aside {
+    box-shadow: 0 12px 30px rgba(14, 30, 32, 0.18);
+  }
+  .page-title,
+  .panel,
+  .stat {
+    border-radius: 13px;
+  }
+  .page-title {
+    margin-bottom: 20px;
+  }
+}
 .page-actions {
   align-self: center;
 }
