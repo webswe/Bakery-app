@@ -73,6 +73,8 @@ import {
   Settings,
   Star,
   X,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import {
   units,
@@ -124,6 +126,7 @@ const sectionPrimaryPages = {
 };
 const lockKey = "bakery-ledger-lock-v1";
 const tutorialKey = "bakery-ledger-tutorial-v1";
+const sidebarCollapsedKey = "bakery-ledger-sidebar-collapsed-v1";
 const modalDraftKey = (type, value) =>
   `bakery-ledger-${type}-draft-${value?.id || "new"}-v1`;
 const nonTextInputTypes = new Set([
@@ -258,6 +261,9 @@ function App() {
     () => !localStorage.getItem(tutorialKey),
   );
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => localStorage.getItem(sidebarCollapsedKey) === "true",
+  );
   const [savedAt, setSavedAt] = useState(null);
   const [undo, setUndo] = useState(null);
   const [recentPages, setRecentPages] = useState(() =>
@@ -314,6 +320,9 @@ function App() {
       ?.scrollIntoView({ block: "nearest", inline: "center" });
     window.scrollTo(0, 0);
   }, [page]);
+  useEffect(() => {
+    localStorage.setItem(sidebarCollapsedKey, String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
   useEffect(() => {
     setRecentPages((current) => rememberPage(localStorage, current, page));
   }, [page]);
@@ -758,27 +767,48 @@ function App() {
   if (locked && lockConfig)
     return <LockScreen config={lockConfig} onUnlock={() => setLocked(false)} />;
   return (
-    <div className="app" onPointerDownCapture={recoverTextFieldFocus}>
+    <div
+      className={sidebarCollapsed ? "app sidebar-collapsed" : "app"}
+      onPointerDownCapture={recoverTextFieldFocus}
+    >
       <a className="skip-link" href="#workspace-title">
         Skip to workspace content
       </a>
       <aside>
-        <a
-          className="brand"
-          href="#page=Overview"
-          onClick={(e) => {
-            e.preventDefault();
-            navigate("Overview");
-          }}
-        >
-          <span className="brand-icon">
-            <ChefHat />
-          </span>
-          <span>
-            {bakeryName}
-            <small>A little clarity. A lot of growth.</small>
-          </span>
-        </a>
+        <div className="sidebar-brand-row">
+          <a
+            className="brand"
+            href="#page=Overview"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("Overview");
+            }}
+          >
+            <span className="brand-icon">
+              <ChefHat />
+            </span>
+            <span>
+              {bakeryName}
+              <small>A little clarity. A lot of growth.</small>
+            </span>
+          </a>
+          <button
+            type="button"
+            className="sidebar-toggle"
+            aria-label={
+              sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            }
+            aria-pressed={sidebarCollapsed}
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            onClick={() => setSidebarCollapsed((current) => !current)}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen size={17} />
+            ) : (
+              <PanelLeftClose size={17} />
+            )}
+          </button>
+        </div>
         <div className="sidebar-summary" aria-live="polite">
           <span className="status-dot" />
           <span>Working in</span>
@@ -800,6 +830,7 @@ function App() {
                 key={group.name}
                 className={section.name === group.name ? "active" : ""}
                 aria-current={section.name === group.name ? "true" : undefined}
+                title={group.name}
                 onClick={() => navigate(group.pages[0])}
               >
                 <Icon size={19} />

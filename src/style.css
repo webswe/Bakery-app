@@ -7569,3 +7569,95 @@ tbody tr:hover {
     display: none;
   }
 }
+
+/* Collapsing the desktop rail leaves room for detailed planning work. */
+.sidebar-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-brand-row .brand {
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar-toggle {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  color: rgba(241, 247, 244, 0.78);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar-toggle:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  filter: none;
+}
+
+@media (min-width: 851px) {
+  aside,
+  main {
+    transition:
+      width 220ms var(--ease-out),
+      margin-left 220ms var(--ease-out);
+  }
+
+  .app.sidebar-collapsed aside {
+    width: 80px;
+    padding: 28px 14px 20px;
+  }
+
+  .app.sidebar-collapsed main {
+    margin-left: 80px;
+  }
+
+  .app.sidebar-collapsed .sidebar-brand-row {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .app.sidebar-collapsed .sidebar-brand-row .brand {
+    flex: 0 0 auto;
+  }
+
+  .app.sidebar-collapsed .brand > span:last-child,
+  .app.sidebar-collapsed .sidebar-summary,
+  .app.sidebar-collapsed .nav-label,
+  .app.sidebar-collapsed .sidebar-footer {
+    display: none;
+  }
+
+  .app.sidebar-collapsed nav {
+    gap: 8px;
+    margin-top: 32px;
+  }
+
+  .app.sidebar-collapsed nav button {
+    width: 52px;
+    min-height: 46px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+    font-size: 0;
+  }
+
+  .app.sidebar-collapsed nav button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .app.sidebar-collapsed nav button::before {
+    left: -1px;
+  }
+}
+
+@media (max-width: 850px) {
+  .sidebar-toggle {
+    display: none;
+  }
+}
