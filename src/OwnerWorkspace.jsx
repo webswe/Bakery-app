@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   calendarEntries,
+  directSalePaid,
   orderPaid,
   ownerForecast,
+  recordDirectSalePayment,
   recordPayment,
   taxReport,
   wasteAnalysis,
@@ -57,6 +59,8 @@ export default function OwnerWorkspace({
         <SupplierPrices data={data} />
       ) : page === "Payments" ? (
         <Payments data={data} act={act} />
+      ) : page === "Receivables" ? (
+        <Receivables data={data} act={act} />
       ) : page === "Tax report" ? (
         <TaxReport data={data} />
       ) : page === "Waste analysis" ? (
@@ -71,6 +75,204 @@ export default function OwnerWorkspace({
         />
       )}
     </div>
+  );
+}
+
+function Receivables({ data, act }) {
+  const rows = data.sales.filter((sale) =>
+    ["unpaid", "partial"].includes(sale.paymentStatus),
+  );
+  const [saleId, setSaleId] = useState(rows[0]?.id || "");
+  const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState("Cash");
+  const [date, setDate] = useState(localDate());
+  const [note, setNote] = useState("");
+  useEffect(() => {
+    if (!rows.some((sale) => sale.id === saleId)) setSaleId(rows[0]?.id || "");
+  }, [rows, saleId]);
+  const selected = data.sales.find((sale) => sale.id === saleId);
+  const paid = selected ? directSalePaid(data, selected) : 0;
+  const balance = selected ? Math.max(0, selected.total - paid) : 0;
+  const today = localDate();
+  const totalDue = rows.reduce(
+    (sum, sale) => sum + Math.max(0, sale.total - directSalePaid(data, sale)),
+    0,
+  );
+  return (
+    <>
+      <div className="stats planning-stats">
+        <div className="stat">
+          <div>Open receivables</div>
+          <strong>{rows.length}</strong>
+          <small>Unpaid and partially paid sales</small>
+        </div>
+        <div className="stat green">
+          <div>Total due</div>
+          <strong>{money(totalDue)}</strong>
+          <small>Across direct sales</small>
+        </div>
+        <div className="stat">
+          <div>Overdue</div>
+          <strong>
+            {rows.filter((sale) => sale.dueDate && sale.dueDate < today).length}
+          </strong>
+          <small>Past the saved due date</small>
+        </div>
+      </div>
+      <div className="planning-layout">
+        <section className="panel planning-form">
+          <h2>Record a payment</h2>
+          {rows.length ? (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (
+                  act(() =>
+                    recordDirectSalePayment(data, saleId, {
+                      amount,
+                      method,
+                      date,
+                      note,
+                    }),
+                  )
+                ) {
+                  setAmount("");
+                  setNote("");
+                }
+              }}
+            >
+              <label>
+                Sale
+                <select
+                  value={saleId}
+                  onChange={(event) => {
+                    setSaleId(event.target.value);
+                    setAmount("");
+                  }}
+                  required
+                >
+                  {rows.map((sale) => (
+                    <option key={sale.id} value={sale.id}>
+                      {sale.customer || sale.name} ·{" "}
+                      {money(sale.total - directSalePaid(data, sale))} due
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="form-row">
+                <label>
+                  Amount
+                  <input
+                    type="number"
+                    min="0.01"
+                    max={balance}
+                    step="0.01"
+                    value={amount}
+                    onChange={(event) => setAmount(event.target.value)}
+                    required
+                  />
+                </label>
+                <label>
+                  Method
+                  <select
+                    value={method}
+                    onChange={(event) => setMethod(event.target.value)}
+                  >
+                    <option>Cash</option>
+                    <option>Card</option>
+                    <option>Bank transfer</option>
+                    <option>Other</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                Payment date
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(event) => setDate(event.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Note
+                <input
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder="Optional reference or reminder"
+                />
+              </label>
+              <div className="planning-actions">
+                <button className="primary">Record payment</button>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setAmount(String(balance))}
+                >
+                  Use full balance
+                </button>
+              </div>
+            </form>
+          ) : (
+            <p className="empty-note">No unpaid direct sales.</p>
+          )}
+        </section>
+        <section className="panel planning-form">
+          <h2>Selected balance</h2>
+          {selected ? (
+            <dl>
+              <dt>Customer</dt>
+              <dd>{selected.customer || "Walk-in / not saved"}</dd>
+              <dt>Sale total</dt>
+              <dd>{money(selected.total)}</dd>
+              <dt>Collected</dt>
+              <dd>{money(paid)}</dd>
+              <dt>Still due</dt>
+              <dd>{money(balance)}</dd>
+              <dt>Due date</dt>
+              <dd>{selected.dueDate || "Not set"}</dd>
+            </dl>
+          ) : (
+            <p>Select an unpaid sale to review it.</p>
+          )}
+        </section>
+      </div>
+      <section className="panel table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>SALE</th>
+              <th>CUSTOMER</th>
+              <th>DUE DATE</th>
+              <th>COLLECTED</th>
+              <th>BALANCE</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((sale) => {
+              const collected = directSalePaid(data, sale);
+              const overdue = sale.dueDate && sale.dueDate < today;
+              return (
+                <tr key={sale.id}>
+                  <td>
+                    {sale.date} · {sale.name}
+                  </td>
+                  <td>{sale.customer || "—"}</td>
+                  <td className={overdue ? "negative" : ""}>
+                    {sale.dueDate || "Not set"}
+                    {overdue && <small>Overdue</small>}
+                  </td>
+                  <td>{money(collected)}</td>
+                  <td>
+                    <b>{money(sale.total - collected)}</b>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </section>
+    </>
   );
 }
 

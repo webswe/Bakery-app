@@ -297,6 +297,12 @@ export function SaleFields({ data }) {
               <option>Other</option>
             </select>
           </label>
+          {paymentStatus === "unpaid" && (
+            <label>
+              Due date
+              <input name="dueDate" type="date" min={localDay()} />
+            </label>
+          )}
         </div>
         <p className="hint">
           {paymentStatus === "unpaid"

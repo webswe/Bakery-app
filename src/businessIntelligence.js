@@ -29,7 +29,13 @@ export function financialCenter(data, month) {
       0,
     ) +
     summary.sales
-      .filter((sale) => !sale.orderId && sale.paymentStatus !== "unpaid")
+      .filter(
+        (sale) =>
+          !sale.orderId &&
+          sale.paymentStatus !== "unpaid" &&
+          sale.paymentStatus !== "partial" &&
+          !(data.payments || []).some((payment) => payment.saleId === sale.id),
+      )
       .reduce((sum, sale) => sum + number(sale.total), 0);
   const wasteCost = (data.waste || [])
     .filter((row) => row.date?.startsWith(month))
@@ -70,8 +76,16 @@ export function financialCenter(data, month) {
           return sum + Math.max(0, number(order.total) - paid);
         }, 0) +
       summary.sales
-        .filter((sale) => !sale.orderId && sale.paymentStatus === "unpaid")
-        .reduce((sum, sale) => sum + number(sale.total), 0),
+        .filter(
+          (sale) =>
+            !sale.orderId && ["unpaid", "partial"].includes(sale.paymentStatus),
+        )
+        .reduce((sum, sale) => {
+          const paid = (data.payments || [])
+            .filter((payment) => payment.saleId === sale.id)
+            .reduce((total, payment) => total + number(payment.amount), 0);
+          return sum + Math.max(0, number(sale.total) - paid);
+        }, 0),
     wasteCost,
     wastePercent: summary.revenue ? (wasteCost / summary.revenue) * 100 : 0,
     margin,

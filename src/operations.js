@@ -256,6 +256,7 @@ export function sell(data, f) {
         customerId: f.customerId || "",
         payment: paymentStatus === "unpaid" ? "Unpaid" : f.payment || "Cash",
         paymentStatus,
+        dueDate: paymentStatus === "unpaid" ? f.dueDate || "" : "",
         orderType:
           String(f.orderType || "Walk-in sale").trim() || "Walk-in sale",
         saleBatchId: f.saleBatchId || "",

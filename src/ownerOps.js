@@ -49,6 +49,52 @@ export function recordPayment(data, orderId, input) {
   };
 }
 
+export function directSalePaid(data, sale) {
+  return (data.payments || [])
+    .filter((payment) => payment.saleId === sale.id)
+    .reduce(
+      (sum, payment) =>
+        sum + (payment.kind === "refund" ? -payment.amount : payment.amount),
+      0,
+    );
+}
+
+export function recordDirectSalePayment(data, saleId, input) {
+  const sale = data.sales.find((entry) => entry.id === saleId);
+  if (!sale || !["unpaid", "partial"].includes(sale.paymentStatus))
+    throw Error("This sale has no outstanding balance.");
+  const amount = number(input.amount, "payment amount");
+  const current = directSalePaid(data, sale);
+  if (current + amount > sale.total + 0.005)
+    throw Error("Payment exceeds the remaining balance.");
+  const nextPaid = current + amount;
+  const complete = nextPaid >= sale.total - 0.005;
+  const payment = {
+    id: crypto.randomUUID(),
+    saleId,
+    date: validDate(input.date),
+    amount,
+    kind: "payment",
+    method: input.method || "Cash",
+    note: input.note?.trim() || "",
+  };
+  return {
+    ...data,
+    payments: [...(data.payments || []), payment],
+    sales: data.sales.map((entry) =>
+      entry.id === saleId
+        ? {
+            ...entry,
+            amountPaid: nextPaid,
+            paymentStatus: complete ? "paid" : "partial",
+            payment: complete ? input.method || "Payment recorded" : "Partial",
+            ...(complete ? { paidAt: new Date().toISOString() } : {}),
+          }
+        : entry,
+    ),
+  };
+}
+
 export function calendarEntries(data, month) {
   const prefix = month + "-";
   return [

@@ -2,7 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   calendarEntries,
+  directSalePaid,
   orderPaid,
+  recordDirectSalePayment,
   recordPayment,
   taxReport,
   wasteAnalysis,
@@ -72,6 +74,41 @@ test("payment ledger supports partial payments and refunds with order limits", (
         date: "2026-10-28",
       }),
     /exceeds/,
+  );
+});
+
+test("direct receivables accept partial and final payments", () => {
+  let data = fixture();
+  data.sales = [
+    {
+      id: "sale-due",
+      date: "2026-11-08",
+      name: "Cake",
+      total: 50,
+      paymentStatus: "unpaid",
+    },
+  ];
+  data = recordDirectSalePayment(data, "sale-due", {
+    amount: 20,
+    date: "2026-11-08",
+    method: "Cash",
+  });
+  assert.equal(directSalePaid(data, data.sales[0]), 20);
+  assert.equal(data.sales[0].paymentStatus, "partial");
+  data = recordDirectSalePayment(data, "sale-due", {
+    amount: 30,
+    date: "2026-11-09",
+    method: "Card",
+  });
+  assert.equal(directSalePaid(data, data.sales[0]), 50);
+  assert.equal(data.sales[0].paymentStatus, "paid");
+  assert.throws(
+    () =>
+      recordDirectSalePayment(data, "sale-due", {
+        amount: 1,
+        date: "2026-11-09",
+      }),
+    /outstanding balance/,
   );
 });
 

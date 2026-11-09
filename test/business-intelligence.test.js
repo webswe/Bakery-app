@@ -117,6 +117,29 @@ test("unpaid direct sales are due but do not count as cash received", () => {
   assert.equal(report.outstanding, 30);
 });
 
+test("partial direct-sale payments become cash and reduce the amount due", () => {
+  const data = base();
+  data.sales.push({
+    id: "due",
+    date: "2026-11-02",
+    total: 30,
+    net: 30,
+    cost: 12,
+    quantity: 3,
+    paymentStatus: "partial",
+  });
+  data.payments.push({
+    id: "part",
+    saleId: "due",
+    date: "2026-11-03",
+    kind: "payment",
+    amount: 10,
+  });
+  const report = financialCenter(data, "2026-11");
+  assert.equal(report.cashIn, 10);
+  assert.equal(report.outstanding, 20);
+});
+
 test("scheduler creates one linked plan for an unplanned accepted order", () => {
   const data = base();
   data.orders.push({

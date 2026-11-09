@@ -1047,6 +1047,7 @@ function App() {
               "Inventory lots",
               "Supplier prices",
               "Payments",
+              "Receivables",
               "Tax report",
               "Waste analysis",
               "Owner forecast",
@@ -1182,7 +1183,9 @@ function App() {
                                 <small>
                                   {s.quantity} sold
                                   {s.orderType ? ` · ${s.orderType}` : ""}
-                                  {s.paymentStatus === "unpaid"
+                                  {["unpaid", "partial"].includes(
+                                    s.paymentStatus,
+                                  )
                                     ? " · Payment due"
                                     : ""}
                                 </small>
@@ -1207,30 +1210,14 @@ function App() {
                             <td>{money(s.total ?? s.amount)}</td>
                             <td>
                               {s.type === "Sale" &&
-                                s.paymentStatus === "unpaid" && (
+                                ["unpaid", "partial"].includes(
+                                  s.paymentStatus,
+                                ) && (
                                   <button
                                     className="secondary"
-                                    onClick={() =>
-                                      saveWithUndo(
-                                        {
-                                          ...data,
-                                          sales: data.sales.map((sale) =>
-                                            sale.id === s.id
-                                              ? {
-                                                  ...sale,
-                                                  paymentStatus: "paid",
-                                                  payment: "Payment recorded",
-                                                  paidAt:
-                                                    new Date().toISOString(),
-                                                }
-                                              : sale,
-                                          ),
-                                        },
-                                        "Sale marked paid.",
-                                      )
-                                    }
+                                    onClick={() => navigate("Receivables")}
                                   >
-                                    Mark paid
+                                    Collect
                                   </button>
                                 )}
                               <button

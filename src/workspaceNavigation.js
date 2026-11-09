@@ -44,6 +44,7 @@ export const sections = [
     pages: [
       "Order intake",
       "Orders",
+      "Receivables",
       "Quotes",
       "Customers",
       "Packing",
@@ -163,6 +164,11 @@ export const pages = {
       "Track accepted quotes, payments and pickups. Fulfill orders from finished stock.",
     next: "Daily planner",
     nextLabel: "Plan production",
+  },
+  Receivables: {
+    label: "Receivables",
+    description:
+      "Collect partial or full payments for unpaid direct sales and review overdue balances.",
   },
   Quotes: {
     label: "Quotes",
