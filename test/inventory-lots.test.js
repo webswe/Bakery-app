@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  clearInventoryStock,
   consumeLots,
   lotAlerts,
   reconcileLots,
@@ -91,4 +92,43 @@ test("personal use reduces stock and records a distinct movement", () => {
   assert.equal(next.inventoryLots[0].remaining, 3);
   assert.equal(next.movements[0].kind, "Personal use");
   assert.throws(() => recordPersonalUse(data, "flour", 6), /Only 5/);
+});
+
+test("clearing stock retains the catalog item and historical lot details", () => {
+  const data = {
+    items: [
+      {
+        id: "milk",
+        name: "Evaporated milk",
+        stock: 1062,
+        unit: "g",
+        price: 2.5,
+      },
+    ],
+    inventoryLots: [
+      {
+        id: "lot-a",
+        itemId: "milk",
+        remaining: 354,
+        receivedAt: "2026-11-01",
+      },
+      {
+        id: "lot-b",
+        itemId: "milk",
+        remaining: 708,
+        receivedAt: "2026-11-03",
+      },
+    ],
+    movements: [],
+  };
+  const next = clearInventoryStock(data, "milk");
+  assert.equal(next.items[0].stock, 0);
+  assert.equal(next.items[0].price, 2.5);
+  assert.deepEqual(
+    next.inventoryLots.map((lot) => lot.remaining),
+    [0, 0],
+  );
+  assert.equal(next.movements[0].kind, "Stock cleared");
+  assert.equal(next.movements[0].delta, -1062);
+  assert.equal(next.movements[0].reason, "Cleared by owner");
 });

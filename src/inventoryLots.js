@@ -167,6 +167,35 @@ export function recordPersonalUse(data, itemId, quantity) {
   };
 }
 
+export function clearInventoryStock(data, itemId) {
+  const item = data.items.find((entry) => entry.id === itemId);
+  if (!item) throw Error("Inventory item is missing.");
+  const quantity = Number(item.stock) || 0;
+  if (quantity <= 0) return data;
+  return {
+    ...data,
+    inventoryLots: (data.inventoryLots || []).map((lot) =>
+      lot.itemId === itemId ? { ...lot, remaining: 0 } : lot,
+    ),
+    items: data.items.map((entry) =>
+      entry.id === itemId ? { ...entry, stock: 0 } : entry,
+    ),
+    movements: [
+      ...(data.movements || []),
+      {
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        name: item.name,
+        kind: "Stock cleared",
+        quantity,
+        delta: -quantity,
+        unit: item.unit,
+        reason: "Cleared by owner",
+      },
+    ],
+  };
+}
+
 export function lotAlerts(data, day) {
   return (data.inventoryLots || [])
     .filter((lot) => lot.remaining > 0 && lot.expiryDate)

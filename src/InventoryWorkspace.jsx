@@ -1,5 +1,6 @@
 import { directSaleTotals, purchaseTax } from "./taxation.js";
 import {
+  clearInventoryStock,
   receiveInventory,
   reconcileLots,
   recordPersonalUse,
@@ -444,6 +445,26 @@ export default function Operations({ data, save, open, tab }) {
                             onClick={() => open("item", i)}
                           >
                             Edit item
+                          </button>
+                          <button
+                            className="text-button stock-clear-button"
+                            type="button"
+                            disabled={!(i.stock > 0)}
+                            title="Set on-hand stock to zero without deleting this item"
+                            onClick={() => {
+                              const quantity = Number(
+                                Number(i.stock || 0).toFixed(3),
+                              );
+                              if (
+                                !confirm(
+                                  `Clear ${quantity} ${i.unit} of ${i.name} from current stock? This keeps the item, its price and its purchase history.`,
+                                )
+                              )
+                                return;
+                              act(() => clearInventoryStock(data, i.id));
+                            }}
+                          >
+                            Clear stock
                           </button>
                         </div>
                         {activeStockId === i.id && (
