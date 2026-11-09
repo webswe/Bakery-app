@@ -811,6 +811,10 @@ function App() {
             );
           })}
         </nav>
+        <div className="workspace-context" aria-live="polite">
+          <span>{section.name}</span>
+          <b>{info.label}</b>
+        </div>
         {appearance.showTips && (
           <div className="workspace-guide">
             <p>Quote → Order → Produce → Fulfill</p>

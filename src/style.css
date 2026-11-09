@@ -4494,6 +4494,49 @@ nav button {
   color: var(--app-accent);
   background: var(--app-soft);
 }
+.workspace-context {
+  display: grid;
+  gap: 3px;
+  margin: 16px 12px 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--app-accent);
+  border-radius: 0 7px 7px 0;
+  background: color-mix(in srgb, var(--app-soft) 60%, #fff);
+}
+.workspace-context span {
+  color: #71838c;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.workspace-context b {
+  overflow: hidden;
+  color: #365662;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workspace-tabs {
+  align-items: center;
+  padding-bottom: 3px;
+}
+.workspace-tabs::after {
+  color: #7b8e96;
+  content: "Swipe for more";
+  font-size: 10px;
+  white-space: nowrap;
+}
+.stock-form .hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: #7c6540;
+}
+@media (min-width: 901px) {
+  .workspace-tabs::after {
+    display: none;
+  }
+}
 
 .conversion-summary {
   max-width: 360px;
