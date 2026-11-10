@@ -25,6 +25,7 @@ import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
 import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
 import SupportWorkspace from "./SupportWorkspace.jsx";
+import DataCleanupWorkspace from "./DataCleanupWorkspace.jsx";
 import {
   removeRecipe,
   saveRecipePreset,
@@ -121,6 +122,7 @@ const sectionPrimaryPages = {
     "Help & support",
     "Business profile",
     "App customization",
+    "Data cleanup",
     "Backups",
   ],
 };
@@ -1036,6 +1038,8 @@ function App() {
             <BusinessProfileWorkspace data={data} save={save} />
           ) : page === "App customization" ? (
             <AppCustomizationWorkspace data={data} save={save} />
+          ) : page === "Data cleanup" ? (
+            <DataCleanupWorkspace data={data} save={save} navigate={navigate} />
           ) : page === "Goals & tasks" ? (
             <OwnerCommandCenter data={data} save={save} />
           ) : page === "App updates" ? (

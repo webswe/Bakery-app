@@ -119,6 +119,7 @@ export const sections = [
       "Business profile",
       "Bakery profiles",
       "App customization",
+      "Data cleanup",
       "Cost settings",
       "Tax settings",
       "Equipment care",
@@ -510,6 +511,11 @@ export const pages = {
     label: "App customization",
     description:
       "Personalize the workspace appearance and choose how much guidance appears while you work.",
+  },
+  "Data cleanup": {
+    label: "Data cleanup",
+    description:
+      "Choose which saved records to permanently remove after creating a backup.",
   },
   "Tax settings": {
     label: "Tax settings",

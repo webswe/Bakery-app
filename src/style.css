@@ -7661,3 +7661,144 @@ tbody tr:hover {
     display: none;
   }
 }
+
+/* Data cleanup is deliberately calm and explicit around destructive choices. */
+.data-cleanup-workspace {
+  display: grid;
+  gap: 18px;
+  max-width: 980px;
+}
+
+.cleanup-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px;
+  border-color: #ead7bf;
+  background: linear-gradient(135deg, #fffaf3, #fff);
+}
+
+.cleanup-hero h2 {
+  margin: 5px 0 4px;
+  font-size: 19px;
+}
+
+.cleanup-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: 12px;
+  color: #9a612a;
+  background: #f9ead7;
+}
+
+.cleanup-selection {
+  overflow: visible;
+}
+
+.cleanup-options {
+  display: grid;
+  gap: 10px;
+  padding: 0 22px 22px;
+}
+
+.cleanup-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 13px;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid var(--premium-line);
+  border-radius: 11px;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--ease-out),
+    background 160ms var(--ease-out);
+}
+
+.cleanup-option:hover,
+.cleanup-option.selected {
+  border-color: color-mix(in srgb, var(--app-accent) 35%, #d4e2dc);
+  background: color-mix(in srgb, var(--app-soft) 48%, #fff);
+}
+
+.cleanup-option input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--app-accent);
+}
+
+.cleanup-option span {
+  display: grid;
+  gap: 4px;
+}
+
+.cleanup-option b {
+  color: var(--premium-ink);
+  font-size: 12px;
+}
+
+.cleanup-option small {
+  color: var(--premium-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.cleanup-option em {
+  color: var(--premium-muted);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cleanup-confirmation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px auto;
+  gap: 16px;
+  align-items: end;
+  padding: 22px;
+  border-color: #ead7d2;
+  background: #fffdfc;
+}
+
+.cleanup-confirmation h2 {
+  margin-bottom: 5px;
+}
+
+.cleanup-confirmation p {
+  margin: 0;
+}
+
+.cleanup-confirmation label {
+  display: grid;
+  gap: 7px;
+  color: var(--premium-ink);
+  font-size: 11px;
+}
+
+.cleanup-confirmation .danger-button {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.cleanup-confirmation > .positive {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 700px) {
+  .cleanup-confirmation {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .cleanup-option {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .cleanup-option em {
+    grid-column: 2;
+  }
+}
