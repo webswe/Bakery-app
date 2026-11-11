@@ -1,6 +1,6 @@
 {
   "name": "bakery-ledger",
-  "version": "1.5.8-beta.4",
+  "version": "1.5.8-beta.5",
   "description": "Recipes, costing and profit tracking for small bakeries",
   "main": "desktop.cjs",
   "author": "Bakery Ledger",
