@@ -140,6 +140,44 @@ test("partial direct-sale payments become cash and reduce the amount due", () =>
   assert.equal(report.outstanding, 20);
 });
 
+test("financial center combines purchases, expenses, cash planning and collections", () => {
+  const data = base();
+  data.settings.finance = { openingCash: 100, monthlyExpenseBudget: 40 };
+  data.sales.push({
+    id: "sale",
+    date: "2026-11-02",
+    total: 60,
+    net: 60,
+    cost: 20,
+    quantity: 3,
+  });
+  data.expenses.push({ date: "2026-11-03", amount: 25, category: "Fuel" });
+  data.purchaseHistory.push({
+    date: "2026-11-04",
+    finalPackageCost: 12,
+    packages: 2,
+  });
+  data.orders.push({
+    id: "order",
+    customer: "Ari",
+    pickupDate: "2026-11-12",
+    status: "open",
+    total: 80,
+  });
+  const report = financialCenter(data, "2026-11");
+  assert.equal(report.purchaseCash, 24);
+  assert.equal(report.cashOut, 49);
+  assert.equal(report.netCashFlow, 11);
+  assert.equal(report.cashPosition, 111);
+  assert.equal(report.expenseBudgetProgress, 62.5);
+  assert.equal(report.dailyCashFlow.length, 3);
+  assert.deepEqual(report.upcomingCollections[0], {
+    date: "2026-11-12",
+    name: "Ari",
+    amount: 80,
+  });
+});
+
 test("scheduler creates one linked plan for an unplanned accepted order", () => {
   const data = base();
   data.orders.push({

@@ -2221,6 +2221,87 @@ nav button {
     display: none;
   }
 }
+
+/* Finance tools put cash movement and collections beside profitability. */
+.finance-settings form {
+  display: grid;
+  gap: 13px;
+}
+
+.finance-settings label {
+  display: grid;
+  gap: 6px;
+  color: var(--premium-ink);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.finance-settings .secondary {
+  justify-self: start;
+}
+
+.finance-budget-progress {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  color: var(--premium-muted);
+  font-size: 11px;
+}
+
+.cashflow-list {
+  display: grid;
+  max-height: 286px;
+  overflow: auto;
+}
+
+.cashflow-list > div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--premium-line);
+  color: var(--premium-muted);
+  font-size: 11px;
+}
+
+.cashflow-list time {
+  color: var(--premium-ink);
+  font-weight: 700;
+}
+
+.cashflow-list b {
+  color: var(--premium-ink);
+  font-size: 12px;
+}
+
+.cashflow-list b.negative {
+  color: #a64f43;
+}
+
+.cashflow-list b.positive {
+  color: #327357;
+}
+
+.cashflow-list small {
+  grid-column: 2 / -1;
+  color: var(--premium-muted);
+  font-size: 10px;
+}
+
+.collection-list > div {
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+}
+
+@media (max-width: 600px) {
+  .cashflow-list > div,
+  .collection-list > div {
+    grid-template-columns: 1fr auto;
+  }
+  .cashflow-list time {
+    grid-column: 1 / -1;
+  }
+}
 .planning-workspace input[type="checkbox"] {
   width: 18px;
   height: 18px;

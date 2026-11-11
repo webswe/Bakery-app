@@ -27,7 +27,8 @@ export default function BusinessIntelligenceWorkspace({
   navigate,
   restoreData,
 }) {
-  if (page === "Financial center") return <FinancialCenter data={data} />;
+  if (page === "Financial center")
+    return <FinancialCenter data={data} save={save} />;
   if (page === "Smart schedule")
     return <SmartSchedule data={data} save={save} navigate={navigate} />;
   if (page === "Production performance")
@@ -47,7 +48,7 @@ export default function BusinessIntelligenceWorkspace({
   return <SetupChecklist data={data} save={save} navigate={navigate} />;
 }
 
-function FinancialCenter({ data }) {
+function FinancialCenter({ data, save }) {
   const [month, setMonth] = useState(today().slice(0, 7));
   const report = useMemo(() => financialCenter(data, month), [data, month]);
   const guidance = financialGuidance(report);
@@ -55,6 +56,8 @@ function FinancialCenter({ data }) {
     ["Revenue", money(report.revenue), report.progress.revenue],
     ["Net profit", money(report.profit), report.progress.profit],
     ["Cash recorded", money(report.cashIn), report.progress.reserve],
+    ["Net cash flow", money(report.netCashFlow), null],
+    ["Cash position", money(report.cashPosition), null],
     ["Outstanding", money(report.outstanding), null],
     ["Profit margin", percent(report.margin), null],
     ["Waste cost", money(report.wasteCost), null],
@@ -120,6 +123,132 @@ function FinancialCenter({ data }) {
             Sales tax collected is {money(report.collectedTax)} and is shown
             separately because it is not business income.
           </p>
+        </section>
+      </div>
+      <div className="operations-grid">
+        <section className="panel planning-form">
+          <h2>Cash position</h2>
+          <dl className="snapshot-ledger">
+            <dt>Opening cash</dt>
+            <dd>{money(report.finance.openingCash)}</dd>
+            <dt>Cash received</dt>
+            <dd>{money(report.cashIn)}</dd>
+            <dt>Cash out</dt>
+            <dd>− {money(report.cashOut)}</dd>
+            <dt>Projected position</dt>
+            <dd>
+              <b>{money(report.cashPosition)}</b>
+            </dd>
+          </dl>
+          <p className="hint">
+            Cash out includes operating expenses and recorded ingredient or
+            packaging purchases. Sales tax stays separate from profit.
+          </p>
+        </section>
+        <section className="panel planning-form finance-settings">
+          <h2>Cash planning settings</h2>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              const form = Object.fromEntries(
+                new FormData(event.currentTarget),
+              );
+              save({
+                ...data,
+                settings: {
+                  ...data.settings,
+                  finance: {
+                    openingCash: Math.max(0, Number(form.openingCash) || 0),
+                    monthlyExpenseBudget: Math.max(
+                      0,
+                      Number(form.monthlyExpenseBudget) || 0,
+                    ),
+                  },
+                },
+              });
+            }}
+          >
+            <label>
+              Opening cash for this view ($)
+              <input
+                name="openingCash"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={report.finance.openingCash || ""}
+              />
+            </label>
+            <label>
+              Monthly operating expense budget ($)
+              <input
+                name="monthlyExpenseBudget"
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={report.finance.monthlyExpenseBudget || ""}
+              />
+            </label>
+            <button className="secondary" type="submit">
+              Save cash plan
+            </button>
+          </form>
+          {report.finance.monthlyExpenseBudget > 0 && (
+            <div className="finance-budget-progress">
+              <span>
+                {money(report.overhead)} of{" "}
+                {money(report.finance.monthlyExpenseBudget)} operating budget
+              </span>
+              <div className="goal-progress">
+                <i
+                  style={{
+                    width: `${Math.min(100, report.expenseBudgetProgress)}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+      <div className="operations-grid">
+        <section className="panel planning-form">
+          <h2>Cash movement by day</h2>
+          <div className="cashflow-list">
+            {report.dailyCashFlow.map((row) => (
+              <div key={row.date}>
+                <time>{row.date}</time>
+                <span>
+                  In {money(row.cashIn)} · Out {money(row.cashOut)}
+                </span>
+                <b className={row.net < 0 ? "negative" : "positive"}>
+                  {row.net < 0 ? "−" : "+"}
+                  {money(Math.abs(row.net))}
+                </b>
+                <small>Balance {money(row.runningCash)}</small>
+              </div>
+            ))}
+            {!report.dailyCashFlow.length && (
+              <p className="empty-note">
+                No cash movements recorded this month.
+              </p>
+            )}
+          </div>
+        </section>
+        <section className="panel planning-form">
+          <h2>Upcoming collections</h2>
+          <div className="cashflow-list collection-list">
+            {report.upcomingCollections.map((entry, index) => (
+              <div key={`${entry.name}-${index}`}>
+                <time>{entry.date || "No due date"}</time>
+                <span>{entry.name}</span>
+                <b>{money(entry.amount)}</b>
+              </div>
+            ))}
+            {!report.upcomingCollections.length && (
+              <p className="positive">
+                No unpaid balances are waiting for collection.
+              </p>
+            )}
+          </div>
         </section>
       </div>
       <section className="panel planning-form">

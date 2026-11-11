@@ -18,6 +18,10 @@ function normalizeBusinessGoals(value = {}) {
 
 export function financialCenter(data, month) {
   const summary = monthlySummary(data, month);
+  const finance = {
+    openingCash: number(data.settings?.finance?.openingCash),
+    monthlyExpenseBudget: number(data.settings?.finance?.monthlyExpenseBudget),
+  };
   const monthPayments = (data.payments || []).filter((row) =>
     row.date?.startsWith(month),
   );
@@ -44,6 +48,17 @@ export function financialCenter(data, month) {
   const wasteCost = (data.waste || [])
     .filter((row) => row.date?.startsWith(month))
     .reduce((sum, row) => sum + number(row.cost), 0);
+  const purchaseCash = (data.purchaseHistory || [])
+    .filter((row) => row.date?.startsWith(month))
+    .reduce(
+      (sum, row) =>
+        sum +
+        number(row.finalPackageCost ?? row.packagePrice) *
+          Math.max(1, number(row.packages) || 1),
+      0,
+    );
+  const cashOut = summary.overhead + purchaseCash;
+  const netCashFlow = cashIn - cashOut;
   const expenseGroups = Object.entries(
     summary.expenses.reduce((groups, row) => {
       const key = row.category?.trim() || "Other";
@@ -55,6 +70,85 @@ export function financialCenter(data, month) {
     .sort((a, b) => b.amount - a.amount);
   const margin = summary.revenue ? (summary.profit / summary.revenue) * 100 : 0;
   const goals = normalizeBusinessGoals(data.settings?.ownerGoals);
+  const cashFlowByDay = {};
+  const addCash = (date, field, amount) => {
+    if (!date?.startsWith(month)) return;
+    const row = (cashFlowByDay[date] ||= { date, cashIn: 0, cashOut: 0 });
+    row[field] += amount;
+  };
+  monthPayments.forEach((row) => {
+    if (row.kind === "adjustment") return;
+    const amount = number(row.amount);
+    if (row.kind === "refund") addCash(row.date, "cashOut", amount);
+    else addCash(row.date, "cashIn", amount);
+  });
+  summary.sales
+    .filter(
+      (sale) =>
+        !sale.orderId &&
+        sale.paymentStatus !== "unpaid" &&
+        sale.paymentStatus !== "partial" &&
+        !(data.payments || []).some((payment) => payment.saleId === sale.id),
+    )
+    .forEach((sale) => addCash(sale.date, "cashIn", number(sale.total)));
+  summary.expenses.forEach((expense) =>
+    addCash(expense.date, "cashOut", number(expense.amount)),
+  );
+  (data.purchaseHistory || []).forEach((purchase) =>
+    addCash(
+      purchase.date,
+      "cashOut",
+      number(purchase.finalPackageCost ?? purchase.packagePrice) *
+        Math.max(1, number(purchase.packages) || 1),
+    ),
+  );
+  let runningCash = finance.openingCash;
+  const dailyCashFlow = Object.values(cashFlowByDay)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((row) => {
+      const net = row.cashIn - row.cashOut;
+      runningCash += net;
+      return { ...row, net, runningCash };
+    });
+  const paymentEntries = data.payments || [];
+  const balanceFor = (id, type, total) =>
+    Math.max(
+      0,
+      number(total) -
+        paymentEntries
+          .filter((entry) => entry[`${type}Id`] === id)
+          .reduce(
+            (sum, entry) =>
+              sum +
+              (entry.kind === "refund"
+                ? -number(entry.amount)
+                : number(entry.amount)),
+            0,
+          ),
+    );
+  const upcomingCollections = [
+    ...(data.orders || [])
+      .filter(
+        (order) => order.status !== "cancelled" && order.status !== "completed",
+      )
+      .map((order) => ({
+        date: order.pickupDate,
+        name: order.customer || order.recipeName || "Customer order",
+        amount: balanceFor(order.id, "order", order.total),
+      })),
+    ...(data.sales || [])
+      .filter((sale) => ["unpaid", "partial"].includes(sale.paymentStatus))
+      .map((sale) => ({
+        date: sale.dueDate || sale.date,
+        name: sale.customer || sale.recipeName || "Direct sale",
+        amount: balanceFor(sale.id, "sale", sale.total),
+      })),
+  ]
+    .filter((entry) => entry.amount > 0)
+    .sort((a, b) =>
+      (a.date || "9999-12-31").localeCompare(b.date || "9999-12-31"),
+    )
+    .slice(0, 5);
   return {
     ...summary,
     cashIn,
@@ -94,6 +188,16 @@ export function financialCenter(data, month) {
     wastePercent: summary.revenue ? (wasteCost / summary.revenue) * 100 : 0,
     margin,
     expenseGroups,
+    finance,
+    purchaseCash,
+    cashOut,
+    netCashFlow,
+    cashPosition: finance.openingCash + netCashFlow,
+    expenseBudgetProgress: finance.monthlyExpenseBudget
+      ? (summary.overhead / finance.monthlyExpenseBudget) * 100
+      : 0,
+    dailyCashFlow,
+    upcomingCollections,
     goals,
     progress: {
       revenue: goals.monthlyRevenue
@@ -142,6 +246,19 @@ export function financialGuidance(report) {
       level: "info",
       title: "Pickup balances still need collection",
       detail: `${report.outstanding.toFixed(2)} remains due across open orders and unpaid direct sales.`,
+    });
+  if (report.cashPosition < 0)
+    notes.push({
+      level: "danger",
+      title: "Cash position is below zero",
+      detail:
+        "Review upcoming collections and planned spending before making new purchases.",
+    });
+  if (report.finance.monthlyExpenseBudget && report.expenseBudgetProgress > 100)
+    notes.push({
+      level: "warning",
+      title: "Operating expense budget exceeded",
+      detail: `Operating expenses are ${report.expenseBudgetProgress.toFixed(0)}% of the monthly budget.`,
     });
   if (!notes.length)
     notes.push({
