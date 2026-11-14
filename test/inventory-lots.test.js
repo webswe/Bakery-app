@@ -160,14 +160,8 @@ test("bulk receiving records every selected item in one operation", () => {
     ],
     { receivedAt: "2026-11-14", supplier: "Wholesale market" },
   );
-  assert.equal(
-    next.items.find((item) => item.id === "milk").stock,
-    708,
-  );
-  assert.equal(
-    next.items.find((item) => item.id === "flour").stock,
-    16,
-  );
+  assert.equal(next.items.find((item) => item.id === "milk").stock, 708);
+  assert.equal(next.items.find((item) => item.id === "flour").stock, 16);
   assert.equal(next.inventoryLots.length, 2);
   assert.equal(next.purchaseHistory.length, 2);
   assert.equal(next.movements.length, 2);
@@ -180,9 +174,13 @@ test("bulk receiving records every selected item in one operation", () => {
   );
   assert.throws(
     () =>
-      receiveInventoryMany(data, [{ itemId: "milk", packages: 0 }], {
-        receivedAt: "2026-11-14",
-      }),
+      receiveInventoryMany(
+        data,
+        [{ itemId: "milk", packages: 0 }],
+        {
+          receivedAt: "2026-11-14",
+        },
+      ),
     /at least one item/,
   );
 });
