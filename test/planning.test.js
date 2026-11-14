@@ -218,3 +218,27 @@ test("completion consumes inventory once, preserves history, and excludes comple
     /whole batches/,
   );
 });
+
+test("planned production can move to another calendar date without duplication", () => {
+  const created = savePlan(fixture(), {
+    recipeId: "dessert",
+    batches: 1,
+    date: "2026-11-14",
+    notes: "First plan",
+  });
+  const plan = created.productionPlans[0];
+  const edited = savePlan(
+    created,
+    {
+      recipeId: "dessert",
+      batches: 3,
+      date: "2026-11-16",
+      notes: "Moved from calendar",
+    },
+    plan.id,
+  );
+  assert.equal(edited.productionPlans.length, 1);
+  assert.equal(edited.productionPlans[0].date, "2026-11-16");
+  assert.equal(edited.productionPlans[0].batches, 3);
+  assert.equal(edited.productionPlans[0].notes, "Moved from calendar");
+});

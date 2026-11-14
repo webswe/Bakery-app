@@ -1,0 +1,58 @@
+.calendar-task-editor {
+  margin-bottom: 18px;
+}
+
+.calendar-task-editor > form {
+  display: grid;
+  gap: 14px;
+}
+
+.calendar-editable-event {
+  width: 100%;
+  min-height: 0;
+  padding: 6px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  text-align: left;
+  align-items: flex-start;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.calendar-editable-event:hover,
+.calendar-editable-event.active {
+  border-color: color-mix(in srgb, var(--app-accent) 45%, #d5e1dc);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--app-accent) 12%, transparent);
+  filter: none;
+}
+
+.bulk-receive {
+  margin-bottom: 18px;
+}
+
+.bulk-receive > summary {
+  padding: 16px 20px;
+  color: var(--premium-ink, #172b2a);
+  font-weight: 700;
+}
+
+.bulk-receive > form {
+  display: grid;
+  gap: 16px;
+  padding: 0 20px 20px;
+}
+
+.bulk-receive td input {
+  width: 120px;
+  min-width: 90px;
+}
+
+@media (max-width: 700px) {
+  .calendar-task-editor .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .bulk-receive td input {
+    width: 90px;
+  }
+}

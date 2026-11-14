@@ -6,6 +6,7 @@ import {
   lotAlerts,
   reconcileLots,
   receiveInventory,
+  receiveInventoryMany,
   recordPersonalUse,
 } from "../src/inventoryLots.js";
 
@@ -131,4 +132,50 @@ test("clearing stock retains the catalog item and historical lot details", () =>
   assert.equal(next.movements[0].kind, "Stock cleared");
   assert.equal(next.movements[0].delta, -1062);
   assert.equal(next.movements[0].reason, "Cleared by owner");
+});
+
+test("bulk receiving records every selected item in one operation", () => {
+  const data = {
+    ...fixture(),
+    items: [
+      ...fixture().items,
+      {
+        id: "flour",
+        name: "Flour",
+        amount: 5,
+        unit: "kg",
+        price: 8,
+        taxMode: "exempt",
+        tax: 0,
+        stock: 1,
+      },
+    ],
+  };
+  const next = receiveInventoryMany(
+    data,
+    [
+      { itemId: "milk", packages: 2, packagePrice: 2 },
+      { itemId: "flour", packages: 3, packagePrice: 8 },
+      { itemId: "milk", packages: 0, packagePrice: 2 },
+    ],
+    { receivedAt: "2026-11-14", supplier: "Wholesale market" },
+  );
+  assert.equal(next.items.find((item) => item.id === "milk").stock, 708);
+  assert.equal(next.items.find((item) => item.id === "flour").stock, 16);
+  assert.equal(next.inventoryLots.length, 2);
+  assert.equal(next.purchaseHistory.length, 2);
+  assert.equal(next.movements.length, 2);
+  assert.ok(
+    next.inventoryLots.every(
+      (lot) =>
+        lot.supplier === "Wholesale market" && lot.receivedAt === "2026-11-14",
+    ),
+  );
+  assert.throws(
+    () =>
+      receiveInventoryMany(data, [{ itemId: "milk", packages: 0 }], {
+        receivedAt: "2026-11-14",
+      }),
+    /at least one item/,
+  );
 });

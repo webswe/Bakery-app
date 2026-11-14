@@ -2,6 +2,7 @@ import { directSaleTotals, purchaseTax } from "./taxation.js";
 import {
   clearInventoryStock,
   receiveInventory,
+  receiveInventoryMany,
   reconcileLots,
   recordPersonalUse,
 } from "./inventoryLots.js";
@@ -394,6 +395,12 @@ export default function Operations({ data, save, open, tab }) {
               </div>
             </div>
           )}
+          <BulkReceiveForm
+            data={data}
+            apply={(entries, common) =>
+              act(() => receiveInventoryMany(data, entries, common))
+            }
+          />
           <div className="panel table-scroll">
             <table>
               <thead>
@@ -780,6 +787,114 @@ export default function Operations({ data, save, open, tab }) {
     </>
   );
 }
+function BulkReceiveForm({ data, apply }) {
+  const [packages, setPackages] = useState({});
+  const [receivedAt, setReceivedAt] = useState(localDay());
+  const [supplier, setSupplier] = useState("");
+  const selected = data.items.filter((item) => Number(packages[item.id]) > 0);
+  return (
+    <details className="panel planning-form bulk-receive">
+      <summary>Receive multiple stock items</summary>
+      <div className="panel-heading">
+        <div>
+          <h2>Bulk stock intake</h2>
+          <p>
+            Enter package counts for every item in this delivery, then save them
+            together. Each item keeps its own package size and purchase price.
+          </p>
+        </div>
+      </div>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          const entries = data.items.map((item) => ({
+            itemId: item.id,
+            packages: packages[item.id] || "",
+            packagePrice: item.price,
+          }));
+          if (apply(entries, { receivedAt, supplier }) !== false) {
+            setPackages({});
+            setSupplier("");
+          }
+        }}
+      >
+        <div className="form-row">
+          <label>
+            Received date
+            <input
+              type="date"
+              value={receivedAt}
+              onChange={(event) => setReceivedAt(event.target.value)}
+              required
+            />
+          </label>
+          <label>
+            Supplier for this delivery
+            <input
+              value={supplier}
+              onChange={(event) => setSupplier(event.target.value)}
+              placeholder="Optional"
+            />
+          </label>
+        </div>
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>ITEM</th>
+                <th>CURRENT</th>
+                <th>PACKAGE SIZE</th>
+                <th>PACKAGES RECEIVED</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.items.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <b>{item.name}</b>
+                  </td>
+                  <td>
+                    {Number((Number(item.stock) || 0).toFixed(3))} {item.unit}
+                  </td>
+                  <td>
+                    {item.amount} {item.unit}
+                  </td>
+                  <td>
+                    <input
+                      aria-label={`Packages received for ${item.name}`}
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={packages[item.id] || ""}
+                      onChange={(event) =>
+                        setPackages((current) => ({
+                          ...current,
+                          [item.id]: event.target.value,
+                        }))
+                      }
+                      placeholder="0"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="planning-actions">
+          <button className="primary" disabled={!selected.length}>
+            Receive {selected.length || ""} item
+            {selected.length === 1 ? "" : "s"}
+          </button>
+          <small>
+            Uses each item's saved purchase price. Edit an item first if its
+            latest price changed.
+          </small>
+        </div>
+      </form>
+    </details>
+  );
+}
+
 function conversionSummary(item) {
   const values = [
     item.gramsPerCan && `${item.gramsPerCan} g/can`,

@@ -10,7 +10,8 @@ import {
   wasteAnalysis,
 } from "./ownerOps.js";
 import { lotAlerts } from "./inventoryLots.js";
-import { localDate } from "./planning.js";
+import { localDate, savePlan } from "./planning.js";
+import "./CalendarEditing.css";
 import { createLock, verifyPin } from "./security.js";
 import { addDays } from "./productLots.js";
 import { priceChanges } from "./ownerFeatures.js";
@@ -50,7 +51,7 @@ export default function OwnerWorkspace({
     <div className="planning-workspace owner-workspace">
       {error && <p className="error">{error}</p>}
       {page === "Calendar" ? (
-        <Calendar data={data} />
+        <Calendar data={data} act={act} />
       ) : page === "Prep sheets" ? (
         <PrepSheets data={data} />
       ) : page === "Inventory lots" ? (
@@ -346,28 +347,144 @@ function Receivables({ data, act }) {
   );
 }
 
-function Calendar({ data }) {
+function Calendar({ data, act }) {
   const [month, setMonth] = useState(localDate().slice(0, 7));
+  const [editingId, setEditingId] = useState("");
+  const [draft, setDraft] = useState(null);
   const entries = calendarEntries(data, month);
   const [year, monthNumber] = month.split("-").map(Number);
   const days = new Date(year, monthNumber, 0).getDate();
   const start = new Date(year, monthNumber - 1, 1).getDay();
+  const beginEdit = (planId) => {
+    const plan = data.productionPlans.find((item) => item.id === planId);
+    if (!plan || plan.status !== "planned") return;
+    setEditingId(plan.id);
+    setDraft({
+      date: plan.date,
+      recipeId: plan.recipeId,
+      batches: plan.batches,
+      notes: plan.notes || "",
+    });
+  };
+  const closeEditor = () => {
+    setEditingId("");
+    setDraft(null);
+  };
   return (
     <>
       <div className="planning-toolbar">
         <div>
           <h2>Production & pickup calendar</h2>
-          <p>One schedule for kitchen work and customer commitments.</p>
+          <p>
+            Click a planned production task to change its date, recipe, batches,
+            or kitchen notes.
+          </p>
         </div>
         <label>
           Month
           <input
             type="month"
             value={month}
-            onChange={(e) => setMonth(e.target.value)}
+            onChange={(e) => {
+              setMonth(e.target.value);
+              closeEditor();
+            }}
           />
         </label>
       </div>
+      {draft && (
+        <section className="panel planning-form calendar-task-editor">
+          <div className="panel-heading">
+            <div>
+              <span className="eyebrow">EDIT PRODUCTION TASK</span>
+              <h2>Update the calendar plan</h2>
+            </div>
+            <button className="text-button" type="button" onClick={closeEditor}>
+              Close
+            </button>
+          </div>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (act(() => savePlan(data, draft, editingId))) {
+                setMonth(draft.date.slice(0, 7));
+                closeEditor();
+              }
+            }}
+          >
+            <div className="form-row">
+              <label>
+                Production date
+                <input
+                  type="date"
+                  value={draft.date}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      date: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </label>
+              <label>
+                Recipe
+                <select
+                  value={draft.recipeId}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      recipeId: event.target.value,
+                    }))
+                  }
+                  required
+                >
+                  {data.recipes.map((recipe) => (
+                    <option value={recipe.id} key={recipe.id}>
+                      {recipe.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Whole batches
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={draft.batches}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      batches: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </label>
+            </div>
+            <label>
+              Kitchen notes
+              <textarea
+                value={draft.notes}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))
+                }
+                placeholder="Prep, decoration, or timing notes"
+              />
+            </label>
+            <div className="planning-actions">
+              <button className="primary">Save calendar task</button>
+              <button className="secondary" type="button" onClick={closeEditor}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
       <section className="calendar-grid panel">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <b className="calendar-weekday" key={day}>
@@ -383,16 +500,33 @@ function Calendar({ data }) {
           return (
             <div className="calendar-day" key={date}>
               <strong>{i + 1}</strong>
-              {rows.map((row) => (
-                <span
-                  className={"calendar-event " + row.type.toLowerCase()}
-                  key={row.id}
-                >
-                  <b>{row.type}</b>
-                  {row.title}
-                  <small>{row.detail}</small>
-                </span>
-              ))}
+              {rows.map((row) =>
+                row.type === "Production" && row.planId ? (
+                  <button
+                    type="button"
+                    className={
+                      "calendar-event production calendar-editable-event" +
+                      (editingId === row.planId ? " active" : "")
+                    }
+                    key={row.id}
+                    onClick={() => beginEdit(row.planId)}
+                    title="Edit this production task"
+                  >
+                    <b>{row.type}</b>
+                    {row.title}
+                    <small>{row.detail}</small>
+                  </button>
+                ) : (
+                  <span
+                    className={"calendar-event " + row.type.toLowerCase()}
+                    key={row.id}
+                  >
+                    <b>{row.type}</b>
+                    {row.title}
+                    <small>{row.detail}</small>
+                  </span>
+                ),
+              )}
             </div>
           );
         })}
