@@ -791,9 +791,7 @@ function BulkReceiveForm({ data, apply }) {
   const [packages, setPackages] = useState({});
   const [receivedAt, setReceivedAt] = useState(localDay());
   const [supplier, setSupplier] = useState("");
-  const selected = data.items.filter(
-    (item) => Number(packages[item.id]) > 0,
-  );
+  const selected = data.items.filter((item) => Number(packages[item.id]) > 0);
   return (
     <details className="panel planning-form bulk-receive">
       <summary>Receive multiple stock items</summary>
