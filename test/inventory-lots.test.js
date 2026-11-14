@@ -168,19 +168,14 @@ test("bulk receiving records every selected item in one operation", () => {
   assert.ok(
     next.inventoryLots.every(
       (lot) =>
-        lot.supplier === "Wholesale market" &&
-        lot.receivedAt === "2026-11-14",
+        lot.supplier === "Wholesale market" && lot.receivedAt === "2026-11-14",
     ),
   );
   assert.throws(
     () =>
-      receiveInventoryMany(
-        data,
-        [{ itemId: "milk", packages: 0 }],
-        {
-          receivedAt: "2026-11-14",
-        },
-      ),
+      receiveInventoryMany(data, [{ itemId: "milk", packages: 0 }], {
+        receivedAt: "2026-11-14",
+      }),
     /at least one item/,
   );
 });
