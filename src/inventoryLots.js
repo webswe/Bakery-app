@@ -93,6 +93,24 @@ export function receiveInventory(data, itemId, input) {
   };
 }
 
+export function receiveInventoryMany(data, entries, common = {}) {
+  const rows = entries
+    .map((entry) => ({
+      itemId: entry.itemId,
+      packages: Number(entry.packages),
+      packagePrice: entry.packagePrice,
+      supplier: entry.supplier ?? common.supplier,
+      receivedAt: entry.receivedAt ?? common.receivedAt,
+      expiryDate: entry.expiryDate ?? common.expiryDate,
+    }))
+    .filter((entry) => Number.isFinite(entry.packages) && entry.packages > 0);
+  if (!rows.length) throw Error("Enter packages for at least one item.");
+  return rows.reduce(
+    (next, entry) => receiveInventory(next, entry.itemId, entry),
+    data,
+  );
+}
+
 export function consumeLots(lots, itemId, quantity) {
   let left = number(quantity, "consumption quantity");
   const ordered = lots
