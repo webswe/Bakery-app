@@ -1244,111 +1244,106 @@ function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {monthActivity
-                        .slice(0, visibleActivity)
-                        .map((s) => (
-                          <tr key={s.id}>
-                            <td>
-                              <b>{s.name}</b>
-                              {s.quantity && (
-                                <small>
-                                  {s.quantity} sold
-                                  {s.orderType ? ` · ${s.orderType}` : ""}
-                                  {["unpaid", "partial"].includes(
-                                    s.paymentStatus,
-                                  )
-                                    ? " · Payment due"
-                                    : ""}
-                                </small>
-                              )}
-                              {s.net != null && (
-                                <small>
-                                  Before tax {money(s.net)} · Sales tax{" "}
-                                  {money(s.tax || 0)}
-                                </small>
-                              )}
-                            </td>
-                            <td>{s.date}</td>
-                            <td>
-                              <span
-                                className={
-                                  "tag " + (s.type === "Sale" ? "sage" : "")
-                                }
-                              >
-                                {s.type}
-                              </span>
-                            </td>
-                            <td>{money(s.total ?? s.amount)}</td>
-                            <td>
-                              {s.type === "Sale" &&
-                                ["unpaid", "partial"].includes(
-                                  s.paymentStatus,
-                                ) && (
-                                  <button
-                                    className="secondary"
-                                    onClick={() => navigate("Receivables")}
-                                  >
-                                    Collect
-                                  </button>
-                                )}
-                              {s.type === "Expense" && (
+                      {monthActivity.slice(0, visibleActivity).map((s) => (
+                        <tr key={s.id}>
+                          <td>
+                            <b>{s.name}</b>
+                            {s.quantity && (
+                              <small>
+                                {s.quantity} sold
+                                {s.orderType ? ` · ${s.orderType}` : ""}
+                                {["unpaid", "partial"].includes(s.paymentStatus)
+                                  ? " · Payment due"
+                                  : ""}
+                              </small>
+                            )}
+                            {s.net != null && (
+                              <small>
+                                Before tax {money(s.net)} · Sales tax{" "}
+                                {money(s.tax || 0)}
+                              </small>
+                            )}
+                          </td>
+                          <td>{s.date}</td>
+                          <td>
+                            <span
+                              className={
+                                "tag " + (s.type === "Sale" ? "sage" : "")
+                              }
+                            >
+                              {s.type}
+                            </span>
+                          </td>
+                          <td>{money(s.total ?? s.amount)}</td>
+                          <td>
+                            {s.type === "Sale" &&
+                              ["unpaid", "partial"].includes(
+                                s.paymentStatus,
+                              ) && (
                                 <button
                                   className="secondary"
-                                  onClick={() => open("expense", s)}
+                                  onClick={() => navigate("Receivables")}
                                 >
-                                  Edit
+                                  Collect
                                 </button>
                               )}
+                            {s.type === "Expense" && (
                               <button
-                                aria-label="Delete transaction"
-                                disabled={!!(s.orderId || s.wasteId)}
-                                title={
-                                  s.orderId || s.wasteId
-                                    ? "Linked order and waste records are retained for stock consistency"
-                                    : "Delete transaction"
-                                }
-                                className="icon-button"
-                                onClick={() => {
-                                  if (confirm("Delete this transaction?"))
-                                    saveWithUndo(
-                                      {
-                                        ...data,
-                                        products: s.stockTracked
-                                          ? {
-                                              ...data.products,
-                                              [s.recipeId]: {
-                                                quantity:
-                                                  (data.products[s.recipeId]
-                                                    ?.quantity || 0) +
-                                                  s.quantity,
-                                                value:
-                                                  (data.products[s.recipeId]
-                                                    ?.value || 0) + s.cost,
-                                              },
-                                            }
-                                          : data.products,
-                                        productLots: s.stockTracked
-                                          ? restoreProductLots(
-                                              data.productLots || [],
-                                              s.productLotUsage,
-                                            )
-                                          : data.productLots,
-                                        sales: data.sales.filter(
-                                          (x) => x.id !== s.id,
-                                        ),
-                                        expenses: data.expenses.filter(
-                                          (x) => x.id !== s.id,
-                                        ),
-                                      },
-                                      `${s.type} deleted.`,
-                                    );
-                                }}
+                                className="secondary"
+                                onClick={() => open("expense", s)}
                               >
-                                <Trash2 size={15} />
+                                Edit
                               </button>
-                            </td>
-                          </tr>
-                        ))}
+                            )}
+                            <button
+                              aria-label="Delete transaction"
+                              disabled={!!(s.orderId || s.wasteId)}
+                              title={
+                                s.orderId || s.wasteId
+                                  ? "Linked order and waste records are retained for stock consistency"
+                                  : "Delete transaction"
+                              }
+                              className="icon-button"
+                              onClick={() => {
+                                if (confirm("Delete this transaction?"))
+                                  saveWithUndo(
+                                    {
+                                      ...data,
+                                      products: s.stockTracked
+                                        ? {
+                                            ...data.products,
+                                            [s.recipeId]: {
+                                              quantity:
+                                                (data.products[s.recipeId]
+                                                  ?.quantity || 0) + s.quantity,
+                                              value:
+                                                (data.products[s.recipeId]
+                                                  ?.value || 0) + s.cost,
+                                            },
+                                          }
+                                        : data.products,
+                                      productLots: s.stockTracked
+                                        ? restoreProductLots(
+                                            data.productLots || [],
+                                            s.productLotUsage,
+                                          )
+                                        : data.productLots,
+                                      sales: data.sales.filter(
+                                        (x) => x.id !== s.id,
+                                      ),
+                                      expenses: data.expenses.filter(
+                                        (x) => x.id !== s.id,
+                                      ),
+                                    },
+                                    `${s.type} deleted.`,
+                                  );
+                              }}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                   {monthActivity.length > visibleActivity && (
