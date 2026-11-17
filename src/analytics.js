@@ -1,4 +1,6 @@
 import { saleRevenue } from "./taxation.js";
+
+const list = (value) => (Array.isArray(value) ? value : []);
 export function monthlySummary(data, month) {
   const sales = data.sales.filter((s) => s.date.startsWith(month));
   const expenses = data.expenses.filter((e) => e.date.startsWith(month));
@@ -25,7 +27,7 @@ export function previousMonth(month) {
   return `${m === 1 ? y - 1 : y}-${String(m === 1 ? 12 : m - 1).padStart(2, "0")}`;
 }
 export function migrateData(data) {
-  const recipes = (data.recipes || []).map((recipe) => {
+  const recipes = list(data.recipes).map((recipe) => {
     const saleFormat = recipe.saleFormat || "individual";
     const saleQuantity =
       saleFormat === "dozen"
@@ -43,45 +45,47 @@ export function migrateData(data) {
   return {
     ...data,
     recipes,
+    sales: list(data.sales),
+    expenses: list(data.expenses),
     salesTaxRate: data.salesTaxRate ?? 0,
-    orders: data.orders || [],
-    customers: data.customers || [],
+    orders: list(data.orders),
+    customers: list(data.customers),
     documentCounters: data.documentCounters || {},
     businessProfile: {
       supportEmail: "botaa109@gmail.com",
       ...(data.businessProfile || {}),
     },
-    payments: data.payments || [],
-    waste: data.waste || [],
-    inventoryLots: data.inventoryLots || [],
-    purchaseHistory: data.purchaseHistory || [],
-    quotes: data.quotes || [],
-    productionPlans: data.productionPlans || [],
+    payments: list(data.payments),
+    waste: list(data.waste),
+    inventoryLots: list(data.inventoryLots),
+    purchaseHistory: list(data.purchaseHistory),
+    quotes: list(data.quotes),
+    productionPlans: list(data.productionPlans),
     products: data.products || {},
-    productLots: data.productLots || [],
-    productionBatches: data.productionBatches || [],
-    seasonalPlans: data.seasonalPlans || [],
-    ownerTasks: data.ownerTasks || [],
-    scalingPresets: data.scalingPresets || [],
-    purchaseOrders: data.purchaseOrders || [],
-    recipeVersions: data.recipeVersions || [],
-    recipeComponents: data.recipeComponents || [],
-    packagingPresets: data.packagingPresets || [],
-    kitchenTimers: data.kitchenTimers || [],
-    closeouts: data.closeouts || [],
-    equipment: data.equipment || [],
-    maintenanceLogs: data.maintenanceLogs || [],
-    archives: data.archives || [],
-    orderRequests: data.orderRequests || [],
-    recurringTasks: data.recurringTasks || [],
-    substitutions: data.substitutions || [],
-    recipePhotos: data.recipePhotos || [],
-    businessProfiles: data.businessProfiles || [],
-    changeLog: data.changeLog || [],
-    movements: data.movements || [],
+    productLots: list(data.productLots),
+    productionBatches: list(data.productionBatches),
+    seasonalPlans: list(data.seasonalPlans),
+    ownerTasks: list(data.ownerTasks),
+    scalingPresets: list(data.scalingPresets),
+    purchaseOrders: list(data.purchaseOrders),
+    recipeVersions: list(data.recipeVersions),
+    recipeComponents: list(data.recipeComponents),
+    packagingPresets: list(data.packagingPresets),
+    kitchenTimers: list(data.kitchenTimers),
+    closeouts: list(data.closeouts),
+    equipment: list(data.equipment),
+    maintenanceLogs: list(data.maintenanceLogs),
+    archives: list(data.archives),
+    orderRequests: list(data.orderRequests),
+    recurringTasks: list(data.recurringTasks),
+    substitutions: list(data.substitutions),
+    recipePhotos: list(data.recipePhotos),
+    businessProfiles: list(data.businessProfiles),
+    changeLog: list(data.changeLog),
+    movements: list(data.movements),
     settings: { hourlyWage: 0, electricityRate: 0, ...(data.settings || {}) },
     taxRates: data.taxRates || { food: data.tax ?? 0, other: data.tax ?? 0 },
-    items: data.items.map((i) => ({
+    items: list(data.items).map((i) => ({
       ...i,
       taxCategory: i.taxCategory || (i.type === "packaging" ? "other" : "food"),
     })),
