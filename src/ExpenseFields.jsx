@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  expenseCategories,
-  expensePaymentMethods,
-} from "./expenses.js";
+import { expenseCategories, expensePaymentMethods } from "./expenses.js";
 import { localDay } from "./uiFormatters.js";
 
 export default function ExpenseFields({ expense }) {
@@ -46,10 +43,7 @@ export default function ExpenseFields({ expense }) {
       <div className="form-row">
         <label>
           Category
-          <select
-            name="category"
-            defaultValue={expense?.category || "Other"}
-          >
+          <select name="category" defaultValue={expense?.category || "Other"}>
             {expenseCategories.map((name) => (
               <option key={name}>{name}</option>
             ))}
