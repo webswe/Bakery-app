@@ -45,7 +45,10 @@ export default class AppErrorBoundary extends React.Component {
           </p>
           <p className="error">{this.state.message}</p>
           <div className="recovery-actions">
-            <button className="primary" onClick={() => window.location.reload()}>
+            <button
+              className="primary"
+              onClick={() => window.location.reload()}
+            >
               Reload Bakery Ledger
             </button>
             <button className="secondary" onClick={this.exportWorkspace}>
