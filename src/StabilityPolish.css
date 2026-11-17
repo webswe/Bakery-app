@@ -223,3 +223,21 @@ small {
     animation-iteration-count: 1 !important;
   }
 }
+
+.activity-load-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 18px;
+  border-top: 1px solid var(--polish-border);
+  color: #71838d;
+}
+
+@media (max-width: 580px) {
+  .activity-load-more {
+    align-items: stretch;
+    flex-direction: column;
+    text-align: center;
+  }
+}
