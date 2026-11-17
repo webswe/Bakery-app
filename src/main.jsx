@@ -519,7 +519,7 @@ function App() {
     setError("");
     let nextValue = value;
     let restoredDraft = false;
-    if (["item", "recipe"].includes(type)) {
+    if (["item", "recipe", "expense"].includes(type)) {
       try {
         const draft = JSON.parse(
           localStorage.getItem(modalDraftKey(type, value)),
@@ -536,7 +536,7 @@ function App() {
     setModal({ type, value: nextValue, restoredDraft });
   }
   function saveModalDraft(event) {
-    if (!modal || !["item", "recipe"].includes(modal.type)) return;
+    if (!modal || !["item", "recipe", "expense"].includes(modal.type)) return;
     const form = event.currentTarget;
     const draft = Object.fromEntries(new FormData(form));
     if (modal.type === "recipe")
@@ -754,7 +754,7 @@ function App() {
       }
       if (modal.type === "expense")
         persist(saveExpense(data, { ...modal.value, ...f }));
-      if (["item", "recipe"].includes(modal.type))
+      if (["item", "recipe", "expense"].includes(modal.type))
         localStorage.removeItem(modalDraftKey(modal.type, modal.value));
       setModalDirty(false);
       setModal(null);
