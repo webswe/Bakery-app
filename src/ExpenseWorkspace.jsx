@@ -8,7 +8,7 @@ import {
   removeExpense,
 } from "./expenses.js";
 import { localDay, money } from "./uiFormatters.js";
-import "./ExpenseWorkspace.css";
+import "./ExpenseLedgerStyles.css";
 
 function downloadCsv(content, month) {
   const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
