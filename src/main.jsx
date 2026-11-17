@@ -26,6 +26,9 @@ import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
 import SupportWorkspace from "./SupportWorkspace.jsx";
 import DataCleanupWorkspace from "./DataCleanupWorkspace.jsx";
+import ExpenseWorkspace from "./ExpenseWorkspace.jsx";
+import ExpenseFields from "./ExpenseFields.jsx";
+import { saveExpense } from "./expenses.js";
 import {
   removeRecipe,
   saveRecipePreset,
@@ -57,7 +60,14 @@ import {
   businessIntelligencePages,
 } from "./workspaceNavigation.js";
 import { withChangeLog } from "./businessIntelligence.js";
-import React, { lazy, Suspense, useState, useEffect, useRef } from "react";
+import React, {
+  lazy,
+  Suspense,
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { createRoot } from "react-dom/client";
 import {
   LayoutDashboard,
@@ -117,7 +127,13 @@ const sectionPrimaryPages = {
   Stock: stockPrimaryPages,
   Kitchen: kitchenPrimaryPages,
   Sales: ["Orders", "Receivables", "Quotes", "Customers"],
-  Reports: ["Daily snapshot", "Owner forecast", "Tax report", "Waste analysis"],
+  Reports: [
+    "Daily snapshot",
+    "Expenses",
+    "Owner forecast",
+    "Tax report",
+    "Waste analysis",
+  ],
   Settings: [
     "Tutorial",
     "User guide",
@@ -271,6 +287,7 @@ function App() {
     () => localStorage.getItem(sidebarCollapsedKey) === "true",
   );
   const [savedAt, setSavedAt] = useState(null);
+  const [visibleActivity, setVisibleActivity] = useState(50);
   const [undo, setUndo] = useState(null);
   const [recentPages, setRecentPages] = useState(() =>
     readRecentPages(localStorage),
@@ -502,7 +519,7 @@ function App() {
     setError("");
     let nextValue = value;
     let restoredDraft = false;
-    if (["item", "recipe"].includes(type)) {
+    if (["item", "recipe", "expense"].includes(type)) {
       try {
         const draft = JSON.parse(
           localStorage.getItem(modalDraftKey(type, value)),
@@ -519,7 +536,7 @@ function App() {
     setModal({ type, value: nextValue, restoredDraft });
   }
   function saveModalDraft(event) {
-    if (!modal || !["item", "recipe"].includes(modal.type)) return;
+    if (!modal || !["item", "recipe", "expense"].includes(modal.type)) return;
     const form = event.currentTarget;
     const draft = Object.fromEntries(new FormData(form));
     if (modal.type === "recipe")
@@ -577,6 +594,19 @@ function App() {
   }, [modal]);
   const sales = data.sales.filter((s) => s.date.startsWith(month)),
     expenses = data.expenses.filter((s) => s.date.startsWith(month));
+  const monthActivity = useMemo(
+    () =>
+      [
+        ...data.sales
+          .filter((row) => row.date.startsWith(month))
+          .map((row) => ({ ...row, type: "Sale" })),
+        ...data.expenses
+          .filter((row) => row.date.startsWith(month))
+          .map((row) => ({ ...row, type: "Expense" })),
+      ].sort((a, b) => b.date.localeCompare(a.date)),
+    [data.sales, data.expenses, month],
+  );
+  useEffect(() => setVisibleActivity(50), [month]);
   function submit(e) {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
@@ -723,14 +753,8 @@ function App() {
         );
       }
       if (modal.type === "expense")
-        persist({
-          ...data,
-          expenses: [
-            ...data.expenses,
-            { id: uid(), date: f.date, name: f.name, amount: +f.amount },
-          ],
-        });
-      if (["item", "recipe"].includes(modal.type))
+        persist(saveExpense(data, { ...modal.value, ...f }));
+      if (["item", "recipe", "expense"].includes(modal.type))
         localStorage.removeItem(modalDraftKey(modal.type, modal.value));
       setModalDirty(false);
       setModal(null);
@@ -1044,6 +1068,8 @@ function App() {
             <AppCustomizationWorkspace data={data} save={save} />
           ) : page === "Data cleanup" ? (
             <DataCleanupWorkspace data={data} save={save} navigate={navigate} />
+          ) : page === "Expenses" ? (
+            <ExpenseWorkspace data={data} save={save} open={open} />
           ) : page === "Goals & tasks" ? (
             <OwnerCommandCenter data={data} save={save} />
           ) : page === "App updates" ? (
@@ -1218,108 +1244,123 @@ function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        ...sales.map((s) => ({ ...s, type: "Sale" })),
-                        ...expenses.map((s) => ({ ...s, type: "Expense" })),
-                      ]
-                        .sort((a, b) => b.date.localeCompare(a.date))
-                        .map((s) => (
-                          <tr key={s.id}>
-                            <td>
-                              <b>{s.name}</b>
-                              {s.quantity && (
-                                <small>
-                                  {s.quantity} sold
-                                  {s.orderType ? ` · ${s.orderType}` : ""}
-                                  {["unpaid", "partial"].includes(
-                                    s.paymentStatus,
-                                  )
-                                    ? " · Payment due"
-                                    : ""}
-                                </small>
+                      {monthActivity.slice(0, visibleActivity).map((s) => (
+                        <tr key={s.id}>
+                          <td>
+                            <b>{s.name}</b>
+                            {s.quantity && (
+                              <small>
+                                {s.quantity} sold
+                                {s.orderType ? ` · ${s.orderType}` : ""}
+                                {["unpaid", "partial"].includes(s.paymentStatus)
+                                  ? " · Payment due"
+                                  : ""}
+                              </small>
+                            )}
+                            {s.net != null && (
+                              <small>
+                                Before tax {money(s.net)} · Sales tax{" "}
+                                {money(s.tax || 0)}
+                              </small>
+                            )}
+                          </td>
+                          <td>{s.date}</td>
+                          <td>
+                            <span
+                              className={
+                                "tag " + (s.type === "Sale" ? "sage" : "")
+                              }
+                            >
+                              {s.type}
+                            </span>
+                          </td>
+                          <td>{money(s.total ?? s.amount)}</td>
+                          <td>
+                            {s.type === "Sale" &&
+                              ["unpaid", "partial"].includes(
+                                s.paymentStatus,
+                              ) && (
+                                <button
+                                  className="secondary"
+                                  onClick={() => navigate("Receivables")}
+                                >
+                                  Collect
+                                </button>
                               )}
-                              {s.net != null && (
-                                <small>
-                                  Before tax {money(s.net)} · Sales tax{" "}
-                                  {money(s.tax || 0)}
-                                </small>
-                              )}
-                            </td>
-                            <td>{s.date}</td>
-                            <td>
-                              <span
-                                className={
-                                  "tag " + (s.type === "Sale" ? "sage" : "")
-                                }
-                              >
-                                {s.type}
-                              </span>
-                            </td>
-                            <td>{money(s.total ?? s.amount)}</td>
-                            <td>
-                              {s.type === "Sale" &&
-                                ["unpaid", "partial"].includes(
-                                  s.paymentStatus,
-                                ) && (
-                                  <button
-                                    className="secondary"
-                                    onClick={() => navigate("Receivables")}
-                                  >
-                                    Collect
-                                  </button>
-                                )}
+                            {s.type === "Expense" && (
                               <button
-                                aria-label="Delete transaction"
-                                disabled={!!(s.orderId || s.wasteId)}
-                                title={
-                                  s.orderId || s.wasteId
-                                    ? "Linked order and waste records are retained for stock consistency"
-                                    : "Delete transaction"
-                                }
-                                className="icon-button"
-                                onClick={() => {
-                                  if (confirm("Delete this transaction?"))
-                                    saveWithUndo(
-                                      {
-                                        ...data,
-                                        products: s.stockTracked
-                                          ? {
-                                              ...data.products,
-                                              [s.recipeId]: {
-                                                quantity:
-                                                  (data.products[s.recipeId]
-                                                    ?.quantity || 0) +
-                                                  s.quantity,
-                                                value:
-                                                  (data.products[s.recipeId]
-                                                    ?.value || 0) + s.cost,
-                                              },
-                                            }
-                                          : data.products,
-                                        productLots: s.stockTracked
-                                          ? restoreProductLots(
-                                              data.productLots || [],
-                                              s.productLotUsage,
-                                            )
-                                          : data.productLots,
-                                        sales: data.sales.filter(
-                                          (x) => x.id !== s.id,
-                                        ),
-                                        expenses: data.expenses.filter(
-                                          (x) => x.id !== s.id,
-                                        ),
-                                      },
-                                      `${s.type} deleted.`,
-                                    );
-                                }}
+                                className="secondary"
+                                onClick={() => open("expense", s)}
                               >
-                                <Trash2 size={15} />
+                                Edit
                               </button>
-                            </td>
-                          </tr>
-                        ))}
+                            )}
+                            <button
+                              aria-label="Delete transaction"
+                              disabled={!!(s.orderId || s.wasteId)}
+                              title={
+                                s.orderId || s.wasteId
+                                  ? "Linked order and waste records are retained for stock consistency"
+                                  : "Delete transaction"
+                              }
+                              className="icon-button"
+                              onClick={() => {
+                                if (confirm("Delete this transaction?"))
+                                  saveWithUndo(
+                                    {
+                                      ...data,
+                                      products: s.stockTracked
+                                        ? {
+                                            ...data.products,
+                                            [s.recipeId]: {
+                                              quantity:
+                                                (data.products[s.recipeId]
+                                                  ?.quantity || 0) + s.quantity,
+                                              value:
+                                                (data.products[s.recipeId]
+                                                  ?.value || 0) + s.cost,
+                                            },
+                                          }
+                                        : data.products,
+                                      productLots: s.stockTracked
+                                        ? restoreProductLots(
+                                            data.productLots || [],
+                                            s.productLotUsage,
+                                          )
+                                        : data.productLots,
+                                      sales: data.sales.filter(
+                                        (x) => x.id !== s.id,
+                                      ),
+                                      expenses: data.expenses.filter(
+                                        (x) => x.id !== s.id,
+                                      ),
+                                    },
+                                    `${s.type} deleted.`,
+                                  );
+                              }}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
+                  {monthActivity.length > visibleActivity && (
+                    <div className="activity-load-more">
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          setVisibleActivity((count) => count + 50)
+                        }
+                      >
+                        Show 50 more transactions
+                      </button>
+                      <small>
+                        Showing {visibleActivity} of {monthActivity.length}
+                      </small>
+                    </div>
+                  )}
                   {!sales.length && !expenses.length && (
                     <div className="empty">
                       <span>✧</span>
@@ -1400,7 +1441,9 @@ function App() {
                       ? "Recipe studio"
                       : modal.type === "sale"
                         ? "Record a sale"
-                        : "Record an expense"}
+                        : modal.value?.id
+                          ? "Edit expense"
+                          : "Record an expense"}
                 {modalDirty ? " • Unsaved draft" : ""}
               </h2>
               <button
@@ -1493,35 +1536,7 @@ function App() {
               ) : modal.type === "sale" ? (
                 <SaleFields data={data} />
               ) : (
-                <>
-                  <label>
-                    Description
-                    <input
-                      name="name"
-                      required
-                      placeholder="e.g. Kitchen rent"
-                    />
-                  </label>
-                  <label>
-                    Amount ($)
-                    <input
-                      name="amount"
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      required
-                    />
-                  </label>
-                  <label>
-                    Date
-                    <input
-                      name="date"
-                      type="date"
-                      defaultValue={today()}
-                      required
-                    />
-                  </label>
-                </>
+                <ExpenseFields expense={modal.value} />
               )}
               {error && <div className="error">{error}</div>}
               <div className="modal-actions">

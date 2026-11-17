@@ -100,6 +100,7 @@ export const sections = [
     name: "Reports",
     pages: [
       "Daily snapshot",
+      "Expenses",
       "Daily closeout",
       "Owner forecast",
       "Menu profitability",
@@ -396,6 +397,11 @@ export const pages = {
     label: "Daily snapshot",
     description:
       "Review one day of sales, costs, payments, tax and kitchen output.",
+  },
+  Expenses: {
+    label: "Expenses",
+    description:
+      "Record, categorize, edit, search, and export operating expenses without double-counting inventory purchases.",
   },
   "Daily closeout": {
     label: "Daily closeout",
