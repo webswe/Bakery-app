@@ -127,7 +127,15 @@ const csvCell = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
 
 export function expenseCsv(rows) {
   return [
-    ["Date", "Description", "Category", "Vendor", "Payment method", "Amount", "Notes"],
+    [
+      "Date",
+      "Description",
+      "Category",
+      "Vendor",
+      "Payment method",
+      "Amount",
+      "Notes",
+    ],
     ...rows.map((row) => [
       row.date,
       row.name,
