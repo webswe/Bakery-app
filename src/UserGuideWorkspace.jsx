@@ -230,7 +230,7 @@ const guideSections = [
     tips: [
       "Revenue is shown before customer sales tax. Tax collected remains a separate liability figure.",
       "Profit is useful only when purchases, operating expenses, recipe costs, and refunds are recorded consistently.",
-      "Do not enter ingredient or packaging purchases as operating expenses; receiving inventory already records those cash costs."
+      "Do not enter ingredient or packaging purchases as operating expenses; receiving inventory already records those cash costs.",
     ],
     keywords:
       "finance goals revenue profit cash margin expense tax report money",
