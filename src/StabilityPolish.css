@@ -86,8 +86,7 @@ small {
 .quick-search:focus-within {
   border-color: var(--app-accent);
   background: white;
-  box-shadow: 0 0 0 4px
-    color-mix(in srgb, var(--app-accent) 13%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--app-accent) 13%, transparent);
 }
 
 .table-scroll {
