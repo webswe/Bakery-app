@@ -222,6 +222,7 @@ const guideSections = [
       "Set revenue, profit, margin, cash-reserve, waste, batch, and owner-hour targets under Goals & tasks.",
       "Open Goals & finances and choose the reporting month.",
       "Compare progress bars with the owner guidance and profit bridge.",
+      "Open Expenses to categorize overhead, record vendor and payment details, correct entries, or export the ledger.",
       "Review outstanding pickup balances and the largest operating-expense categories.",
       "Open Menu profitability before changing prices or removing a product.",
       "Use Daily closeout for cash reconciliation; use Tax report for recorded tax totals.",
@@ -229,6 +230,7 @@ const guideSections = [
     tips: [
       "Revenue is shown before customer sales tax. Tax collected remains a separate liability figure.",
       "Profit is useful only when purchases, operating expenses, recipe costs, and refunds are recorded consistently.",
+      "Do not enter ingredient or packaging purchases as operating expenses; receiving inventory already records those cash costs."
     ],
     keywords:
       "finance goals revenue profit cash margin expense tax report money",
