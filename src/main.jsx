@@ -26,6 +26,9 @@ import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
 import SupportWorkspace from "./SupportWorkspace.jsx";
 import DataCleanupWorkspace from "./DataCleanupWorkspace.jsx";
+import ExpenseWorkspace from "./ExpenseWorkspace.jsx";
+import ExpenseFields from "./ExpenseFields.jsx";
+import { saveExpense } from "./expenses.js";
 import {
   removeRecipe,
   saveRecipePreset,
@@ -117,7 +120,13 @@ const sectionPrimaryPages = {
   Stock: stockPrimaryPages,
   Kitchen: kitchenPrimaryPages,
   Sales: ["Orders", "Receivables", "Quotes", "Customers"],
-  Reports: ["Daily snapshot", "Owner forecast", "Tax report", "Waste analysis"],
+  Reports: [
+    "Daily snapshot",
+    "Expenses",
+    "Owner forecast",
+    "Tax report",
+    "Waste analysis",
+  ],
   Settings: [
     "Tutorial",
     "User guide",
@@ -723,13 +732,7 @@ function App() {
         );
       }
       if (modal.type === "expense")
-        persist({
-          ...data,
-          expenses: [
-            ...data.expenses,
-            { id: uid(), date: f.date, name: f.name, amount: +f.amount },
-          ],
-        });
+        persist(saveExpense(data, { ...modal.value, ...f }));
       if (["item", "recipe"].includes(modal.type))
         localStorage.removeItem(modalDraftKey(modal.type, modal.value));
       setModalDirty(false);
@@ -1044,6 +1047,8 @@ function App() {
             <AppCustomizationWorkspace data={data} save={save} />
           ) : page === "Data cleanup" ? (
             <DataCleanupWorkspace data={data} save={save} navigate={navigate} />
+          ) : page === "Expenses" ? (
+            <ExpenseWorkspace data={data} save={save} open={open} />
           ) : page === "Goals & tasks" ? (
             <OwnerCommandCenter data={data} save={save} />
           ) : page === "App updates" ? (
@@ -1268,6 +1273,14 @@ function App() {
                                     Collect
                                   </button>
                                 )}
+                              {s.type === "Expense" && (
+                                <button
+                                  className="secondary"
+                                  onClick={() => open("expense", s)}
+                                >
+                                  Edit
+                                </button>
+                              )}
                               <button
                                 aria-label="Delete transaction"
                                 disabled={!!(s.orderId || s.wasteId)}
@@ -1400,7 +1413,9 @@ function App() {
                       ? "Recipe studio"
                       : modal.type === "sale"
                         ? "Record a sale"
-                        : "Record an expense"}
+                        : modal.value?.id
+                          ? "Edit expense"
+                          : "Record an expense"}
                 {modalDirty ? " • Unsaved draft" : ""}
               </h2>
               <button
@@ -1493,35 +1508,7 @@ function App() {
               ) : modal.type === "sale" ? (
                 <SaleFields data={data} />
               ) : (
-                <>
-                  <label>
-                    Description
-                    <input
-                      name="name"
-                      required
-                      placeholder="e.g. Kitchen rent"
-                    />
-                  </label>
-                  <label>
-                    Amount ($)
-                    <input
-                      name="amount"
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      required
-                    />
-                  </label>
-                  <label>
-                    Date
-                    <input
-                      name="date"
-                      type="date"
-                      defaultValue={today()}
-                      required
-                    />
-                  </label>
-                </>
+                <ExpenseFields expense={modal.value} />
               )}
               {error && <div className="error">{error}</div>}
               <div className="modal-actions">
