@@ -60,7 +60,14 @@ import {
   businessIntelligencePages,
 } from "./workspaceNavigation.js";
 import { withChangeLog } from "./businessIntelligence.js";
-import React, { lazy, Suspense, useState, useEffect, useRef } from "react";
+import React, {
+  lazy,
+  Suspense,
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { createRoot } from "react-dom/client";
 import {
   LayoutDashboard,
@@ -280,6 +287,7 @@ function App() {
     () => localStorage.getItem(sidebarCollapsedKey) === "true",
   );
   const [savedAt, setSavedAt] = useState(null);
+  const [visibleActivity, setVisibleActivity] = useState(50);
   const [undo, setUndo] = useState(null);
   const [recentPages, setRecentPages] = useState(() =>
     readRecentPages(localStorage),
@@ -586,6 +594,19 @@ function App() {
   }, [modal]);
   const sales = data.sales.filter((s) => s.date.startsWith(month)),
     expenses = data.expenses.filter((s) => s.date.startsWith(month));
+  const monthActivity = useMemo(
+    () =>
+      [
+        ...data.sales
+          .filter((row) => row.date.startsWith(month))
+          .map((row) => ({ ...row, type: "Sale" })),
+        ...data.expenses
+          .filter((row) => row.date.startsWith(month))
+          .map((row) => ({ ...row, type: "Expense" })),
+      ].sort((a, b) => b.date.localeCompare(a.date)),
+    [data.sales, data.expenses, month],
+  );
+  useEffect(() => setVisibleActivity(50), [month]);
   function submit(e) {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
@@ -1223,11 +1244,8 @@ function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        ...sales.map((s) => ({ ...s, type: "Sale" })),
-                        ...expenses.map((s) => ({ ...s, type: "Expense" })),
-                      ]
-                        .sort((a, b) => b.date.localeCompare(a.date))
+                      {monthActivity
+                        .slice(0, visibleActivity)
                         .map((s) => (
                           <tr key={s.id}>
                             <td>
@@ -1333,6 +1351,21 @@ function App() {
                         ))}
                     </tbody>
                   </table>
+                  {monthActivity.length > visibleActivity && (
+                    <div className="activity-load-more">
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          setVisibleActivity((count) => count + 50)
+                        }
+                      >
+                        Show 50 more transactions
+                      </button>
+                      <small>
+                        Showing {visibleActivity} of {monthActivity.length}
+                      </small>
+                    </div>
+                  )}
                   {!sales.length && !expenses.length && (
                     <div className="empty">
                       <span>✧</span>
