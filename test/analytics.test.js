@@ -35,3 +35,12 @@ test("old backups retain purchase rates and gain tax categories", () => {
   assert.deepEqual(d.scalingPresets, []);
   assert.deepEqual(d.purchaseOrders, []);
 });
+
+test("incomplete legacy data gains safe empty collections", () => {
+  const data = migrateData({});
+  assert.deepEqual(data.items, []);
+  assert.deepEqual(data.recipes, []);
+  assert.deepEqual(data.sales, []);
+  assert.deepEqual(data.expenses, []);
+  assert.deepEqual(data.productionPlans, []);
+});

@@ -85,7 +85,9 @@ import {
   convertItem,
 } from "./costing.js";
 import { localDay, money } from "./uiFormatters.js";
+import AppErrorBoundary from "./AppErrorBoundary.jsx";
 import "./style.css";
+import "./StabilityPolish.css";
 const OwnerToolkitWorkspace = lazy(() => import("./OwnerToolkitWorkspace.jsx"));
 const BakeryOperationsWorkspace = lazy(
   () => import("./BakeryOperationsWorkspace.jsx"),
@@ -153,14 +155,16 @@ function recoverTextFieldFocus(event) {
     (field instanceof HTMLInputElement && nonTextInputTypes.has(field.type))
   )
     return;
-  requestAnimationFrame(() => {
+  const focus = () => {
     if (
       document.hasFocus() &&
       field.isConnected &&
       document.activeElement !== field
     )
       field.focus({ preventScroll: true });
-  });
+  };
+  focus();
+  requestAnimationFrame(focus);
 }
 const readLock = () => {
   try {
@@ -2360,4 +2364,8 @@ function LockScreen({ config, onUnlock }) {
     </main>
   );
 }
-createRoot(document.getElementById("root")).render(<App />);
+createRoot(document.getElementById("root")).render(
+  <AppErrorBoundary>
+    <App />
+  </AppErrorBoundary>,
+);

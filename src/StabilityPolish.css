@@ -1,0 +1,225 @@
+:root {
+  --polish-border: color-mix(in srgb, var(--app-sidebar) 14%, white);
+  --polish-shadow: 0 12px 32px rgb(31 56 63 / 7%);
+  --polish-focus: color-mix(in srgb, var(--app-accent) 72%, white);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+input,
+select,
+textarea {
+  caret-color: var(--app-accent);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #82919a;
+  opacity: 1;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--polish-focus);
+  outline-offset: 2px;
+}
+
+.panel,
+.stat {
+  border-color: var(--polish-border);
+  box-shadow: var(--polish-shadow);
+}
+
+.panel {
+  border-radius: 12px;
+}
+
+.panel-heading p,
+.hint,
+.empty p,
+.stat small,
+small {
+  line-height: 1.55;
+}
+
+.content table tbody tr {
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.content table tbody tr:hover {
+  background: color-mix(in srgb, var(--app-soft) 55%, white);
+}
+
+.content table tbody tr:focus-within {
+  background: color-mix(in srgb, var(--app-soft) 78%, white);
+  box-shadow: inset 3px 0 var(--app-accent);
+}
+
+.quick-search {
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.quick-search:focus-within {
+  border-color: var(--app-accent);
+  background: white;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--app-accent) 13%, transparent);
+}
+
+.table-scroll {
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.error {
+  border: 1px solid #e7b8ae;
+}
+
+.recovery-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 15% 15%, var(--app-soft), transparent 34%),
+    var(--app-canvas);
+}
+
+.recovery-card {
+  width: min(620px, 100%);
+  padding: clamp(24px, 5vw, 48px);
+}
+
+.recovery-card h1 {
+  margin: 12px 0;
+}
+
+.recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+@media (max-width: 850px) {
+  .content {
+    padding: 24px 18px;
+  }
+
+  .page-title {
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+
+  .panel-heading {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 580px) {
+  .content {
+    padding: 18px 12px 28px;
+  }
+
+  h1 {
+    font-size: clamp(24px, 8vw, 30px);
+  }
+
+  .page-title {
+    display: grid;
+    gap: 14px;
+  }
+
+  .page-title .primary {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 0;
+  }
+
+  .form-row,
+  .planning-actions,
+  .modal-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: min(92vh, 760px);
+    border-radius: 18px 18px 0 0;
+  }
+
+  .modal form {
+    padding: 18px;
+  }
+
+  .modal-actions button,
+  .planning-actions button,
+  .recovery-actions button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .quick-search {
+    width: min(100%, 320px);
+  }
+
+  .quick-search kbd {
+    display: none;
+  }
+
+  .recovery-screen {
+    align-items: end;
+    padding: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

@@ -522,11 +522,7 @@ export function wasteCoaching(data, month) {
 function changeSummary(previous, next) {
   const ignored = new Set(["changeLog"]);
   return Object.keys(next)
-    .filter(
-      (key) =>
-        !ignored.has(key) &&
-        JSON.stringify(previous?.[key]) !== JSON.stringify(next[key]),
-    )
+    .filter((key) => !ignored.has(key) && previous?.[key] !== next[key])
     .map((key) => key.replace(/([A-Z])/g, " $1").toLowerCase());
 }
 
