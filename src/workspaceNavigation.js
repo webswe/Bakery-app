@@ -37,7 +37,7 @@ export const businessIntelligencePages = [
 export const sections = [
   {
     name: "Overview",
-    pages: ["Overview", "Goals & tasks", "Financial center"],
+    pages: ["Overview", "Owner desk", "Goals & tasks", "Financial center"],
   },
   {
     name: "Sales",
@@ -143,6 +143,11 @@ export const pages = {
       "See what needs attention today, then review your business performance.",
     action: "Record a sale",
     modal: "sale",
+  },
+  "Owner desk": {
+    label: "Owner desk",
+    description:
+      "Review today’s decisions, production demand, personal use, cash-flow runway, bookkeeping exports, backups, and keyboard shortcuts in one place.",
   },
   "Goals & tasks": {
     label: "Goals & tasks",
