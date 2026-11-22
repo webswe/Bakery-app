@@ -66,6 +66,8 @@ export function migrateData(data) {
     productionBatches: list(data.productionBatches),
     seasonalPlans: list(data.seasonalPlans),
     ownerTasks: list(data.ownerTasks),
+    personalUseRecords: list(data.personalUseRecords),
+    cashFlowPlans: list(data.cashFlowPlans),
     scalingPresets: list(data.scalingPresets),
     purchaseOrders: list(data.purchaseOrders),
     recipeVersions: list(data.recipeVersions),
