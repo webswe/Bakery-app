@@ -104,7 +104,11 @@ export default function OwnerDecisionWorkspace({ data, save, navigate }) {
       </nav>
       {notice && (
         <p
-          className={/saved|scheduled|recorded|download/i.test(notice) ? "positive" : "error"}
+          className={
+            /saved|scheduled|recorded|download/i.test(notice)
+              ? "positive"
+              : "error"
+          }
           role="status"
         >
           {notice}
@@ -258,7 +262,10 @@ function Production({ data, day, recommendations, act, navigate }) {
               themselves.
             </p>
           </div>
-          <button className="text-button" onClick={() => navigate("Smart schedule")}>
+          <button
+            className="text-button"
+            onClick={() => navigate("Smart schedule")}
+          >
             Open detailed schedule
           </button>
         </div>
@@ -278,7 +285,9 @@ function Production({ data, day, recommendations, act, navigate }) {
           </div>
         ))}
         {!recommendations.length && (
-          <p className="empty-note">Record sales or orders to build a forecast.</p>
+          <p className="empty-note">
+            Record sales or orders to build a forecast.
+          </p>
         )}
       </section>
       <section className="panel planning-form">
@@ -292,10 +301,7 @@ function Production({ data, day, recommendations, act, navigate }) {
           onSubmit={(event) => {
             event.preventDefault();
             const input = Object.fromEntries(new FormData(event.currentTarget));
-            act(
-              () => recordOwnerUse(data, input),
-              "Personal use recorded.",
-            );
+            act(() => recordOwnerUse(data, input), "Personal use recorded.");
             event.currentTarget.reset();
           }}
         >
@@ -389,8 +395,8 @@ function Money({ data, day, act }) {
             <div>
               <h2>Cash-flow runway</h2>
               <p>
-                Outstanding balances plus your planned income and bills. This
-                is a planning view, not an accounting statement.
+                Outstanding balances plus your planned income and bills. This is
+                a planning view, not an accounting statement.
               </p>
             </div>
             <label>
@@ -447,7 +453,11 @@ function Money({ data, day, act }) {
           >
             <label>
               Description
-              <input name="name" placeholder="Rent, market fee, expected catering payment" required />
+              <input
+                name="name"
+                placeholder="Rent, market fee, expected catering payment"
+                required
+              />
             </label>
             <div className="form-row">
               <label>
@@ -459,7 +469,13 @@ function Money({ data, day, act }) {
               </label>
               <label>
                 Amount
-                <input name="amount" type="number" min="0.01" step="0.01" required />
+                <input
+                  name="amount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  required
+                />
               </label>
               <label>
                 Date
@@ -543,9 +559,7 @@ function Tools({ data, navigate }) {
     backupError = "Local backup history needs attention.";
   }
   const latest = backups.at(-1);
-  const deviceDay = localStorage.getItem(
-    "bakery-ledger-device-backup-day-v1",
-  );
+  const deviceDay = localStorage.getItem("bakery-ledger-device-backup-day-v1");
   return (
     <div className="owner-decision-grid">
       <section className="panel">
@@ -554,12 +568,18 @@ function Tools({ data, navigate }) {
           <dt>Automatic local snapshots</dt>
           <dd>{backups.length}</dd>
           <dt>Latest local snapshot</dt>
-          <dd>{latest?.savedAt ? new Date(latest.savedAt).toLocaleString() : "Not yet available"}</dd>
+          <dd>
+            {latest?.savedAt
+              ? new Date(latest.savedAt).toLocaleString()
+              : "Not yet available"}
+          </dd>
           <dt>Latest device backup</dt>
           <dd>{deviceDay || "Not recorded on this device"}</dd>
           <dt>Workspace records</dt>
           <dd>
-            {(data.sales || []).length + (data.orders || []).length + (data.recipes || []).length}
+            {(data.sales || []).length +
+              (data.orders || []).length +
+              (data.recipes || []).length}
           </dd>
         </dl>
         {backupError && <p className="error">{backupError}</p>}
@@ -567,7 +587,10 @@ function Tools({ data, navigate }) {
           <button className="primary" onClick={() => navigate("Backups")}>
             Export portable backup
           </button>
-          <button className="secondary" onClick={() => navigate("Secure backups")}>
+          <button
+            className="secondary"
+            onClick={() => navigate("Secure backups")}
+          >
             Secure backup tools
           </button>
         </div>
@@ -575,11 +598,26 @@ function Tools({ data, navigate }) {
       <section className="panel">
         <h2>Keyboard-first workflow</h2>
         <div className="shortcut-list">
-          <span><kbd>Ctrl/⌘ K</kbd><b>Find a page, record or action</b></span>
-          <span><kbd>↑ / ↓</kbd><b>Move through search results</b></span>
-          <span><kbd>Enter</kbd><b>Open the selected result</b></span>
-          <span><kbd>Esc</kbd><b>Close search or a dialog</b></span>
-          <span><kbd>F1</kbd><b>Open the user guide</b></span>
+          <span>
+            <kbd>Ctrl/⌘ K</kbd>
+            <b>Find a page, record or action</b>
+          </span>
+          <span>
+            <kbd>↑ / ↓</kbd>
+            <b>Move through search results</b>
+          </span>
+          <span>
+            <kbd>Enter</kbd>
+            <b>Open the selected result</b>
+          </span>
+          <span>
+            <kbd>Esc</kbd>
+            <b>Close search or a dialog</b>
+          </span>
+          <span>
+            <kbd>F1</kbd>
+            <b>Open the user guide</b>
+          </span>
         </div>
         <p className="hint">
           Search includes recipes, stock items, customers, orders, pages and
