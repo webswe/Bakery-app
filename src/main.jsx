@@ -24,6 +24,7 @@ import QuickSearch from "./QuickSearch.jsx";
 import UpdateWorkspace, { UpdateStatusBadge } from "./UpdateWorkspace.jsx";
 import AppCustomizationWorkspace from "./AppCustomizationWorkspace.jsx";
 import OwnerCommandCenter from "./OwnerCommandCenter.jsx";
+import OwnerDecisionWorkspace from "./OwnerDecisionWorkspace.jsx";
 import SupportWorkspace from "./SupportWorkspace.jsx";
 import DataCleanupWorkspace from "./DataCleanupWorkspace.jsx";
 import ExpenseWorkspace from "./ExpenseWorkspace.jsx";
@@ -1074,6 +1075,12 @@ function App() {
             <ExpenseWorkspace data={data} save={save} open={open} />
           ) : page === "Pricing desk" ? (
             <PricingDeskWorkspace data={data} save={save} navigate={navigate} />
+          ) : page === "Owner desk" ? (
+            <OwnerDecisionWorkspace
+              data={data}
+              save={save}
+              navigate={navigate}
+            />
           ) : page === "Goals & tasks" ? (
             <OwnerCommandCenter data={data} save={save} />
           ) : page === "App updates" ? (
