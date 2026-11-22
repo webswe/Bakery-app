@@ -242,3 +242,27 @@ test("planned production can move to another calendar date without duplication",
   assert.equal(edited.productionPlans[0].batches, 3);
   assert.equal(edited.productionPlans[0].notes, "Moved from calendar");
 });
+
+test("quotes use saved contingency, processing fees and whole-price rounding", () => {
+  const data = fixture();
+  data.settings.pricingGuide = {
+    targetMargin: 20,
+    wastePercent: 10,
+    processorFeePercent: 2,
+    processorFixedFee: 0.3,
+    roundTo: 0.5,
+  };
+  const quote = quoteCalculation(data, {
+    recipeId: "dessert",
+    portions: 11,
+    margin: 20,
+    extraCost: 10,
+    taxRate: 0,
+    date: "2026-11-22",
+  });
+  assert.equal(quote.baseCost, 50);
+  assert.equal(quote.cost, 55);
+  assert.equal(quote.subtotal, 71);
+  assert.equal(quote.processingFee, 1.72);
+  assert.ok(quote.margin >= 20);
+});
