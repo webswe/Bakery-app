@@ -1073,11 +1073,7 @@ function App() {
           ) : page === "Expenses" ? (
             <ExpenseWorkspace data={data} save={save} open={open} />
           ) : page === "Pricing desk" ? (
-            <PricingDeskWorkspace
-              data={data}
-              save={save}
-              navigate={navigate}
-            />
+            <PricingDeskWorkspace data={data} save={save} navigate={navigate} />
           ) : page === "Goals & tasks" ? (
             <OwnerCommandCenter data={data} save={save} />
           ) : page === "App updates" ? (
