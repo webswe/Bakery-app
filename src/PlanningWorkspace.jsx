@@ -16,6 +16,7 @@ import {
 } from "./planning.js";
 import { checklistSteps, toggleChecklist } from "./business.js";
 import { fullCost } from "./operations.js";
+import { normalizePricingPolicy } from "./pricingStrategy.js";
 import { money } from "./uiFormatters.js";
 const qty = (n) => Number(n.toFixed(3));
 const nextWeek = () => {
@@ -275,13 +276,14 @@ function RecipeSelect({ data, value, onChange }) {
 }
 function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
   const draftKey = "bakery-ledger-quote-draft-v1";
+  const pricingPolicy = normalizePricingPolicy(data.settings);
   const initialCustomer = data.customers?.find(
     (customer) => customer.id === initialCustomerId,
   );
   const empty = () => ({
     recipeId: data.recipes[0]?.id || "",
     portions: 1,
-    margin: 30,
+    margin: pricingPolicy.targetMargin,
     extraCost: 0,
     taxRate: data.salesTaxRate ?? 0,
     customer: initialCustomer?.name || "",
@@ -499,7 +501,19 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
                 {quote.producedPortions} / {quote.portions}
               </dd>
               <dt>Full production + extra cost</dt>
-              <dd>{money(quote.cost)}</dd>
+              <dd>{money(quote.baseCost ?? quote.cost)}</dd>
+              {quote.wastePercent > 0 && (
+                <>
+                  <dt>Contingency ({quote.wastePercent}%)</dt>
+                  <dd>{money(quote.cost - quote.baseCost)}</dd>
+                </>
+              )}
+              {quote.processingFee > 0 && (
+                <>
+                  <dt>Estimated processing fee</dt>
+                  <dd>{money(quote.processingFee)}</dd>
+                </>
+              )}
               <dt>Quote before tax</dt>
               <dd>{money(quote.subtotal)}</dd>
               <dt>Before-tax price / requested portion</dt>
@@ -508,8 +522,17 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
               <dd>{money(quote.tax)}</dd>
               <dt>Estimated profit</dt>
               <dd>{money(quote.profit)}</dd>
+              <dt>Estimated margin</dt>
+              <dd>{Number(quote.margin || 0).toFixed(1)}%</dd>
             </dl>
           )}
+          <button
+            className="text-button"
+            type="button"
+            onClick={() => navigate("Pricing desk")}
+          >
+            Review pricing assumptions
+          </button>
           <p className="hint">
             Saving captures this estimate. Later price changes do not rewrite
             saved quotes. Editing and saving recalculates with current costs.
