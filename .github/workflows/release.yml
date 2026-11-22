@@ -24,7 +24,7 @@ jobs:
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          $isPrerelease = $tag -match "-(alpha|rc)([.-]|$)"
+          $isPrerelease = $tag -match "-(alpha|beta|rc)([.-]|$)"
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
             if ($isPrerelease) {
