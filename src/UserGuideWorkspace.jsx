@@ -108,6 +108,29 @@ const guideSections = [
       "recipe maker price pricing packaging labor fraction duplicate edit margin",
   },
   {
+    id: "pricing-planning",
+    category: "Recipes & pricing",
+    title: "Use the pricing and planning desk",
+    summary:
+      "Turn the complete cost of one selling unit into a fee-aware price and a realistic monthly sales target.",
+    page: "Pricing desk",
+    steps: [
+      "Choose a recipe and confirm that its yield and selling quantity match how the product is actually sold.",
+      "Set the target margin, waste or contingency allowance, expected discount, and card or marketplace fees.",
+      "Review the recommended before-tax price, customer total with tax, profit, margin, and markup.",
+      "Check the whole-unit warning when a batch leaves portions outside a complete box, tray, or dozen.",
+      "Enter monthly fixed costs plus revenue and profit goals to see break-even units and units per selling day.",
+      "Save the assumptions for future quotes, or apply the recommended price to the recipe when ready.",
+    ],
+    tips: [
+      "Margin is profit divided by revenue; markup is profit divided by cost.",
+      "Customer sales tax is added after the selling price and is not bakery revenue.",
+      "The calculator rounds the complete selling unit so boxes and dozens are not inflated by repeated per-portion rounding.",
+    ],
+    keywords:
+      "pricing guide calculator margin markup fee discount contingency waste break even revenue profit monthly plan",
+  },
+  {
     id: "quotes-orders",
     category: "Sales & customers",
     title: "Move from inquiry to accepted order",
