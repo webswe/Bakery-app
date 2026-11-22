@@ -1,10 +1,5 @@
 import React, { useMemo, useState } from "react";
-import {
-  ArrowUpRight,
-  Calculator,
-  CircleDollarSign,
-  Save,
-} from "lucide-react";
+import { ArrowUpRight, Calculator, CircleDollarSign, Save } from "lucide-react";
 import {
   applyPricingRecommendation,
   pricingDeskReport,
@@ -112,9 +107,7 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
                 max="90"
                 step="1"
                 value={form.targetMargin}
-                onChange={(event) =>
-                  change("targetMargin", event.target.value)
-                }
+                onChange={(event) => change("targetMargin", event.target.value)}
               />
             </label>
             <label>
@@ -140,9 +133,7 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
                 max="100"
                 step="0.1"
                 value={form.wastePercent}
-                onChange={(event) =>
-                  change("wastePercent", event.target.value)
-                }
+                onChange={(event) => change("wastePercent", event.target.value)}
               />
             </label>
             <label>
@@ -205,9 +196,7 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
                 max="100"
                 step="0.1"
                 value={form.salesTaxRate}
-                onChange={(event) =>
-                  change("salesTaxRate", event.target.value)
-                }
+                onChange={(event) => change("salesTaxRate", event.target.value)}
               />
             </label>
           </div>
@@ -472,9 +461,9 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
               </p>
               <p>
                 The recommendation covers ingredients, packaging, labor,
-                electricity, batch overhead, contingency, expected discount,
-                and processing fees. It rounds the complete selling unit—not
-                each portion—so boxes and dozens are not inflated by repeated
+                electricity, batch overhead, contingency, expected discount, and
+                processing fees. It rounds the complete selling unit—not each
+                portion—so boxes and dozens are not inflated by repeated
                 rounding.
               </p>
               <p>
