@@ -7,6 +7,9 @@ import {
   priceForMargin,
 } from "./pricingStrategy.js";
 
+const moneyRound = (value) =>
+  Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
 export const localDate = () => {
   const d = new Date();
   return [
@@ -54,14 +57,15 @@ export function quoteCalculation(data, input) {
   if (margin >= 100 || taxRate > 100)
     throw Error("Margin must be below 100%; tax cannot exceed 100%.");
   const batches = Math.ceil(portions / recipe.yield);
-  const baseCost =
+  const baseCost = moneyRound(
     number(fullCost(recipe, data.items, data.settings), "Recipe cost") *
       batches +
-    number(input.extraCost, "Extra cost");
+      number(input.extraCost, "Extra cost"),
+  );
   const savedPolicy = data.settings?.pricingGuide;
   const policy = normalizePricingPolicy(data.settings);
   const wastePercent = savedPolicy ? policy.wastePercent : 0;
-  const cost = baseCost * (1 + wastePercent / 100);
+  const cost = moneyRound(baseCost * (1 + wastePercent / 100));
   const priced = priceForMargin({
     cost,
     targetMargin: margin,
