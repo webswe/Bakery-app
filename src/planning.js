@@ -2,6 +2,10 @@ import { customerTax } from "./taxation.js";
 import { requirements, fullCost, produce } from "./operations.js";
 import { ensureCustomer } from "./customerOps.js";
 import { allocateDocumentNumber } from "./documentOps.js";
+import {
+  normalizePricingPolicy,
+  priceForMargin,
+} from "./pricingStrategy.js";
 
 export const localDate = () => {
   const d = new Date();
