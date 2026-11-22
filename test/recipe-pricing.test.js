@@ -117,10 +117,15 @@ test("pricing rounds the complete dozen instead of every portion", () => {
       taxMode: "exempt",
     },
   ];
-  const plan = recipePricingPlan(recipe, items, {}, {
-    targetMargin: 50,
-    roundTo: 0.5,
-  });
+  const plan = recipePricingPlan(
+    recipe,
+    items,
+    {},
+    {
+      targetMargin: 50,
+      roundTo: 0.5,
+    },
+  );
   assert.equal(plan.total, 2.02);
   assert.equal(plan.suggestedSale, 4.5);
   assert.equal(plan.suggestedPortion, 0.375);
