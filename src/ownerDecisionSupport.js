@@ -19,7 +19,10 @@ const csvCell = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
 
 export function productionRecommendations(data, day, horizonDays = 7) {
   if (!validDay(day)) throw Error("Choose a valid planning date.");
-  const horizon = Math.max(1, Math.min(30, Math.round(number(horizonDays) || 7)));
+  const horizon = Math.max(
+    1,
+    Math.min(30, Math.round(number(horizonDays) || 7)),
+  );
   const recentStart = addDays(day, -28);
   const through = addDays(day, horizon);
   const recentSales = (data.sales || []).filter(
@@ -66,11 +69,10 @@ export function productionRecommendations(data, day, horizonDays = 7) {
         );
       const onHand = Math.max(0, number(data.products?.[recipe.id]?.quantity));
       const forecastDemand = Math.ceil(averageDaily * horizon + orderDemand);
-      const portionsToMake = Math.max(
-        0,
-        forecastDemand - onHand - scheduled,
+      const portionsToMake = Math.max(0, forecastDemand - onHand - scheduled);
+      const batches = Math.ceil(
+        portionsToMake / Math.max(1, number(recipe.yield)),
       );
-      const batches = Math.ceil(portionsToMake / Math.max(1, number(recipe.yield)));
       let batchCost = 0;
       try {
         batchCost = fullCost(recipe, data.items || [], data.settings || {});
@@ -117,7 +119,9 @@ export function recordOwnerUse(data, input) {
   let unit;
   let cost;
   if (kind === "dessert") {
-    const recipe = (data.recipes || []).find((row) => row.id === input.recordId);
+    const recipe = (data.recipes || []).find(
+      (row) => row.id === input.recordId,
+    );
     if (!recipe) throw Error("Choose a dessert.");
     const stock = data.products?.[recipe.id] || { quantity: 0, value: 0 };
     cost = stock.quantity ? (stock.value / stock.quantity) * quantity : 0;
@@ -133,7 +137,9 @@ export function recordOwnerUse(data, input) {
   } else {
     const item = (data.items || []).find((row) => row.id === input.recordId);
     if (!item) throw Error("Choose an ingredient or package.");
-    cost = item.amount ? (number(item.price) / number(item.amount)) * quantity : 0;
+    cost = item.amount
+      ? (number(item.price) / number(item.amount)) * quantity
+      : 0;
     next = recordPersonalUse(data, item.id, quantity);
     name = item.name;
     unit = item.unit;
