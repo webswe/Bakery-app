@@ -76,8 +76,11 @@ export function priceForMargin(input) {
     );
   const realizedRequired = (cost + fixedFee) / denominator;
   const rawListPrice = realizedRequired / Math.max(0.01, 1 - discountRate);
-  const listPrice =
-    Math.ceil((rawListPrice - Number.EPSILON) / roundTo) * roundTo;
+  const listPrice = Number(
+    (
+      Math.ceil(rawListPrice / roundTo - 1e-9) * roundTo
+    ).toFixed(10),
+  );
   return {
     ...evaluateListPrice({
       ...input,
