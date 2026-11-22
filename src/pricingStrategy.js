@@ -24,9 +24,7 @@ export function normalizePricingPolicy(settings = {}) {
     monthlyFixedCosts: Math.max(
       0,
       finite(
-        saved.monthlyFixedCosts ??
-          settings.finance?.monthlyExpenseBudget ??
-          0,
+        saved.monthlyFixedCosts ?? settings.finance?.monthlyExpenseBudget ?? 0,
       ),
     ),
     monthlyRevenueGoal: Math.max(
@@ -71,15 +69,11 @@ export function priceForMargin(input) {
   const roundTo = Math.max(0.01, finite(input.roundTo, 0.01));
   const denominator = 1 - targetMargin / 100 - feeRate;
   if (denominator <= 0)
-    throw Error(
-      "Target margin and processing fee must total less than 100%.",
-    );
+    throw Error("Target margin and processing fee must total less than 100%.");
   const realizedRequired = (cost + fixedFee) / denominator;
   const rawListPrice = realizedRequired / Math.max(0.01, 1 - discountRate);
   const listPrice = Number(
-    (
-      Math.ceil(rawListPrice / roundTo - 1e-9) * roundTo
-    ).toFixed(10),
+    (Math.ceil(rawListPrice / roundTo - 1e-9) * roundTo).toFixed(10),
   );
   return {
     ...evaluateListPrice({
@@ -106,7 +100,11 @@ export function monthlySalesPlan(input) {
   const remainingRevenue = Math.max(0, revenueGoal - actualRevenue);
   const remainingProfit = Math.max(0, profitGoal - actualProfit);
   const units = (amount, contribution) =>
-    amount <= 0 ? 0 : contribution > 0 ? Math.ceil(amount / contribution) : null;
+    amount <= 0
+      ? 0
+      : contribution > 0
+        ? Math.ceil(amount / contribution)
+        : null;
   const breakEvenUnits = units(fixedCosts, unitContribution);
   const revenueGoalUnits = units(revenueGoal, unitRevenue);
   const profitGoalUnits = units(fixedCosts + profitGoal, unitContribution);
