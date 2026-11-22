@@ -1,0 +1,36 @@
+name: Format pricing preview
+on:
+  push:
+    branches:
+      - feature/pricing-planning-suite
+jobs:
+  format-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Format and print changed files
+        shell: bash
+        run: |
+          files=(
+            src/BakeryOperationsWorkspace.jsx
+            src/BusinessIntelligenceWorkspace.jsx
+            src/main.jsx
+            src/planning.js
+            src/PricingDeskWorkspace.jsx
+            src/pricingPlanner.js
+            src/pricingStrategy.js
+            src/recipePricing.js
+            test/recipe-pricing.test.js
+          )
+          npx prettier --write "${files[@]}"
+          for file in "${files[@]}"; do
+            echo "FORMAT_BEGIN:${file}"
+            base64 -w 0 "${file}"
+            echo
+            echo "FORMAT_END:${file}"
+          done
