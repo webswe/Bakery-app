@@ -55,7 +55,7 @@ function FinancialCenter({ data, save }) {
   const metrics = [
     ["Revenue", money(report.revenue), report.progress.revenue],
     ["Net profit", money(report.profit), report.progress.profit],
-    ["Cash recorded", money(report.cashIn), report.progress.reserve],
+    ["Cash reserve", money(report.cashPosition), report.progress.reserve],
     ["Net cash flow", money(report.netCashFlow), null],
     ["Cash position", money(report.cashPosition), null],
     ["Outstanding", money(report.outstanding), null],
@@ -135,7 +135,7 @@ function FinancialCenter({ data, save }) {
             <dd>{money(report.cashIn)}</dd>
             <dt>Cash out</dt>
             <dd>− {money(report.cashOut)}</dd>
-            <dt>Projected position</dt>
+            <dt>Recorded closing cash</dt>
             <dd>
               <b>{money(report.cashPosition)}</b>
             </dd>
@@ -148,6 +148,7 @@ function FinancialCenter({ data, save }) {
         <section className="panel planning-form finance-settings">
           <h2>Cash planning settings</h2>
           <form
+            key={month}
             onSubmit={(event) => {
               event.preventDefault();
               const form = Object.fromEntries(
@@ -158,7 +159,14 @@ function FinancialCenter({ data, save }) {
                 settings: {
                   ...data.settings,
                   finance: {
-                    openingCash: Math.max(0, Number(form.openingCash) || 0),
+                    ...data.settings?.finance,
+                    openingCashByMonth: {
+                      ...(data.settings?.finance?.openingCashByMonth || {}),
+                      [month]: Math.max(
+                        0,
+                        Number(form.openingCash) || 0,
+                      ),
+                    },
                     monthlyExpenseBudget: Math.max(
                       0,
                       Number(form.monthlyExpenseBudget) || 0,
@@ -169,7 +177,7 @@ function FinancialCenter({ data, save }) {
             }}
           >
             <label>
-              Opening cash for this view ($)
+              Opening cash for this month ($)
               <input
                 name="openingCash"
                 type="number"
