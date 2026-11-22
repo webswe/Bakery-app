@@ -162,10 +162,7 @@ function FinancialCenter({ data, save }) {
                     ...data.settings?.finance,
                     openingCashByMonth: {
                       ...(data.settings?.finance?.openingCashByMonth || {}),
-                      [month]: Math.max(
-                        0,
-                        Number(form.openingCash) || 0,
-                      ),
+                      [month]: Math.max(0, Number(form.openingCash) || 0),
                     },
                     monthlyExpenseBudget: Math.max(
                       0,
