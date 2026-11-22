@@ -2,10 +2,7 @@ import { customerTax } from "./taxation.js";
 import { requirements, fullCost, produce } from "./operations.js";
 import { ensureCustomer } from "./customerOps.js";
 import { allocateDocumentNumber } from "./documentOps.js";
-import {
-  normalizePricingPolicy,
-  priceForMargin,
-} from "./pricingStrategy.js";
+import { normalizePricingPolicy, priceForMargin } from "./pricingStrategy.js";
 
 const moneyRound = (value) =>
   Math.round((Number(value) + Number.EPSILON) * 100) / 100;
