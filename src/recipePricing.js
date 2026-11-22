@@ -161,6 +161,8 @@ export function recipePricingPlan(recipe, items, settings = {}, input = {}) {
     batchProfit: current.profit * costs.wholeSaleUnits,
     suggestedBatchProfit: recommendation.profit * costs.sellableUnits,
     profitPerLaborHour:
-      laborHours > 0 ? (current.profit * costs.wholeSaleUnits) / laborHours : null,
+      laborHours > 0
+        ? (current.profit * costs.wholeSaleUnits) / laborHours
+        : null,
   };
 }
