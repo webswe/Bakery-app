@@ -18,9 +18,14 @@ function normalizeBusinessGoals(value = {}) {
 
 export function financialCenter(data, month) {
   const summary = monthlySummary(data, month);
+  const financeSettings = data.settings?.finance || {};
   const finance = {
-    openingCash: number(data.settings?.finance?.openingCash),
-    monthlyExpenseBudget: number(data.settings?.finance?.monthlyExpenseBudget),
+    openingCash: number(
+      financeSettings.openingCashByMonth?.[month] ??
+        financeSettings.openingCash,
+    ),
+    openingCashByMonth: financeSettings.openingCashByMonth || {},
+    monthlyExpenseBudget: number(financeSettings.monthlyExpenseBudget),
   };
   const monthPayments = (data.payments || []).filter((row) =>
     row.date?.startsWith(month),
@@ -59,6 +64,7 @@ export function financialCenter(data, month) {
     );
   const cashOut = summary.overhead + purchaseCash;
   const netCashFlow = cashIn - cashOut;
+  const cashPosition = finance.openingCash + netCashFlow;
   const expenseGroups = Object.entries(
     summary.expenses.reduce((groups, row) => {
       const key = row.category?.trim() || "Other";
@@ -192,7 +198,7 @@ export function financialCenter(data, month) {
     purchaseCash,
     cashOut,
     netCashFlow,
-    cashPosition: finance.openingCash + netCashFlow,
+    cashPosition,
     expenseBudgetProgress: finance.monthlyExpenseBudget
       ? (summary.overhead / finance.monthlyExpenseBudget) * 100
       : 0,
@@ -206,7 +212,9 @@ export function financialCenter(data, month) {
       profit: goals.monthlyProfit
         ? (summary.profit / goals.monthlyProfit) * 100
         : 0,
-      reserve: goals.cashReserve ? (cashIn / goals.cashReserve) * 100 : 0,
+      reserve: goals.cashReserve
+        ? (Math.max(0, cashPosition) / goals.cashReserve) * 100
+        : 0,
     },
   };
 }

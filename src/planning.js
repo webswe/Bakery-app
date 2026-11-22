@@ -2,6 +2,10 @@ import { customerTax } from "./taxation.js";
 import { requirements, fullCost, produce } from "./operations.js";
 import { ensureCustomer } from "./customerOps.js";
 import { allocateDocumentNumber } from "./documentOps.js";
+import { normalizePricingPolicy, priceForMargin } from "./pricingStrategy.js";
+
+const moneyRound = (value) =>
+  Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 
 export const localDate = () => {
   const d = new Date();
@@ -50,11 +54,24 @@ export function quoteCalculation(data, input) {
   if (margin >= 100 || taxRate > 100)
     throw Error("Margin must be below 100%; tax cannot exceed 100%.");
   const batches = Math.ceil(portions / recipe.yield);
-  const cost =
+  const baseCost = moneyRound(
     number(fullCost(recipe, data.items, data.settings), "Recipe cost") *
       batches +
-    number(input.extraCost, "Extra cost");
-  const subtotal = Math.round((cost / (1 - margin / 100)) * 100) / 100;
+      number(input.extraCost, "Extra cost"),
+  );
+  const savedPolicy = data.settings?.pricingGuide;
+  const policy = normalizePricingPolicy(data.settings);
+  const wastePercent = savedPolicy ? policy.wastePercent : 0;
+  const cost = moneyRound(baseCost * (1 + wastePercent / 100));
+  const priced = priceForMargin({
+    cost,
+    targetMargin: margin,
+    processorFeePercent: savedPolicy ? policy.processorFeePercent : 0,
+    processorFixedFee: savedPolicy ? policy.processorFixedFee : 0,
+    discountPercent: 0,
+    roundTo: savedPolicy ? policy.roundTo : 0.01,
+  });
+  const subtotal = priced.listPrice;
   const taxDetails = customerTax(subtotal, taxRate);
   const tax = taxDetails.tax;
   return {
@@ -62,13 +79,17 @@ export function quoteCalculation(data, input) {
     portions,
     batches,
     producedPortions: batches * recipe.yield,
+    baseCost,
     cost,
+    wastePercent,
+    processingFee: priced.processingFee,
     subtotal,
     tax,
     taxRate,
     total: taxDetails.total,
     unitPrice: subtotal / portions,
-    profit: subtotal - cost,
+    profit: priced.profit,
+    margin: priced.margin,
   };
 }
 export function saveQuote(data, input, id) {

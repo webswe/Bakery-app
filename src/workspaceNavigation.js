@@ -101,6 +101,7 @@ export const sections = [
     pages: [
       "Daily snapshot",
       "Expenses",
+      "Pricing desk",
       "Daily closeout",
       "Owner forecast",
       "Menu profitability",
@@ -402,6 +403,11 @@ export const pages = {
     label: "Expenses",
     description:
       "Record, categorize, edit, search, and export operating expenses without double-counting inventory purchases.",
+  },
+  "Pricing desk": {
+    label: "Pricing & planning",
+    description:
+      "Build a fee-aware selling price, compare margin targets, and translate one recipe into monthly break-even, revenue, and profit goals.",
   },
   "Daily closeout": {
     label: "Daily closeout",

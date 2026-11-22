@@ -15,6 +15,7 @@ import {
   recipeSaleDetails,
 } from "./recipePricing.js";
 import { localDay, money } from "./uiFormatters.js";
+import { evaluateListPrice } from "./pricingStrategy.js";
 
 const today = () => localDay();
 const qty = (value) =>
@@ -30,7 +31,9 @@ export default function BakeryOperationsWorkspace({
   navigate,
 }) {
   if (page === "Recipe lab")
-    return <RecipeLab data={data} save={save} open={open} />;
+    return (
+      <RecipeLab data={data} save={save} open={open} navigate={navigate} />
+    );
   if (page === "Allergen matrix") return <AllergenMatrix data={data} />;
   if (page === "Capacity planner")
     return <CapacityPlanner data={data} save={save} navigate={navigate} />;
@@ -45,8 +48,9 @@ export default function BakeryOperationsWorkspace({
   return <PurchaseOrders data={data} save={save} navigate={navigate} />;
 }
 
-function RecipeLab({ data, save, open }) {
+function RecipeLab({ data, save, open, navigate }) {
   const [selected, setSelected] = useState(data.recipes[0]?.id || "");
+  const [tierError, setTierError] = useState("");
   const recipe = data.recipes.find((entry) => entry.id === selected);
   const referencePhoto = (data.recipePhotos || []).find(
     (entry) => entry.recipeId === selected,
@@ -69,7 +73,11 @@ function RecipeLab({ data, save, open }) {
       quantity: Number(form.get("quantity")),
       price: Number(form.get("price")),
     };
-    if (!tier.name || !(tier.quantity > 0) || !(tier.price >= 0)) return;
+    if (!tier.name || !(tier.quantity > 0) || !(tier.price > 0)) {
+      setTierError("Enter a tier name, a positive portion count, and a price.");
+      return;
+    }
+    setTierError("");
     save({
       ...data,
       recipes: data.recipes.map((entry) =>
@@ -159,6 +167,7 @@ function RecipeLab({ data, save, open }) {
             </span>
           </div>
           <form
+            key={recipe.id}
             className="compact-form"
             onSubmit={(event) => {
               event.preventDefault();
@@ -215,6 +224,13 @@ function RecipeLab({ data, save, open }) {
               />
             </label>
             <button className="secondary">Save pricing plan</button>
+            <button
+              className="text-button"
+              type="button"
+              onClick={() => navigate("Pricing desk")}
+            >
+              Open advanced pricing & planning
+            </button>
           </form>
           <div className="pricing-recommendation">
             <div>
@@ -280,58 +296,86 @@ function RecipeLab({ data, save, open }) {
               changing the main card price.
             </p>
             <form className="compact-form" onSubmit={updateTiers}>
-              <input name="name" placeholder="Wholesale box" required />
-              <input
-                name="quantity"
-                type="number"
-                min="1"
-                placeholder="Portions"
-                required
-              />
-              <input
-                name="price"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Total price"
-                required
-              />
+              <label>
+                Tier name
+                <input name="name" placeholder="Wholesale box" required />
+              </label>
+              <label>
+                Portions
+                <input
+                  name="quantity"
+                  type="number"
+                  min="1"
+                  placeholder="Portions"
+                  required
+                />
+              </label>
+              <label>
+                Total price
+                <input
+                  name="price"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="Total price"
+                  required
+                />
+              </label>
               <button className="primary">Add tier</button>
             </form>
-            {(recipe.priceTiers || []).map((tier) => (
-              <div className="legend" key={tier.id}>
-                <span>
-                  <b>{tier.name}</b>
-                  <small>
-                    {tier.quantity} portions ·{" "}
-                    {money(tier.price / tier.quantity)} each
-                  </small>
-                </span>
-                <span>
-                  <b>{money(tier.price)}</b>
-                  <button
-                    className="text-button"
-                    onClick={() =>
-                      save({
-                        ...data,
-                        recipes: data.recipes.map((entry) =>
-                          entry.id === recipe.id
-                            ? {
-                                ...entry,
-                                priceTiers: entry.priceTiers.filter(
-                                  (item) => item.id !== tier.id,
-                                ),
-                              }
-                            : entry,
-                        ),
-                      })
-                    }
-                  >
-                    Remove
-                  </button>
-                </span>
-              </div>
-            ))}
+            {tierError && (
+              <p className="error" role="alert">
+                {tierError}
+              </p>
+            )}
+            {(recipe.priceTiers || []).map((tier) => {
+              const tierResult = evaluateListPrice({
+                listPrice: tier.price,
+                cost: pricing.perPortion * tier.quantity,
+                processorFeePercent: pricing.processorFeePercent,
+                processorFixedFee: pricing.processorFixedFee,
+              });
+              return (
+                <div className="legend" key={tier.id}>
+                  <span>
+                    <b>{tier.name}</b>
+                    <small>
+                      {tier.quantity} portions ·{" "}
+                      {money(tier.price / tier.quantity)} each ·{" "}
+                      {qty(tierResult.margin)}% margin
+                    </small>
+                    {tierResult.margin < pricing.minimumMargin && (
+                      <small className="negative">
+                        Below the {pricing.minimumMargin}% minimum margin
+                      </small>
+                    )}
+                  </span>
+                  <span>
+                    <b>{money(tier.price)}</b>
+                    <button
+                      className="text-button"
+                      onClick={() =>
+                        save({
+                          ...data,
+                          recipes: data.recipes.map((entry) =>
+                            entry.id === recipe.id
+                              ? {
+                                  ...entry,
+                                  priceTiers: entry.priceTiers.filter(
+                                    (item) => item.id !== tier.id,
+                                  ),
+                                }
+                              : entry,
+                          ),
+                        })
+                      }
+                    >
+                      Remove
+                    </button>
+                  </span>
+                </div>
+              );
+            })}
           </section>
           <section className="panel planning-form">
             <h2>Version history</h2>

@@ -80,3 +80,53 @@ test("pricing plans include the selling format and respect margin rounding", () 
   assert.equal(plan.suggestedPortion, 0.5);
   assert.equal(plan.suggestedSale, 1);
 });
+
+test("whole selling-unit revenue does not assume fractional boxes", () => {
+  const recipe = {
+    yield: 10,
+    price: 3,
+    saleFormat: "box",
+    saleQuantity: 6,
+    salePrice: 18,
+    lines: [{ itemId: "flour", amount: 100, unit: "g" }],
+  };
+  const items = [
+    { id: "flour", amount: 1000, unit: "g", price: 4, taxMode: "exempt" },
+  ];
+  const details = recipeCostDetails(recipe, items);
+  assert.equal(details.wholeSaleUnits, 1);
+  assert.equal(details.unallocatedPortions, 4);
+  assert.equal(details.revenue, 18);
+});
+
+test("pricing rounds the complete dozen instead of every portion", () => {
+  const recipe = {
+    yield: 12,
+    price: 1,
+    saleFormat: "dozen",
+    saleQuantity: 12,
+    salePrice: 12,
+    lines: [{ itemId: "ingredient", amount: 202, unit: "g" }],
+  };
+  const items = [
+    {
+      id: "ingredient",
+      amount: 1000,
+      unit: "g",
+      price: 10,
+      taxMode: "exempt",
+    },
+  ];
+  const plan = recipePricingPlan(
+    recipe,
+    items,
+    {},
+    {
+      targetMargin: 50,
+      roundTo: 0.5,
+    },
+  );
+  assert.equal(plan.total, 2.02);
+  assert.equal(plan.suggestedSale, 4.5);
+  assert.equal(plan.suggestedPortion, 0.375);
+});

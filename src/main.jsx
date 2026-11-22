@@ -29,6 +29,7 @@ import DataCleanupWorkspace from "./DataCleanupWorkspace.jsx";
 import ExpenseWorkspace from "./ExpenseWorkspace.jsx";
 import ExpenseFields from "./ExpenseFields.jsx";
 import { saveExpense } from "./expenses.js";
+import PricingDeskWorkspace from "./PricingDeskWorkspace.jsx";
 import {
   removeRecipe,
   saveRecipePreset,
@@ -130,6 +131,7 @@ const sectionPrimaryPages = {
   Reports: [
     "Daily snapshot",
     "Expenses",
+    "Pricing desk",
     "Owner forecast",
     "Tax report",
     "Waste analysis",
@@ -1070,6 +1072,8 @@ function App() {
             <DataCleanupWorkspace data={data} save={save} navigate={navigate} />
           ) : page === "Expenses" ? (
             <ExpenseWorkspace data={data} save={save} open={open} />
+          ) : page === "Pricing desk" ? (
+            <PricingDeskWorkspace data={data} save={save} navigate={navigate} />
           ) : page === "Goals & tasks" ? (
             <OwnerCommandCenter data={data} save={save} />
           ) : page === "App updates" ? (
