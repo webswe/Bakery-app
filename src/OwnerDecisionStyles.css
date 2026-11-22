@@ -9,7 +9,11 @@
   justify-content: space-between;
   gap: 1.5rem;
   background:
-    radial-gradient(circle at 90% 15%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 34%),
+    radial-gradient(
+      circle at 90% 15%,
+      color-mix(in srgb, var(--accent) 16%, transparent),
+      transparent 34%
+    ),
     var(--panel);
 }
 
