@@ -32,12 +32,7 @@ export default function BakeryOperationsWorkspace({
 }) {
   if (page === "Recipe lab")
     return (
-      <RecipeLab
-        data={data}
-        save={save}
-        open={open}
-        navigate={navigate}
-      />
+      <RecipeLab data={data} save={save} open={open} navigate={navigate} />
     );
   if (page === "Allergen matrix") return <AllergenMatrix data={data} />;
   if (page === "Capacity planner")
