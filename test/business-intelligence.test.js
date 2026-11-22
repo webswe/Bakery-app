@@ -250,3 +250,27 @@ test("supplier and waste insights choose actionable comparisons", () => {
   assert.equal(suppliers[0].reorder, true);
   assert.match(wasteCoaching(data, "2026-11")[0].action, /smaller packages/i);
 });
+
+test("cash reserve progress uses the month-specific closing position", () => {
+  const data = base();
+  data.settings.ownerGoals.cashReserve = 100;
+  data.settings.finance = {
+    openingCash: 100,
+    openingCashByMonth: { "2026-11": 50 },
+  };
+  data.expenses.push({
+    id: "rent",
+    date: "2026-11-02",
+    amount: 80,
+    category: "Rent",
+  });
+  const november = financialCenter(data, "2026-11");
+  assert.equal(november.finance.openingCash, 50);
+  assert.equal(november.cashPosition, -30);
+  assert.equal(november.progress.reserve, 0);
+
+  const october = financialCenter(data, "2026-10");
+  assert.equal(october.finance.openingCash, 100);
+  assert.equal(october.cashPosition, 100);
+  assert.equal(october.progress.reserve, 100);
+});
