@@ -1,0 +1,231 @@
+.owner-decision-workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.owner-decision-hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background:
+    radial-gradient(
+      circle at 90% 15%,
+      color-mix(in srgb, var(--accent) 16%, transparent),
+      transparent 34%
+    ),
+    var(--panel);
+}
+
+.owner-decision-hero h2 {
+  margin: 0.2rem 0;
+  max-width: 780px;
+}
+
+.owner-decision-hero p {
+  max-width: 720px;
+  margin-bottom: 0;
+}
+
+.owner-decision-hero label {
+  min-width: 180px;
+}
+
+.owner-decision-tabs {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+  scrollbar-width: thin;
+}
+
+.owner-decision-tabs button {
+  flex: 1 0 max-content;
+  min-height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.owner-decision-tabs button.active {
+  background: var(--soft);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.owner-decision-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.owner-decision-metrics article {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.owner-decision-metrics span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.owner-decision-metrics b {
+  overflow-wrap: anywhere;
+  font-size: clamp(1.15rem, 2vw, 1.65rem);
+}
+
+.owner-decision-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.owner-priority,
+.owner-recommendation,
+.owner-cash-row,
+.owner-plan-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.owner-priority {
+  min-height: 48px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.owner-priority:hover {
+  color: var(--accent);
+}
+
+.owner-recommendation > span,
+.owner-cash-row > span,
+.owner-plan-row > span {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.owner-recommendation small,
+.owner-cash-row small,
+.owner-plan-row small {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.owner-cash-row > span:last-child {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.owner-plan-row .icon-button {
+  flex: 0 0 auto;
+}
+
+.owner-bookkeeping {
+  display: flex;
+  align-items: end;
+  gap: 1rem;
+}
+
+.owner-bookkeeping > div {
+  flex: 1;
+}
+
+.owner-bookkeeping p {
+  margin-bottom: 0;
+}
+
+.owner-bookkeeping label {
+  min-width: 175px;
+}
+
+.shortcut-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.shortcut-list span {
+  display: grid;
+  grid-template-columns: minmax(95px, auto) 1fr;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.shortcut-list kbd {
+  justify-self: start;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 7px;
+  background: var(--soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 900px) {
+  .owner-decision-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .owner-decision-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-bookkeeping {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .owner-bookkeeping label {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .owner-decision-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .owner-decision-hero label {
+    min-width: 0;
+  }
+
+  .owner-decision-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .owner-recommendation,
+  .owner-cash-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .owner-cash-row > span:last-child {
+    text-align: left;
+  }
+
+  .owner-recommendation button {
+    width: 100%;
+  }
+}

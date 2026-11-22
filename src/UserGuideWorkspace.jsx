@@ -45,6 +45,29 @@ const guideSections = [
     keywords: "morning daily routine closeout overview calendar cash",
   },
   {
+    id: "owner-desk",
+    category: "Daily routine",
+    title: "Use the owner desk",
+    summary:
+      "See today’s decisions, forecast production, record personal use, plan cash, export bookkeeping data, and check backup health without visiting every report.",
+    page: "Owner desk",
+    steps: [
+      "Start on Today and review overdue tasks, pickups, and suggested batches.",
+      "Schedule a suggested batch only after checking the reason, on-hand desserts, and work already planned.",
+      "Use Production to review the seven-day demand guide or record ingredients and desserts taken for personal use.",
+      "Use Money to add expected bills or income and inspect the lowest projected cash balance.",
+      "Export the monthly bookkeeping CSV for sales, expenses, purchases, tax, and cost-of-goods detail.",
+      "Use Tools & safety to confirm local and device backup activity and review keyboard shortcuts.",
+    ],
+    tips: [
+      "Production suggestions use recorded sales and orders; they remain recommendations until you schedule them.",
+      "Personal use reduces stock but is kept separate from sales and waste.",
+      "The cash-flow runway is a planning forecast, not a bank reconciliation.",
+    ],
+    keywords:
+      "owner desk today production suggestion forecast personal use cash flow runway bookkeeping csv backup keyboard",
+  },
+  {
     id: "inventory-catalog",
     category: "Stock & purchasing",
     title: "Add ingredients and packaging correctly",
