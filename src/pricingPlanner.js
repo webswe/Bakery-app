@@ -1,8 +1,5 @@
 import { monthlySummary } from "./analytics.js";
-import {
-  recipePricingPlan,
-  recipeSaleDetails,
-} from "./recipePricing.js";
+import { recipePricingPlan, recipeSaleDetails } from "./recipePricing.js";
 import {
   monthlySalesPlan,
   normalizePricingPolicy,
@@ -34,8 +31,7 @@ export function pricingDeskReport(data, recipeId, input = {}, month = "") {
     plan.processorFixedFee -
     variableCostPerUnit;
   const monthly = monthlySalesPlan({
-    unitRevenue:
-      plan.suggestedSale * (1 - plan.discountPercent / 100),
+    unitRevenue: plan.suggestedSale * (1 - plan.discountPercent / 100),
     unitProfit: plan.suggestedProfit,
     unitContribution,
     fixedCosts: policy.monthlyFixedCosts,
