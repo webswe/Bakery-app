@@ -8,6 +8,7 @@ import {
   Save,
 } from "lucide-react";
 import {
+  beginnerJourney,
   launchMenuGuide,
   launchReadiness,
   normalizeLaunchProfile,
@@ -32,9 +33,10 @@ const downloadText = (name, text) => {
 };
 
 export default function HomeBakeryLaunchWorkspace({ data, save, navigate }) {
-  const [tab, setTab] = useState("roadmap");
+  const [tab, setTab] = useState("quick");
   const [notice, setNotice] = useState("");
   const readiness = useMemo(() => launchReadiness(data), [data]);
+  const beginner = useMemo(() => beginnerJourney(data), [data]);
   const profile = readiness.profile;
   const budget = useMemo(() => startupBudget(data.settings), [data.settings]);
   const menu = useMemo(() => launchMenuGuide(data), [data]);
@@ -59,33 +61,33 @@ export default function HomeBakeryLaunchWorkspace({ data, save, navigate }) {
           <Rocket size={28} />
         </div>
         <div>
-          <span className="eyebrow">HOME BAKERY LAUNCH</span>
-          <h2>Turn a baking skill into a manageable business</h2>
+          <span className="eyebrow">START HERE</span>
+          <h2>Go from your first product to your first 10 sales</h2>
           <p>
-            Build a compliant local plan, understand startup cash, choose a
-            focused menu, set realistic capacity, and give customers clear
-            policies.
+            Begin with one recipe, understand its cost, choose a sensible
+            price, practice the order flow, and learn from a few real sales.
           </p>
         </div>
         <div className="launch-progress">
-          <b>{readiness.percent}%</b>
+          <b>{beginner.percent}%</b>
           <span>
-            {readiness.complete} of {readiness.total} launch steps
+            {beginner.complete} of {beginner.total} beginner steps
           </span>
-          <progress value={readiness.complete} max={readiness.total} />
+          <progress value={beginner.complete} max={beginner.total} />
         </div>
       </section>
       <div className="home-launch-caution">
-        Requirements vary by country, state, province, county, and city. Bakery
-        Ledger helps organize your research; it does not provide legal, tax, or
-        food-safety advice.
+        Start small and keep the first version simple. Before taking paid
+        orders, confirm the home-food, labeling, tax, and pickup rules that apply
+        where you live.
       </div>
       <nav className="home-launch-tabs" aria-label="Home bakery launch tools">
         {[
-          ["roadmap", "Roadmap"],
-          ["budget", "Budget & income"],
-          ["menu", "Menu & capacity"],
-          ["policies", "Channels & policies"],
+          ["quick", "Quick start"],
+          ["menu", "First menu"],
+          ["policies", "Orders & pickup"],
+          ["roadmap", "Grow later"],
+          ["budget", "Full budget"],
         ].map(([value, label]) => (
           <button
             key={value}
@@ -110,7 +112,15 @@ export default function HomeBakeryLaunchWorkspace({ data, save, navigate }) {
           {notice}
         </p>
       )}
-      {tab === "roadmap" ? (
+      {tab === "quick" ? (
+        <QuickStart
+          data={data}
+          beginner={beginner}
+          act={act}
+          navigate={navigate}
+          openPolicies={() => setTab("policies")}
+        />
+      ) : tab === "roadmap" ? (
         <Roadmap
           data={data}
           profile={profile}
@@ -145,6 +155,166 @@ export default function HomeBakeryLaunchWorkspace({ data, save, navigate }) {
         />
       )}
     </div>
+  );
+}
+
+function QuickStart({ data, beginner, act, navigate, openPolicies }) {
+  const profile = beginner.profile;
+  const actionFor = {
+    "first-product": () => navigate("Recipes"),
+    "cost-product": () => navigate("Recipes"),
+    "price-product": () => navigate("Pricing desk"),
+    "order-basics": openPolicies,
+    "first-quote": () => navigate("Quotes"),
+    "first-order": () => navigate("Order intake"),
+    "first-sale": () => navigate("Product stock"),
+    "first-ten": () => navigate("Overview"),
+  };
+  const next = beginner.steps.find((step) => !step.complete);
+  return (
+    <>
+      <div className="home-launch-metrics">
+        <article className="panel">
+          <span>Products created</span>
+          <b>{(data.recipes || []).length}</b>
+        </article>
+        <article className="panel">
+          <span>Orders recorded</span>
+          <b>{beginner.ordersCount}</b>
+        </article>
+        <article className="panel">
+          <span>Sales completed</span>
+          <b>{beginner.salesCount} / 10</b>
+        </article>
+        <article className="panel">
+          <span>Simple weekly goal</span>
+          <b>{money(profile.weeklySalesGoal)}</b>
+        </article>
+      </div>
+      <div className="home-launch-layout">
+        <section className="panel">
+          <div className="panel-heading">
+            <div>
+              <h2>Your first steps</h2>
+              <p>
+                Work from the top down. Bakery Ledger checks off steps when it
+                finds the matching recipe, quote, order, or sale.
+              </p>
+            </div>
+          </div>
+          <div className="beginner-step-list">
+            {beginner.steps.map((step) => (
+              <button
+                className={step.complete ? "beginner-step complete" : "beginner-step"}
+                key={step.id}
+                onClick={actionFor[step.id]}
+              >
+                {step.complete ? <CheckCircle2 size={21} /> : <Circle size={21} />}
+                <span>
+                  <b>{step.title}</b>
+                  <small>{step.detail}</small>
+                </span>
+              </button>
+            ))}
+          </div>
+          {next ? (
+            <button className="primary beginner-next" onClick={actionFor[next.id]}>
+              Next: {next.title}
+            </button>
+          ) : (
+            <p className="positive">
+              Your first 10 sales are recorded. Use the Owner desk and Grow
+              later tools when you are ready.
+            </p>
+          )}
+        </section>
+        <section className="panel planning-form">
+          <h2>Keep the first goal simple</h2>
+          <p>
+            Choose one product and a small weekly revenue goal. This is a
+            learning target, not a promise or a profit forecast.
+          </p>
+          <form
+            key={`${profile.firstProductId}-${profile.weeklySalesGoal}`}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const form = Object.fromEntries(new FormData(event.currentTarget));
+              act(
+                () =>
+                  saveLaunchProfile(data, {
+                    firstProductId: form.firstProductId,
+                    weeklySalesGoal: form.weeklySalesGoal,
+                  }),
+                "Beginner goal saved.",
+              );
+            }}
+          >
+            <label>
+              First product
+              <select name="firstProductId" defaultValue={profile.firstProductId}>
+                <option value="">Choose a recipe</option>
+                {(data.recipes || []).map((recipe) => (
+                  <option key={recipe.id} value={recipe.id}>
+                    {recipe.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Weekly sales goal
+              <input
+                name="weeklySalesGoal"
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={profile.weeklySalesGoal}
+              />
+            </label>
+            <button className="primary">
+              <Save size={16} />
+              Save simple goal
+            </button>
+          </form>
+          {beginner.product ? (
+            <div className="beginner-price-card">
+              <h3>{beginner.product.name}</h3>
+              <dl className="snapshot-ledger">
+                <dt>Selling price</dt>
+                <dd>{money(beginner.product.price)}</dd>
+                <dt>Estimated cost</dt>
+                <dd>{money(beginner.product.cost)}</dd>
+                <dt>Estimated profit per selling unit</dt>
+                <dd><b>{money(beginner.product.profit)}</b></dd>
+                <dt>Estimated margin</dt>
+                <dd>{beginner.product.margin.toFixed(1)}%</dd>
+                <dt>Units for the weekly sales goal</dt>
+                <dd>{beginner.weeklyUnits ?? "Set a price first"}</dd>
+                <dt>Estimated profit at that volume</dt>
+                <dd>
+                  {beginner.weeklyProfit == null
+                    ? "Set a profitable price first"
+                    : money(beginner.weeklyProfit)}
+                </dd>
+              </dl>
+              {!!beginner.product.readiness.length && (
+                <p className="error">{beginner.product.readiness.join(" · ")}</p>
+              )}
+            </div>
+          ) : (
+            <p className="hint">
+              Create your first recipe, including its packaging, to see a simple
+              price check here.
+            </p>
+          )}
+          <div className="beginner-terms">
+            <h3>Three words to know</h3>
+            <p><b>Revenue:</b> money charged before costs.</p>
+            <p><b>Cost:</b> what you spend to make the product.</p>
+            <p><b>Profit:</b> revenue left after recorded costs.</p>
+          </div>
+        </section>
+      </div>
+    </>
   );
 }
 
