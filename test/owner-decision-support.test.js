@@ -119,8 +119,29 @@ test("production guide combines recent sales, orders, stock and planned batches"
   assert.equal(row.batches, 1);
 });
 
+test("production guide uses an exact horizon and rejects impossible dates", () => {
+  const data = fixture();
+  data.orders[0].pickupDate = "2026-11-29";
+  assert.equal(
+    productionRecommendations(data, "2026-11-22", 7)[0].orderDemand,
+    0,
+  );
+  data.orders[0].pickupDate = "2026-11-28";
+  assert.equal(
+    productionRecommendations(data, "2026-11-22", 7)[0].orderDemand,
+    8,
+  );
+  assert.throws(
+    () => productionRecommendations(data, "2026-02-31"),
+    /valid planning date/,
+  );
+});
+
 test("personal use removes ingredient lots without recording waste", () => {
-  const next = recordOwnerUse(fixture(), {
+  const data = fixture();
+  data.items[0].taxMode = "added";
+  data.items[0].tax = 10;
+  const next = recordOwnerUse(data, {
     kind: "ingredient",
     recordId: "flour",
     quantity: 250,
@@ -129,8 +150,10 @@ test("personal use removes ingredient lots without recording waste", () => {
   });
   assert.equal(next.items[0].stock, 1750);
   assert.equal(next.inventoryLots[0].remaining, 1750);
-  assert.equal(next.personalUseRecords[0].cost, 1);
+  assert.equal(next.personalUseRecords[0].cost, 1.1);
   assert.equal(next.personalUseRecords[0].kind, "ingredient");
+  assert.equal(next.movements[0].effectiveDate, "2026-11-22");
+  assert.equal(next.movements[0].note, "Owner household");
   assert.equal(next.waste.length, 0);
 });
 
@@ -162,6 +185,39 @@ test("cash flow forecast combines receivables and owner plans", () => {
   assert.equal(forecast.totalOut, 20);
   assert.equal(forecast.closing, 200);
   assert.equal(forecast.rows.length, 2);
+});
+
+test("cash flow keeps dated actual cash out of opening balance", () => {
+  const data = fixture();
+  data.orders = [];
+  data.payments.push({
+    id: "payment",
+    date: "2026-11-22",
+    amount: 30,
+    kind: "payment",
+  });
+  data.expenses.push({
+    id: "expense",
+    date: "2026-11-23",
+    amount: 10,
+    category: "Fees",
+  });
+  data.purchaseHistory.push({
+    id: "purchase",
+    date: "2026-11-24",
+    itemName: "Boxes",
+    finalPackageCost: 5,
+    packages: 2,
+  });
+  const forecast = cashFlowForecast(data, "2026-11-22", 7);
+  assert.equal(forecast.opening, 170);
+  assert.equal(forecast.totalIn, 30);
+  assert.equal(forecast.totalOut, 20);
+  assert.equal(forecast.closing, 180);
+  assert.deepEqual(
+    forecast.rows.map((row) => row.date),
+    ["2026-11-22", "2026-11-23", "2026-11-24"],
+  );
 });
 
 test("bookkeeping export keeps tax and costs in separate columns", () => {
