@@ -170,9 +170,21 @@ test("beginner journey starts with one product and tracks the first 10 sales", (
     journey.steps.find((row) => row.id === "first-quote").complete,
     false,
   );
+  assert.equal(
+    journey.steps.find((row) => row.id === "order-basics").complete,
+    false,
+  );
   assert.equal(journey.weeklyUnits, 9);
   assert.ok(journey.weeklyProfit > 0);
   assert.equal(journey.salesCount, 0);
+
+  const confirmed = beginnerJourney(
+    saveLaunchProfile(data, { policiesConfirmed: true }),
+  );
+  assert.equal(
+    confirmed.steps.find((row) => row.id === "order-basics").complete,
+    true,
+  );
 
   data.sales = Array.from({ length: 10 }, (_, index) => ({
     id: String(index),
