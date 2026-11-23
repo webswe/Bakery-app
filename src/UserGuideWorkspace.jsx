@@ -24,6 +24,30 @@ const guideSections = [
     keywords: "setup business profile cost tax goals first week onboarding",
   },
   {
+    id: "home-bakery-launch",
+    category: "Getting started",
+    title: "Plan a home bakery launch",
+    summary:
+      "Move from an idea to a limited soft launch with local-rule research, a startup budget, a focused menu, realistic capacity, and clear customer policies.",
+    page: "Start a bakery",
+    steps: [
+      "Use Roadmap to record local cottage-food, zoning, labeling, allergen, insurance, and sales-channel requirements.",
+      "Set a target date and mark real-world tasks complete only after they are handled.",
+      "Use Budget & income to estimate one-time startup cash, recurring monthly costs, and the owner income you want the business to provide.",
+      "Use Menu & capacity to compare contribution, margin, weekly unit needs, available working days, and maximum batches.",
+      "Start with a small launch menu whose recipes are complete, repeatable, and profitable.",
+      "Choose realistic sales channels and write deposit, lead-time, cancellation, pickup, and late-pickup policies.",
+      "Download the policy draft, adapt it to local requirements, and run a controlled soft launch before increasing volume.",
+    ],
+    tips: [
+      "Bakery Ledger organizes research but cannot determine which laws apply where you live.",
+      "An income target above your available batch capacity needs a higher contribution, simpler menu, more capacity, or a smaller initial goal.",
+      "Keep tax, insurance, and permit advice from qualified local sources.",
+    ],
+    keywords:
+      "home bakery cottage food start business launch permit insurance budget income menu capacity policy deposit pickup",
+  },
+  {
     id: "daily-routine",
     category: "Daily routine",
     title: "Run the daily owner routine",
