@@ -18,6 +18,22 @@ jobs:
       - run: npm ci
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      - name: Preview formatted beginner files
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          files=(
+            src/homeBakeryLaunch.js
+            src/HomeBakeryLaunchWorkspace.jsx
+            src/UserGuideWorkspace.jsx
+          )
+          npx prettier --write "${files[@]}"
+          for file in "${files[@]}"; do
+            echo "FORMAT_BEGIN:${file}"
+            base64 -w 0 "${file}"
+            echo
+            echo "FORMAT_END:${file}"
+          done
       - run: npm test
       - run: npm run format:check
       - run: npm run build
