@@ -64,8 +64,8 @@ export default function HomeBakeryLaunchWorkspace({ data, save, navigate }) {
           <span className="eyebrow">START HERE</span>
           <h2>Go from your first product to your first 10 sales</h2>
           <p>
-            Begin with one recipe, understand its cost, choose a sensible
-            price, practice the order flow, and learn from a few real sales.
+            Begin with one recipe, understand its cost, choose a sensible price,
+            practice the order flow, and learn from a few real sales.
           </p>
         </div>
         <div className="launch-progress">
@@ -78,8 +78,8 @@ export default function HomeBakeryLaunchWorkspace({ data, save, navigate }) {
       </section>
       <div className="home-launch-caution">
         Start small and keep the first version simple. Before taking paid
-        orders, confirm the home-food, labeling, tax, and pickup rules that apply
-        where you live.
+        orders, confirm the home-food, labeling, tax, and pickup rules that
+        apply where you live.
       </div>
       <nav className="home-launch-tabs" aria-label="Home bakery launch tools">
         {[
@@ -205,11 +205,17 @@ function QuickStart({ data, beginner, act, navigate, openPolicies }) {
           <div className="beginner-step-list">
             {beginner.steps.map((step) => (
               <button
-                className={step.complete ? "beginner-step complete" : "beginner-step"}
+                className={
+                  step.complete ? "beginner-step complete" : "beginner-step"
+                }
                 key={step.id}
                 onClick={actionFor[step.id]}
               >
-                {step.complete ? <CheckCircle2 size={21} /> : <Circle size={21} />}
+                {step.complete ? (
+                  <CheckCircle2 size={21} />
+                ) : (
+                  <Circle size={21} />
+                )}
                 <span>
                   <b>{step.title}</b>
                   <small>{step.detail}</small>
@@ -218,7 +224,10 @@ function QuickStart({ data, beginner, act, navigate, openPolicies }) {
             ))}
           </div>
           {next ? (
-            <button className="primary beginner-next" onClick={actionFor[next.id]}>
+            <button
+              className="primary beginner-next"
+              onClick={actionFor[next.id]}
+            >
               Next: {next.title}
             </button>
           ) : (
@@ -238,7 +247,9 @@ function QuickStart({ data, beginner, act, navigate, openPolicies }) {
             key={`${profile.firstProductId}-${profile.weeklySalesGoal}`}
             onSubmit={(event) => {
               event.preventDefault();
-              const form = Object.fromEntries(new FormData(event.currentTarget));
+              const form = Object.fromEntries(
+                new FormData(event.currentTarget),
+              );
               act(
                 () =>
                   saveLaunchProfile(data, {
@@ -251,7 +262,10 @@ function QuickStart({ data, beginner, act, navigate, openPolicies }) {
           >
             <label>
               First product
-              <select name="firstProductId" defaultValue={profile.firstProductId}>
+              <select
+                name="firstProductId"
+                defaultValue={profile.firstProductId}
+              >
                 <option value="">Choose a recipe</option>
                 {(data.recipes || []).map((recipe) => (
                   <option key={recipe.id} value={recipe.id}>
@@ -284,7 +298,9 @@ function QuickStart({ data, beginner, act, navigate, openPolicies }) {
                 <dt>Estimated cost</dt>
                 <dd>{money(beginner.product.cost)}</dd>
                 <dt>Estimated profit per selling unit</dt>
-                <dd><b>{money(beginner.product.profit)}</b></dd>
+                <dd>
+                  <b>{money(beginner.product.profit)}</b>
+                </dd>
                 <dt>Estimated margin</dt>
                 <dd>{beginner.product.margin.toFixed(1)}%</dd>
                 <dt>Units for the weekly sales goal</dt>
@@ -297,7 +313,9 @@ function QuickStart({ data, beginner, act, navigate, openPolicies }) {
                 </dd>
               </dl>
               {!!beginner.product.readiness.length && (
-                <p className="error">{beginner.product.readiness.join(" · ")}</p>
+                <p className="error">
+                  {beginner.product.readiness.join(" · ")}
+                </p>
               )}
             </div>
           ) : (
@@ -308,9 +326,15 @@ function QuickStart({ data, beginner, act, navigate, openPolicies }) {
           )}
           <div className="beginner-terms">
             <h3>Three words to know</h3>
-            <p><b>Revenue:</b> money charged before costs.</p>
-            <p><b>Cost:</b> what you spend to make the product.</p>
-            <p><b>Profit:</b> revenue left after recorded costs.</p>
+            <p>
+              <b>Revenue:</b> money charged before costs.
+            </p>
+            <p>
+              <b>Cost:</b> what you spend to make the product.
+            </p>
+            <p>
+              <b>Profit:</b> revenue left after recorded costs.
+            </p>
           </div>
         </section>
       </div>
