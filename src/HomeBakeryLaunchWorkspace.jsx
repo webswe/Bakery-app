@@ -264,7 +264,9 @@ function QuickStart({ data, beginner, act, navigate, openPolicies }) {
               First product
               <select
                 name="firstProductId"
-                defaultValue={profile.firstProductId}
+                defaultValue={
+                  profile.firstProductId || beginner.recipe?.id || ""
+                }
               >
                 <option value="">Choose a recipe</option>
                 {(data.recipes || []).map((recipe) => (
@@ -770,6 +772,7 @@ function Policies({ data, profile, text, act, setNotice }) {
             act(
               () =>
                 saveLaunchProfile(data, {
+                  policiesConfirmed: true,
                   channels: Object.fromEntries(
                     Object.keys(channelLabels).map((key) => [
                       key,
