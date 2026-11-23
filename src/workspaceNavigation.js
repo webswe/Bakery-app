@@ -37,7 +37,13 @@ export const businessIntelligencePages = [
 export const sections = [
   {
     name: "Overview",
-    pages: ["Overview", "Owner desk", "Goals & tasks", "Financial center"],
+    pages: [
+      "Overview",
+      "Start a bakery",
+      "Owner desk",
+      "Goals & tasks",
+      "Financial center",
+    ],
   },
   {
     name: "Sales",
@@ -143,6 +149,11 @@ export const pages = {
       "See what needs attention today, then review your business performance.",
     action: "Record a sale",
     modal: "sale",
+  },
+  "Start a bakery": {
+    label: "Home bakery launch",
+    description:
+      "Build a practical path from home baker to small business with readiness, startup budget, income targets, a focused menu, capacity, sales channels, and customer policies.",
   },
   "Owner desk": {
     label: "Owner desk",
