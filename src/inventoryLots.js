@@ -157,7 +157,7 @@ export function reconcileLots(lots, itemId, stock) {
   return consumeLots(lots, itemId, tracked - stock).lots;
 }
 
-export function recordPersonalUse(data, itemId, quantity) {
+export function recordPersonalUse(data, itemId, quantity, context = {}) {
   const item = data.items.find((entry) => entry.id === itemId);
   const amount = number(quantity, "personal-use quantity");
   if (!item) throw Error("Inventory item is missing.");
@@ -180,6 +180,8 @@ export function recordPersonalUse(data, itemId, quantity) {
         delta: -amount,
         unit: item.unit,
         reason: "Personal use",
+        effectiveDate: context.date || localDay(),
+        note: String(context.note || "").trim(),
       },
     ],
   };
