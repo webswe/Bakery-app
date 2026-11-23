@@ -18,6 +18,15 @@ jobs:
       - run: npm ci
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      - name: Preview formatted debug file
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          npx prettier --write src/ownerDecisionSupport.js
+          echo "FORMAT_BEGIN"
+          base64 -w 0 src/ownerDecisionSupport.js
+          echo
+          echo "FORMAT_END"
       - run: npm test
       - run: npm run format:check
       - run: npm run build
