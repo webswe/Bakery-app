@@ -43,7 +43,8 @@ export const launchSteps = [
   {
     id: "payments",
     title: "Choose payment methods and bookkeeping routine",
-    detail: "Decide how deposits, balances, tax, expenses, and payouts are recorded.",
+    detail:
+      "Decide how deposits, balances, tax, expenses, and payouts are recorded.",
   },
   {
     id: "backup",
@@ -53,7 +54,8 @@ export const launchSteps = [
   {
     id: "soft-launch",
     title: "Run a limited soft launch",
-    detail: "Test the menu, packaging, timing, pickup, and customer instructions with a controlled order volume.",
+    detail:
+      "Test the menu, packaging, timing, pickup, and customer instructions with a controlled order volume.",
   },
 ];
 
@@ -164,8 +166,8 @@ export function launchReadiness(data) {
   const automatic = {
     identity: Boolean(
       data.businessProfile?.name ||
-        data.businessProfile?.bakeryName ||
-        data.settings?.bakeryName,
+      data.businessProfile?.bakeryName ||
+      data.settings?.bakeryName,
     ),
     costs:
       positive(data.settings?.hourlyWage) > 0 &&
@@ -235,9 +237,7 @@ export function launchMenuGuide(data) {
         const margin = price ? (profit / price) * 100 : 0;
         const laborHours = positive(recipe.laborMinutes) / 60;
         const profitPerLaborHour =
-          laborHours > 0
-            ? (profit * details.sellableUnits) / laborHours
-            : null;
+          laborHours > 0 ? (profit * details.sellableUnits) / laborHours : null;
         const readiness = [
           !(recipe.lines || []).length ? "Add ingredients and packaging" : "",
           !(positive(recipe.yield) > 0) ? "Set the batch yield" : "",
@@ -302,7 +302,9 @@ export function weeklyLaunchPlan(data) {
           recipe?.saleFormat === "dozen"
             ? 12
             : Math.max(1, finite(recipe?.saleQuantity, 1));
-        return sum + Math.max(1, Math.floor(finite(recipe?.yield, 1) / quantity));
+        return (
+          sum + Math.max(1, Math.floor(finite(recipe?.yield, 1) / quantity))
+        );
       }, 0) / menu.length
     : 0;
   const requiredBatches =
