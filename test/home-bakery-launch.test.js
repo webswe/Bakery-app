@@ -97,7 +97,10 @@ test("readiness combines saved checklist decisions and app evidence", () => {
   data = toggleLaunchStep(data, "rules");
   const result = launchReadiness(data);
   assert.equal(result.steps.find((row) => row.id === "rules").complete, true);
-  assert.equal(result.steps.find((row) => row.id === "identity").automatic, true);
+  assert.equal(
+    result.steps.find((row) => row.id === "identity").automatic,
+    true,
+  );
   assert.equal(result.steps.find((row) => row.id === "menu").complete, true);
   assert.ok(result.percent > 0);
 });
