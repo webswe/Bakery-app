@@ -1,11 +1,20 @@
 import { fullCost } from "./operations.js";
 import { recordPersonalUse } from "./inventoryLots.js";
 import { adjustFinishedStock } from "./productLots.js";
-import { financialCenter } from "./businessIntelligence.js";
-import { saleRevenue } from "./taxation.js";
+import { purchaseTax, saleRevenue } from "./taxation.js";
 
 const number = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0);
-const validDay = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value || "");
+const validDay = (value) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+  if (!match) return false;
+  const date = new Date(value + "T12:00:00");
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.getFullYear() === Number(match[1]) &&
+    date.getMonth() + 1 === Number(match[2]) &&
+    date.getDate() === Number(match[3])
+  );
+};
 const addDays = (value, amount) => {
   const date = new Date(value + "T12:00:00");
   date.setDate(date.getDate() + amount);
@@ -24,7 +33,7 @@ export function productionRecommendations(data, day, horizonDays = 7) {
     Math.min(30, Math.round(number(horizonDays) || 7)),
   );
   const recentStart = addDays(day, -28);
-  const through = addDays(day, horizon);
+  const through = addDays(day, horizon - 1);
   const recentSales = (data.sales || []).filter(
     (sale) => sale.date >= recentStart && sale.date < day,
   );
@@ -137,10 +146,15 @@ export function recordOwnerUse(data, input) {
   } else {
     const item = (data.items || []).find((row) => row.id === input.recordId);
     if (!item) throw Error("Choose an ingredient or package.");
+    if (item.needsPrice)
+      throw Error("Set the purchase price before recording personal use.");
     cost = item.amount
-      ? (number(item.price) / number(item.amount)) * quantity
+      ? (purchaseTax(item).total / number(item.amount)) * quantity
       : 0;
-    next = recordPersonalUse(data, item.id, quantity);
+    next = recordPersonalUse(data, item.id, quantity, {
+      date: input.date,
+      note,
+    });
     name = item.name;
     unit = item.unit;
   }
@@ -197,11 +211,91 @@ export function removeCashPlan(data, id) {
   };
 }
 
+function recordedCashEvents(data, start, end) {
+  const events = [];
+  const within = (date) => date >= start && date <= end;
+  (data.payments || [])
+    .filter((payment) => within(payment.date))
+    .forEach((payment) => {
+      if (payment.kind === "adjustment") return;
+      events.push({
+        id: `payment-${payment.id}`,
+        date: payment.date,
+        name:
+          payment.note ||
+          (payment.kind === "refund" ? "Customer refund" : "Customer payment"),
+        amount: number(payment.amount),
+        direction: payment.kind === "refund" ? "out" : "in",
+        category: payment.kind === "refund" ? "Refund" : "Payment received",
+        source: "recorded",
+      });
+    });
+  (data.sales || [])
+    .filter(
+      (sale) =>
+        within(sale.date) &&
+        !sale.orderId &&
+        sale.paymentStatus !== "unpaid" &&
+        sale.paymentStatus !== "partial" &&
+        !(data.payments || []).some((payment) => payment.saleId === sale.id),
+    )
+    .forEach((sale) =>
+      events.push({
+        id: `paid-sale-${sale.id}`,
+        date: sale.date,
+        name: sale.customer || sale.name || "Paid sale",
+        amount: number(sale.total),
+        direction: "in",
+        category: "Paid sale",
+        source: "recorded",
+      }),
+    );
+  (data.expenses || [])
+    .filter((expense) => within(expense.date))
+    .forEach((expense) =>
+      events.push({
+        id: `expense-${expense.id}`,
+        date: expense.date,
+        name: expense.name || expense.category || "Expense",
+        amount: number(expense.amount),
+        direction: "out",
+        category: expense.category || "Expense",
+        source: "recorded",
+      }),
+    );
+  (data.purchaseHistory || [])
+    .filter((purchase) => within(purchase.date))
+    .forEach((purchase) =>
+      events.push({
+        id: `purchase-${purchase.id}`,
+        date: purchase.date,
+        name: purchase.itemName || "Inventory purchase",
+        amount:
+          number(purchase.finalPackageCost ?? purchase.packagePrice) *
+          Math.max(1, number(purchase.packages) || 1),
+        direction: "out",
+        category: "Inventory purchase",
+        source: "recorded",
+      }),
+    );
+  return events.filter((event) => event.amount > 0);
+}
+
+function openingCashOn(data, start) {
+  const month = start.slice(0, 7);
+  const monthStart = month + "-01";
+  const finance = data.settings?.finance || {};
+  let cash = number(finance.openingCashByMonth?.[month] ?? finance.openingCash);
+  for (const event of recordedCashEvents(data, monthStart, addDays(start, -1)))
+    cash += event.direction === "in" ? event.amount : -event.amount;
+  return cash;
+}
+
 export function cashFlowForecast(data, start, days = 30) {
   if (!validDay(start)) throw Error("Choose a valid forecast date.");
   const length = Math.max(1, Math.min(90, Math.round(number(days) || 30)));
   const end = addDays(start, length - 1);
-  const opening = financialCenter(data, start.slice(0, 7)).cashPosition;
+  const opening = openingCashOn(data, start);
   const payments = data.payments || [];
   const paidFor = (field, id) =>
     payments
@@ -214,7 +308,7 @@ export function cashFlowForecast(data, start, days = 30) {
             : number(payment.amount)),
         0,
       );
-  const events = [];
+  const events = recordedCashEvents(data, start, end);
   (data.orders || [])
     .filter(
       (order) =>

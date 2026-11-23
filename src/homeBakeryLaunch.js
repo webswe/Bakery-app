@@ -127,6 +127,7 @@ export function normalizeLaunchProfile(settings = {}) {
         )
       : [],
     localRequirements: String(saved.localRequirements || ""),
+    policiesConfirmed: saved.policiesConfirmed === true,
     channels: {
       customOrders: saved.channels?.customOrders ?? true,
       porchPickup: saved.channels?.porchPickup ?? true,
@@ -225,10 +226,7 @@ export function launchReadiness(data) {
         positive(recipe.salePrice ?? recipe.price) > 0 &&
         positive(recipe.yield) > 0,
     ),
-    policies:
-      profile.policies.depositPercent >= 0 &&
-      profile.policies.leadDays >= 0 &&
-      Boolean(profile.policies.pickupWindow.trim()),
+    policies: profile.policiesConfirmed,
     payments: (data.sales || []).length > 0 || (data.payments || []).length > 0,
   };
   const steps = launchSteps.map((step) => ({
@@ -274,11 +272,7 @@ export function beginnerJourney(data) {
     "price-product": Boolean(
       product && product.price > 0 && product.profit > 0,
     ),
-    "order-basics": Boolean(
-      profile.policies.pickupWindow.trim() &&
-      profile.policies.leadDays >= 0 &&
-      profile.policies.depositPercent >= 0,
-    ),
+    "order-basics": profile.policiesConfirmed,
     "first-quote": (data.quotes || []).length > 0,
     "first-order": (data.orders || []).length > 0,
     "first-sale": (data.sales || []).length > 0,
