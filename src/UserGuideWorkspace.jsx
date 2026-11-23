@@ -48,6 +48,7 @@ const guideSections = [
     ],
     keywords:
       "beginner first product first sale first order first ten home baker price cost profit weekly goal practice quote",
+  },
   {
     id: "daily-routine",
     category: "Daily routine",
