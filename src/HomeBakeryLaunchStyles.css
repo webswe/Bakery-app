@@ -9,7 +9,11 @@
   align-items: center;
   gap: 1rem;
   background:
-    radial-gradient(circle at 8% 10%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 28%),
+    radial-gradient(
+      circle at 8% 10%,
+      color-mix(in srgb, var(--accent) 15%, transparent),
+      transparent 28%
+    ),
     var(--panel);
 }
 
