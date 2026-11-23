@@ -102,7 +102,9 @@ export default function HomeBakeryLaunchWorkspace({ data, save, navigate }) {
       </nav>
       {notice && (
         <p
-          className={/saved|copied|downloaded/i.test(notice) ? "positive" : "error"}
+          className={
+            /saved|copied|downloaded/i.test(notice) ? "positive" : "error"
+          }
           role="status"
         >
           {notice}
@@ -117,7 +119,13 @@ export default function HomeBakeryLaunchWorkspace({ data, save, navigate }) {
           navigate={navigate}
         />
       ) : tab === "budget" ? (
-        <Budget data={data} profile={profile} budget={budget} weekly={weekly} act={act} />
+        <Budget
+          data={data}
+          profile={profile}
+          budget={budget}
+          weekly={weekly}
+          act={act}
+        />
       ) : tab === "menu" ? (
         <Menu
           data={data}
@@ -229,10 +237,16 @@ function Roadmap({ data, profile, readiness, act, navigate }) {
           </button>
         </form>
         <div className="planning-actions">
-          <button className="text-button" onClick={() => navigate("Setup checklist")}>
+          <button
+            className="text-button"
+            onClick={() => navigate("Setup checklist")}
+          >
             Open owner setup checklist
           </button>
-          <button className="text-button" onClick={() => navigate("Business profile")}>
+          <button
+            className="text-button"
+            onClick={() => navigate("Business profile")}
+          >
             Edit business identity
           </button>
         </div>
@@ -285,7 +299,9 @@ function Budget({ data, profile, budget, weekly, act }) {
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              const form = Object.fromEntries(new FormData(event.currentTarget));
+              const form = Object.fromEntries(
+                new FormData(event.currentTarget),
+              );
               act(
                 () =>
                   saveLaunchProfile(data, {
@@ -374,9 +390,13 @@ function Budget({ data, profile, budget, weekly, act }) {
             <dt>Recurring business costs</dt>
             <dd>{money(budget.monthlyTotal)} / month</dd>
             <dt>Total monthly contribution needed</dt>
-            <dd><b>{money(weekly.monthlyNeed)}</b></dd>
+            <dd>
+              <b>{money(weekly.monthlyNeed)}</b>
+            </dd>
             <dt>Weekly contribution needed</dt>
-            <dd><b>{money(weekly.weeklyNeed)}</b></dd>
+            <dd>
+              <b>{money(weekly.weeklyNeed)}</b>
+            </dd>
           </dl>
           {weekly.averageProfit > 0 ? (
             <p className="hint">
@@ -426,7 +446,10 @@ function Menu({ data, profile, menu, weekly, act, navigate }) {
                 offering every recipe at once.
               </p>
             </div>
-            <button className="text-button" onClick={() => navigate("Pricing desk")}>
+            <button
+              className="text-button"
+              onClick={() => navigate("Pricing desk")}
+            >
               Open pricing desk
             </button>
           </div>
@@ -446,12 +469,16 @@ function Menu({ data, profile, menu, weekly, act, navigate }) {
                   )}
                 </span>
                 <strong>
-                  {index < 5 && !row.readiness.length ? "Launch candidate" : "Review"}
+                  {index < 5 && !row.readiness.length
+                    ? "Launch candidate"
+                    : "Review"}
                 </strong>
               </article>
             ))}
             {!menu.length && (
-              <p className="empty-note">Create a recipe to start the menu guide.</p>
+              <p className="empty-note">
+                Create a recipe to start the menu guide.
+              </p>
             )}
           </div>
         </section>
@@ -460,7 +487,9 @@ function Menu({ data, profile, menu, weekly, act, navigate }) {
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              const form = Object.fromEntries(new FormData(event.currentTarget));
+              const form = Object.fromEntries(
+                new FormData(event.currentTarget),
+              );
               act(
                 () =>
                   saveLaunchProfile(data, {
