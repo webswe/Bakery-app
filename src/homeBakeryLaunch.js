@@ -8,6 +8,51 @@ const positive = (value, fallback = 0) => Math.max(0, finite(value, fallback));
 const clamp = (value, minimum, maximum) =>
   Math.min(maximum, Math.max(minimum, finite(value, minimum)));
 
+export const beginnerSteps = [
+  {
+    id: "first-product",
+    title: "Choose one product to start with",
+    detail:
+      "Pick something you make consistently before building a large menu.",
+  },
+  {
+    id: "cost-product",
+    title: "Add its ingredients and packaging",
+    detail: "Use the package price and package size you actually buy.",
+  },
+  {
+    id: "price-product",
+    title: "Check that the selling price leaves a profit",
+    detail:
+      "A sale is not income until ingredients, packaging, and other costs are covered.",
+  },
+  {
+    id: "order-basics",
+    title: "Decide how orders, payment, and pickup work",
+    detail: "Start with simple lead time, deposit, and pickup expectations.",
+  },
+  {
+    id: "first-quote",
+    title: "Make a practice quote",
+    detail: "Try the order flow before a customer is waiting.",
+  },
+  {
+    id: "first-order",
+    title: "Record the first real order",
+    detail: "Keep the customer, price, payment, and pickup date together.",
+  },
+  {
+    id: "first-sale",
+    title: "Complete and record the first sale",
+    detail: "The dashboard becomes useful once real sales are recorded.",
+  },
+  {
+    id: "first-ten",
+    title: "Complete the first 10 sales",
+    detail: "Use the first 10 sales to learn what sells and how long it takes.",
+  },
+];
+
 export const launchSteps = [
   {
     id: "rules",
@@ -67,6 +112,8 @@ export function normalizeLaunchProfile(settings = {}) {
       : "idea",
     targetLaunchDate: saved.targetLaunchDate || "",
     monthlyOwnerIncome: positive(saved.monthlyOwnerIncome),
+    weeklySalesGoal: positive(saved.weeklySalesGoal, 100),
+    firstProductId: String(saved.firstProductId || ""),
     workingDaysPerWeek: clamp(saved.workingDaysPerWeek ?? 3, 1, 7),
     hoursPerWeek: positive(saved.hoursPerWeek, 15),
     maxBatchesPerWeek: Math.max(
@@ -197,6 +244,70 @@ export function launchReadiness(data) {
     complete,
     total: steps.length,
     percent: Math.round((complete / steps.length) * 100),
+  };
+}
+
+export function beginnerJourney(data) {
+  const profile = normalizeLaunchProfile(data.settings);
+  const recipe =
+    (data.recipes || []).find((row) => row.id === profile.firstProductId) ||
+    (data.recipes || [])[0] ||
+    null;
+  const menu = launchMenuGuide(data);
+  const product = recipe
+    ? menu.find((row) => row.recipeId === recipe.id) || null
+    : null;
+  const itemIds = new Set((recipe?.lines || []).map((line) => line.itemId));
+  const linkedItems = (data.items || []).filter((item) => itemIds.has(item.id));
+  const ingredientsReady =
+    Boolean(recipe?.lines?.length) &&
+    linkedItems.length === recipe.lines.length &&
+    linkedItems.every(
+      (item) =>
+        positive(item.amount) > 0 &&
+        positive(item.price) >= 0 &&
+        !item.needsPrice,
+    );
+  const results = {
+    "first-product": Boolean(recipe),
+    "cost-product": ingredientsReady,
+    "price-product": Boolean(
+      product && product.price > 0 && product.profit > 0,
+    ),
+    "order-basics": Boolean(
+      profile.policies.pickupWindow.trim() &&
+      profile.policies.leadDays >= 0 &&
+      profile.policies.depositPercent >= 0,
+    ),
+    "first-quote": (data.quotes || []).length > 0,
+    "first-order": (data.orders || []).length > 0,
+    "first-sale": (data.sales || []).length > 0,
+    "first-ten": (data.sales || []).length >= 10,
+  };
+  const steps = beginnerSteps.map((step) => ({
+    ...step,
+    complete: results[step.id],
+  }));
+  const complete = steps.filter((step) => step.complete).length;
+  const weeklyUnits =
+    product?.price > 0
+      ? Math.ceil(profile.weeklySalesGoal / product.price)
+      : null;
+  return {
+    profile,
+    recipe,
+    product,
+    steps,
+    complete,
+    total: steps.length,
+    percent: Math.round((complete / steps.length) * 100),
+    weeklyUnits,
+    weeklyRevenue:
+      weeklyUnits == null ? null : weeklyUnits * positive(product?.price),
+    weeklyProfit:
+      weeklyUnits == null ? null : weeklyUnits * positive(product?.profit),
+    salesCount: (data.sales || []).length,
+    ordersCount: (data.orders || []).length,
   };
 }
 

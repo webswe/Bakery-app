@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  beginnerJourney,
   launchMenuGuide,
   launchReadiness,
   normalizeLaunchProfile,
@@ -155,4 +156,30 @@ test("policy text includes business terms and a local-requirements warning", () 
   assert.match(text, /7 day/);
   assert.match(text, /home kitchen/i);
   assert.match(text, /requirements/i);
+});
+
+test("beginner journey starts with one product and tracks the first 10 sales", () => {
+  const data = fixture();
+  const journey = beginnerJourney(data);
+  assert.equal(journey.recipe.name, "Cookie box");
+  assert.equal(
+    journey.steps.find((row) => row.id === "first-product").complete,
+    true,
+  );
+  assert.equal(
+    journey.steps.find((row) => row.id === "first-quote").complete,
+    false,
+  );
+  assert.equal(journey.weeklyUnits, 9);
+  assert.ok(journey.weeklyProfit > 0);
+  assert.equal(journey.salesCount, 0);
+
+  data.sales = Array.from({ length: 10 }, (_, index) => ({
+    id: String(index),
+  }));
+  const experienced = beginnerJourney(data);
+  assert.equal(
+    experienced.steps.find((row) => row.id === "first-ten").complete,
+    true,
+  );
 });

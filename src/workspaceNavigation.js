@@ -153,7 +153,7 @@ export const pages = {
   "Start a bakery": {
     label: "Home bakery launch",
     description:
-      "Build a practical path from home baker to small business with readiness, startup budget, income targets, a focused menu, capacity, sales channels, and customer policies.",
+      "Start with one product and learn its cost, price, first quote, first order, and first 10 sales before opening the advanced business-planning tools.",
   },
   "Owner desk": {
     label: "Owner desk",
