@@ -12,7 +12,8 @@ export const beginnerSteps = [
   {
     id: "first-product",
     title: "Choose one product to start with",
-    detail: "Pick something you make consistently before building a large menu.",
+    detail:
+      "Pick something you make consistently before building a large menu.",
   },
   {
     id: "cost-product",
@@ -22,7 +23,8 @@ export const beginnerSteps = [
   {
     id: "price-product",
     title: "Check that the selling price leaves a profit",
-    detail: "A sale is not income until ingredients, packaging, and other costs are covered.",
+    detail:
+      "A sale is not income until ingredients, packaging, and other costs are covered.",
   },
   {
     id: "order-basics",
@@ -269,11 +271,13 @@ export function beginnerJourney(data) {
   const results = {
     "first-product": Boolean(recipe),
     "cost-product": ingredientsReady,
-    "price-product": Boolean(product && product.price > 0 && product.profit > 0),
+    "price-product": Boolean(
+      product && product.price > 0 && product.profit > 0,
+    ),
     "order-basics": Boolean(
       profile.policies.pickupWindow.trim() &&
-        profile.policies.leadDays >= 0 &&
-        profile.policies.depositPercent >= 0,
+      profile.policies.leadDays >= 0 &&
+      profile.policies.depositPercent >= 0,
     ),
     "first-quote": (data.quotes || []).length > 0,
     "first-order": (data.orders || []).length > 0,
