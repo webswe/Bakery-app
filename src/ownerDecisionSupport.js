@@ -285,9 +285,7 @@ function openingCashOn(data, start) {
   const month = start.slice(0, 7);
   const monthStart = month + "-01";
   const finance = data.settings?.finance || {};
-  let cash = number(
-    finance.openingCashByMonth?.[month] ?? finance.openingCash,
-  );
+  let cash = number(finance.openingCashByMonth?.[month] ?? finance.openingCash);
   for (const event of recordedCashEvents(data, monthStart, addDays(start, -1)))
     cash += event.direction === "in" ? event.amount : -event.amount;
   return cash;
