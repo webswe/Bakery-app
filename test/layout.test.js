@@ -3,6 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const css = readFileSync(new URL("../src/style.css", import.meta.url), "utf8");
+const inventoryWorkspace = readFileSync(
+  new URL("../src/InventoryWorkspace.jsx", import.meta.url),
+  "utf8",
+);
 
 test("stock form compact width applies only to its direct inputs, not lot-detail date fields", () => {
   // A descendant `.stock-form input { width: 85px }` rule truncated lot-detail dates (e.g. "01/01/20...").
@@ -34,5 +38,13 @@ test("the later dashboard-actions rule removes the negative-margin overlap with 
   assert.match(
     css,
     /\.dashboard-actions\s*\{\s*margin:\s*0 0 var\(--space-4\);\s*position:\s*static/,
+  );
+});
+
+
+test("operating cost edits preserve unrelated application settings", () => {
+  assert.match(
+    inventoryWorkspace,
+    /settings:\s*\{\s*\.\.\.data\.settings,\s*hourlyWage:/,
   );
 });
