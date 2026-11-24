@@ -41,7 +41,6 @@ test("the later dashboard-actions rule removes the negative-margin overlap with 
   );
 });
 
-
 test("operating cost edits preserve unrelated application settings", () => {
   assert.match(
     inventoryWorkspace,
