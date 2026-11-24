@@ -182,7 +182,7 @@ function Receivables({ data, act }) {
                   <input
                     type="number"
                     min="0.01"
-                    max={balance}
+                    max={kind === "refund" ? paid : balance}
                     step="0.01"
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
@@ -226,9 +226,11 @@ function Receivables({ data, act }) {
                 <button
                   type="button"
                   className="secondary"
-                  onClick={() => setAmount(String(balance))}
+                  onClick={() =>
+                    setAmount(String(kind === "refund" ? paid : balance))
+                  }
                 >
-                  Use full balance
+                  {kind === "refund" ? "Refund all collected" : "Use full balance"}
                 </button>
               </div>
             </form>
