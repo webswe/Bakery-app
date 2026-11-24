@@ -167,7 +167,7 @@ export function capacityForecast(data, startDate, days = 7) {
     const load = plans.reduce(
       (total, plan) => {
         const recipe =
-          plan.recipeSnapshot ||
+          plan.recipeSnapshot?.recipe ||
           data.recipes.find((entry) => entry.id === plan.recipeId) ||
           {};
         const batches = Number(plan.batches) || 0;
@@ -198,6 +198,39 @@ export function capacityForecast(data, startDate, days = 7) {
       ),
     };
   });
+}
+
+export function cashCloseoutActivity(data, date) {
+  const payments = data.payments || [];
+  const cashPayments = payments
+    .filter(
+      (entry) =>
+        entry.date === date &&
+        entry.kind !== "adjustment" &&
+        String(entry.method || "").toLowerCase() === "cash",
+    )
+    .reduce(
+      (sum, entry) =>
+        sum +
+        (entry.kind === "refund"
+          ? -Number(entry.amount || 0)
+          : Number(entry.amount || 0)),
+      0,
+    );
+  const directCash = (data.sales || [])
+    .filter(
+      (entry) =>
+        entry.date === date &&
+        !entry.orderId &&
+        entry.paymentStatus !== "unpaid" &&
+        entry.paymentStatus !== "partial" &&
+        String(
+          entry.payment || entry.paymentMethod || entry.method || "",
+        ).toLowerCase() === "cash" &&
+        !payments.some((payment) => payment.saleId === entry.id),
+    )
+    .reduce((sum, entry) => sum + Number(entry.total || entry.net || 0), 0);
+  return { cashPayments, directCash, total: cashPayments + directCash };
 }
 
 export function saveCloseout(data, closeout) {
@@ -235,7 +268,7 @@ export function archiveCompletedRecords(data, beforeDate) {
     throw Error("Choose an archive date.");
   const orders = (data.orders || []).filter(
     (entry) =>
-      entry.status === "completed" &&
+      ["completed", "fulfilled"].includes(entry.status) &&
       (entry.pickupDate || entry.date || "") < beforeDate,
   );
   const plans = (data.productionPlans || []).filter(
