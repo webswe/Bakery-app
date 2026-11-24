@@ -22,6 +22,7 @@ test("daily snapshot separates earned revenue, cash, tax and costs", () => {
           total: 107,
           cost: 40,
           quantity: 8,
+          paymentStatus: "unpaid",
         },
       ],
       expenses: [{ date: "2026-10-28", amount: 10 }],
@@ -34,6 +35,51 @@ test("daily snapshot separates earned revenue, cash, tax and costs", () => {
   assert.equal(result.tax, 7);
   assert.equal(result.cashReceived, 30);
   assert.equal(result.profit, 50);
+});
+
+test("daily cash includes paid direct sales and excludes balance adjustments", () => {
+  const result = dailySnapshot(
+    {
+      sales: [
+        {
+          id: "walk-in",
+          date: "2026-10-28",
+          total: 20,
+          paymentStatus: "paid",
+        },
+        {
+          id: "due",
+          date: "2026-10-28",
+          total: 50,
+          paymentStatus: "partial",
+        },
+      ],
+      expenses: [],
+      payments: [
+        {
+          saleId: "due",
+          date: "2026-10-28",
+          amount: 30,
+          kind: "payment",
+        },
+        {
+          saleId: "due",
+          date: "2026-10-28",
+          amount: 10,
+          kind: "refund",
+        },
+        {
+          saleId: "due",
+          date: "2026-10-28",
+          amount: 5,
+          kind: "adjustment",
+        },
+      ],
+      productionBatches: [],
+    },
+    "2026-10-28",
+  );
+  assert.equal(result.cashReceived, 40);
 });
 
 test("price and expiry insights use recorded supplier and lot history", () => {
