@@ -187,7 +187,14 @@ export function financialCenter(data, month) {
         .reduce((sum, sale) => {
           const paid = (data.payments || [])
             .filter((payment) => payment.saleId === sale.id)
-            .reduce((total, payment) => total + number(payment.amount), 0);
+            .reduce(
+              (total, payment) =>
+                total +
+                (payment.kind === "refund"
+                  ? -number(payment.amount)
+                  : number(payment.amount)),
+              0,
+            );
           return sum + Math.max(0, number(sale.total) - paid);
         }, 0),
     wasteCost,
