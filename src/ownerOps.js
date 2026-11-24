@@ -150,13 +150,15 @@ export function taxReport(data, month) {
     grossReceipts: sales.reduce((n, s) => n + s.total, 0),
     legacySales: sales.filter((s) => s.net == null).length,
     purchaseTax: purchases.reduce(
-      (n, p) =>
-        n + p.taxAmount != null
-          ? p.taxAmount * (p.packages || 1)
+      (total, purchase) =>
+        total +
+        (purchase.taxAmount != null
+          ? purchase.taxAmount * (purchase.packages || 1)
           : Math.max(
               0,
-              (p.finalPackageCost - p.packagePrice) * (p.packages || 1),
-            ),
+              (purchase.finalPackageCost - purchase.packagePrice) *
+                (purchase.packages || 1),
+            )),
       0,
     ),
     taxableSales: sales

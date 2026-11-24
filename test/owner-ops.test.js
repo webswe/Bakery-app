@@ -44,6 +44,13 @@ const fixture = () => ({
       taxAmount: 0.7,
       packages: 2,
     },
+    {
+      date: "2026-10-22",
+      packagePrice: 5,
+      finalPackageCost: 5.5,
+      taxAmount: 0.5,
+      packages: 3,
+    },
   ],
   waste: [
     { date: "2026-10-22", name: "Cream", reason: "Expired", cost: 3 },
@@ -116,7 +123,7 @@ test("owner reports retain tax, schedule and waste detail", () => {
   const data = fixture();
   const tax = taxReport(data, "2026-10");
   assert.equal(tax.customerTax, 7);
-  assert.equal(tax.purchaseTax, 1.4);
+  assert.equal(tax.purchaseTax, 2.9);
   assert.deepEqual(
     calendarEntries(data, "2026-10").map((row) => row.type),
     ["Production", "Pickup"],

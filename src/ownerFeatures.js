@@ -28,11 +28,26 @@ export function dailySnapshot(data, date) {
     (sum, expense) => sum + (expense.amount || 0),
     0,
   );
-  const cashReceived = payments.reduce(
+  const recordedCash = payments.reduce(
     (sum, payment) =>
-      sum + (payment.kind === "refund" ? -payment.amount : payment.amount),
+      sum +
+      (payment.kind === "adjustment"
+        ? 0
+        : payment.kind === "refund"
+          ? -Number(payment.amount || 0)
+          : Number(payment.amount || 0)),
     0,
   );
+  const directPaidCash = sales
+    .filter(
+      (sale) =>
+        !sale.orderId &&
+        sale.paymentStatus !== "unpaid" &&
+        sale.paymentStatus !== "partial" &&
+        !(data.payments || []).some((payment) => payment.saleId === sale.id),
+    )
+    .reduce((sum, sale) => sum + Number(sale.total || 0), 0);
+  const cashReceived = recordedCash + directPaidCash;
   return {
     date,
     sales,

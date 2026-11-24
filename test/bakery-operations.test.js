@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   archiveCompletedRecords,
   capacityForecast,
+  cashCloseoutActivity,
   menuProfitability,
   removeRecipe,
   recipeRemovalStatus,
@@ -92,6 +93,84 @@ test("capacity forecast highlights overloaded stations", () => {
   assert.equal(row.peak, 100);
 });
 
+test("capacity forecast reads the captured recipe inside a plan snapshot", () => {
+  const data = base();
+  data.productionPlans[0].recipeSnapshot = {
+    recipe: {
+      ...data.recipes[0],
+      laborMinutes: 30,
+      prepMinutes: 15,
+      bakeMinutes: 10,
+    },
+  };
+  const row = capacityForecast(data, "2026-11-05", 1)[0];
+  assert.equal(row.load.prep, 30);
+  assert.equal(row.load.oven, 20);
+  assert.equal(row.load.decorating, 30);
+});
+
+test("cash closeout counts direct cash once and ignores adjustments", () => {
+  const data = {
+    payments: [
+      {
+        saleId: "receivable",
+        date: "2026-11-05",
+        method: "Cash",
+        kind: "payment",
+        amount: 30,
+      },
+      {
+        saleId: "receivable",
+        date: "2026-11-05",
+        method: "Cash",
+        kind: "refund",
+        amount: 5,
+      },
+      {
+        saleId: "receivable",
+        date: "2026-11-05",
+        method: "Cash",
+        kind: "adjustment",
+        amount: 10,
+      },
+      {
+        date: "2026-11-05",
+        method: "Card",
+        kind: "payment",
+        amount: 100,
+      },
+    ],
+    sales: [
+      {
+        id: "walk-in",
+        date: "2026-11-05",
+        payment: "Cash",
+        paymentStatus: "paid",
+        total: 20,
+      },
+      {
+        id: "receivable",
+        date: "2026-11-05",
+        payment: "Cash",
+        paymentStatus: "paid",
+        total: 50,
+      },
+      {
+        id: "order-sale",
+        orderId: "order",
+        date: "2026-11-05",
+        payment: "Cash",
+        total: 100,
+      },
+    ],
+  };
+  assert.deepEqual(cashCloseoutActivity(data, "2026-11-05"), {
+    cashPayments: 25,
+    directCash: 20,
+    total: 45,
+  });
+});
+
 test("profitability uses recorded recipe sales and current cost", () => {
   const row = menuProfitability(base())[0];
   assert.equal(row.revenue, 50);
@@ -108,7 +187,7 @@ test("closeout replaces the same day and archive is reversible", () => {
   assert.deepEqual(data.closeouts[0].checks, ["Stock counted"]);
   data = {
     ...data,
-    orders: [{ id: "old", status: "completed", pickupDate: "2025-01-01" }],
+    orders: [{ id: "old", status: "fulfilled", pickupDate: "2025-01-01" }],
     productionPlans: [
       { id: "old-plan", status: "completed", date: "2025-01-01" },
     ],
