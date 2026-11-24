@@ -140,6 +140,39 @@ test("partial direct-sale payments become cash and reduce the amount due", () =>
   assert.equal(report.outstanding, 20);
 });
 
+test("direct-sale refunds restore the amount due and reduce cash", () => {
+  const data = base();
+  data.sales.push({
+    id: "due",
+    date: "2026-11-02",
+    total: 30,
+    net: 30,
+    cost: 12,
+    quantity: 3,
+    paymentStatus: "partial",
+  });
+  data.payments.push(
+    {
+      id: "part",
+      saleId: "due",
+      date: "2026-11-03",
+      kind: "payment",
+      amount: 20,
+    },
+    {
+      id: "refund",
+      saleId: "due",
+      date: "2026-11-04",
+      kind: "refund",
+      amount: 5,
+    },
+  );
+  const report = financialCenter(data, "2026-11");
+  assert.equal(report.cashIn, 15);
+  assert.equal(report.outstanding, 15);
+  assert.equal(report.upcomingCollections[0].amount, 15);
+});
+
 test("financial center combines purchases, expenses, cash planning and collections", () => {
   const data = base();
   data.settings.finance = { openingCash: 100, monthlyExpenseBudget: 40 };
