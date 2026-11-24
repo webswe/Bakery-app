@@ -18,18 +18,6 @@ jobs:
       - run: npm ci
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
-      - name: Preview formatted debug files
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          files=(src/OwnerWorkspace.jsx test/layout.test.js)
-          npx prettier --write "${files[@]}"
-          for file in "${files[@]}"; do
-            echo "FORMAT_BEGIN:${file}"
-            base64 -w 0 "${file}"
-            echo
-            echo "FORMAT_END:${file}"
-          done
       - run: npm test
       - run: npm run format:check
       - run: npm run build
