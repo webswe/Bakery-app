@@ -559,6 +559,7 @@ export default function Operations({ data, save, open, tab }) {
               act(() => ({
                 ...data,
                 settings: {
+                  ...data.settings,
                   hourlyWage: +f.hourlyWage,
                   electricityRate: +f.electricityRate,
                 },
