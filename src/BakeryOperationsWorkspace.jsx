@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   archiveCompletedRecords,
   capacityForecast,
+  cashCloseoutActivity,
   commonAllergens,
   menuProfitability,
   restoreArchive,
@@ -664,26 +665,7 @@ function DailyCloseout({ data, save, navigate }) {
   const [date, setDate] = useState(today());
   const saved =
     (data.closeouts || []).find((entry) => entry.date === date) || {};
-  const cashPayments = (data.payments || [])
-    .filter(
-      (entry) =>
-        entry.date === date && String(entry.method).toLowerCase() === "cash",
-    )
-    .reduce(
-      (sum, entry) =>
-        sum +
-        (entry.kind === "refund"
-          ? -Number(entry.amount || 0)
-          : Number(entry.amount || 0)),
-      0,
-    );
-  const directCash = (data.sales || [])
-    .filter(
-      (entry) =>
-        entry.date === date &&
-        String(entry.paymentMethod || entry.method).toLowerCase() === "cash",
-    )
-    .reduce((sum, entry) => sum + Number(entry.total || entry.net || 0), 0);
+  const { cashPayments, directCash } = cashCloseoutActivity(data, date);
   const expectedCash =
     Number(saved.openingFloat || 0) +
     cashPayments +
