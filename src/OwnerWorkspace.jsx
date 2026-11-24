@@ -159,7 +159,7 @@ function Receivables({ data, act }) {
                 >
                   {rows.map((sale) => (
                     <option key={sale.id} value={sale.id}>
-                      {sale.customer || sale.name} ·{" "}
+                      {sale.customer || sale.name} Â·{" "}
                       {money(sale.total - directSalePaid(data, sale))} due
                     </option>
                   ))}
@@ -230,7 +230,9 @@ function Receivables({ data, act }) {
                     setAmount(String(kind === "refund" ? paid : balance))
                   }
                 >
-                  {kind === "refund" ? "Refund all collected" : "Use full balance"}
+                  {kind === "refund"
+                    ? "Refund all collected"
+                    : "Use full balance"}
                 </button>
               </div>
             </form>
@@ -328,9 +330,9 @@ function Receivables({ data, act }) {
               return (
                 <tr key={sale.id}>
                   <td>
-                    {sale.date} · {sale.name}
+                    {sale.date} Â· {sale.name}
                   </td>
-                  <td>{sale.customer || "—"}</td>
+                  <td>{sale.customer || "â"}</td>
                   <td className={overdue ? "negative" : ""}>
                     {sale.dueDate || "Not set"}
                     {overdue && <small>Overdue</small>}
@@ -661,7 +663,7 @@ function PrepSheets({ data }) {
                   </span>
                   <span>
                     <small>TEMPERATURE</small>
-                    <b>{recipe?.bakeTemperature || "—"}</b>
+                    <b>{recipe?.bakeTemperature || "â"}</b>
                   </span>
                 </div>
                 {recipe?.equipment && (
@@ -684,7 +686,7 @@ function PrepSheets({ data }) {
                 </p>
                 <p>
                   <small>KITCHEN NOTES</small>
-                  <b>{plan.notes || "—"}</b>
+                  <b>{plan.notes || "â"}</b>
                 </p>
               </div>
               <div className="prep-checks">
@@ -704,7 +706,7 @@ function PrepSheets({ data }) {
               <div className="batch-label">
                 <div className="label-brand">
                   <span>{profile.name || "Bakery Ledger"}</span>
-                  <small>PRODUCT LABEL · CUT ON DOTTED LINE</small>
+                  <small>PRODUCT LABEL Â· CUT ON DOTTED LINE</small>
                 </div>
                 <h3>{recipe?.name}</h3>
                 <div className="label-grid">
@@ -825,7 +827,7 @@ function InventoryLots({ data }) {
                   <td>
                     {qty(lot.remaining)} {lot.unit}
                   </td>
-                  <td>{lot.supplier || "—"}</td>
+                  <td>{lot.supplier || "â"}</td>
                   <td>{money(lot.packagePrice)} / package</td>
                 </tr>
               );
@@ -891,19 +893,19 @@ function SupplierPrices({ data }) {
         <section className="panel planning-form">
           <h2>Price movement alerts</h2>
           <p>
-            Compares each item’s two latest receipts from the same supplier.
+            Compares each itemâs two latest receipts from the same supplier.
           </p>
           {changes.slice(0, 8).map((row) => (
             <div className="legend" key={`${row.itemName}-${row.supplier}`}>
               <span>
                 <b>{row.itemName}</b>
                 <small>
-                  {row.supplier} · latest receipt {row.date}
+                  {row.supplier} Â· latest receipt {row.date}
                 </small>
               </span>
               <b className={row.change > 0 ? "negative" : "positive"}>
                 {row.change > 0 ? "+" : ""}
-                {row.percent.toFixed(1)}% · {money(row.previous)} →{" "}
+                {row.percent.toFixed(1)}% Â· {money(row.previous)} â{" "}
                 {money(row.latest)}
               </b>
             </div>
@@ -952,7 +954,7 @@ function SupplierPrices({ data }) {
             {rows.map((row) => (
               <tr key={row.id}>
                 <td>{row.date}</td>
-                <td>{row.supplier || "—"}</td>
+                <td>{row.supplier || "â"}</td>
                 <td>{row.itemName}</td>
                 <td>{money(row.packagePrice)}</td>
                 <td>{money(row.finalPackageCost)}</td>
@@ -1012,7 +1014,7 @@ function Payments({ data, act }) {
                 <option value="">Choose an order</option>
                 {openOrders.map((item) => (
                   <option value={item.id} key={item.id}>
-                    {item.customer || item.recipeName} · balance{" "}
+                    {item.customer || item.recipeName} Â· balance{" "}
                     {money(item.total - orderPaid(data, item))}
                   </option>
                 ))}
@@ -1109,7 +1111,7 @@ function Payments({ data, act }) {
                       entry.kind === "refund" ? "negative" : "positive"
                     }
                   >
-                    {entry.kind === "refund" ? "−" : ""}
+                    {entry.kind === "refund" ? "â" : ""}
                     {money(entry.amount)}
                   </td>
                 </tr>
