@@ -29,9 +29,7 @@ export function directSalePaid(data, sale) {
 }
 
 export function removePaymentEntry(data, paymentId) {
-  const payment = (data.payments || []).find(
-    (entry) => entry.id === paymentId,
-  );
+  const payment = (data.payments || []).find((entry) => entry.id === paymentId);
   if (!payment) throw Error("Payment entry is missing.");
 
   if (payment.orderId) {
