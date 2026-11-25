@@ -2,6 +2,13 @@ import { fullCost } from "./operations.js";
 import { purchaseTax, saleRevenue } from "./taxation.js";
 import { validDate } from "./business.js";
 import { localDay } from "./dateUtils.js";
+import {
+  directSalePaid,
+  orderPaid,
+  removePaymentEntry,
+} from "./paymentLedger.js";
+
+export { directSalePaid, orderPaid, removePaymentEntry };
 
 const number = (value, label, zero = false) => {
   const n = Number(value);
@@ -9,16 +16,6 @@ const number = (value, label, zero = false) => {
     throw Error("Invalid " + label + ".");
   return n;
 };
-
-export function orderPaid(data, order) {
-  const entries = (data.payments || []).filter((p) => p.orderId === order.id);
-  if (!entries.length) return Number(order.paid) || 0;
-  return entries.reduce(
-    (sum, payment) =>
-      sum + (payment.kind === "refund" ? -payment.amount : payment.amount),
-    0,
-  );
-}
 
 export function recordPayment(data, orderId, input) {
   const order = data.orders.find((o) => o.id === orderId);
@@ -47,16 +44,6 @@ export function recordPayment(data, orderId, input) {
       o.id === orderId ? { ...o, paid: nextPaid } : o,
     ),
   };
-}
-
-export function directSalePaid(data, sale) {
-  return (data.payments || [])
-    .filter((payment) => payment.saleId === sale.id)
-    .reduce(
-      (sum, payment) =>
-        sum + (payment.kind === "refund" ? -payment.amount : payment.amount),
-      0,
-    );
 }
 
 export function recordDirectSalePayment(data, saleId, input) {

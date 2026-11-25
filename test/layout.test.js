@@ -7,6 +7,10 @@ const inventoryWorkspace = readFileSync(
   new URL("../src/InventoryWorkspace.jsx", import.meta.url),
   "utf8",
 );
+const ownerWorkspace = readFileSync(
+  new URL("../src/OwnerWorkspace.jsx", import.meta.url),
+  "utf8",
+);
 
 test("stock form compact width applies only to its direct inputs, not lot-detail date fields", () => {
   // A descendant `.stock-form input { width: 85px }` rule truncated lot-detail dates (e.g. "01/01/20...").
@@ -46,4 +50,10 @@ test("operating cost edits preserve unrelated application settings", () => {
     inventoryWorkspace,
     /settings:\s*\{\s*\.\.\.data\.settings,\s*hourlyWage:/,
   );
+});
+
+test("owner workspace punctuation remains readable UTF-8 text", () => {
+  assert.doesNotMatch(ownerWorkspace, /Â|â|â|â/);
+  assert.match(ownerWorkspace, /·/);
+  assert.match(ownerWorkspace, /—/);
 });

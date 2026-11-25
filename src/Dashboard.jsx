@@ -7,6 +7,7 @@ import DashboardCustomizer from "./DashboardCustomizer.jsx";
 import { normalizeDashboardConfig } from "./dashboardConfig.js";
 import { normalizeOwnerGoals, taskSummary } from "./ownerPlanning.js";
 import { localDay, money } from "./uiFormatters.js";
+import { linkedPaymentTotal } from "./paymentLedger.js";
 
 export default function Dashboard({ data, month, save, navigate }) {
   const savedConfig = normalizeDashboardConfig(data.settings?.dashboard);
@@ -66,17 +67,15 @@ export default function Dashboard({ data, month, save, navigate }) {
   const receivables = data.sales.filter((sale) =>
     ["unpaid", "partial"].includes(sale.paymentStatus),
   );
-  const receivableDue = receivables.reduce((sum, sale) => {
-    const paid = (data.payments || [])
-      .filter((payment) => payment.saleId === sale.id)
-      .reduce(
-        (total, payment) =>
-          total +
-          (payment.kind === "refund" ? -payment.amount : payment.amount),
+  const receivableDue = receivables.reduce(
+    (sum, sale) =>
+      sum +
+      Math.max(
         0,
-      );
-    return sum + Math.max(0, sale.total - paid);
-  }, 0);
+        sale.total - linkedPaymentTotal(data.payments, "saleId", sale.id),
+      ),
+    0,
+  );
   const goals = normalizeOwnerGoals(data.settings?.ownerGoals);
   const startOfWeek = new Date(`${day}T12:00:00`);
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());

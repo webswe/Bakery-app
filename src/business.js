@@ -5,6 +5,7 @@ import { consumeLots } from "./inventoryLots.js";
 import { allocateDocumentNumber } from "./documentOps.js";
 import { consumeProductLots } from "./productLots.js";
 import { localDay } from "./dateUtils.js";
+import { orderPaid } from "./paymentLedger.js";
 export const checklistSteps = ["Bake", "Chill", "Decorate", "Pack"];
 const positive = (v, label, zero = false) => {
   const n = Number(v);
@@ -125,15 +126,7 @@ export function updateOrder(data, id, action, input = {}) {
   if (action === "payment") {
     const paid = positive(input.paid, "total paid", true);
     if (paid > o.total) throw Error("Payment exceeds order total.");
-    const entries = (data.payments || []).filter((p) => p.orderId === id);
-    const current = entries.length
-      ? entries.reduce(
-          (sum, payment) =>
-            sum +
-            (payment.kind === "refund" ? -payment.amount : payment.amount),
-          0,
-        )
-      : Number(o.paid) || 0;
+    const current = orderPaid(data, o);
     const adjustment = paid - current;
     if (Math.abs(adjustment) > 0.005)
       next = {
@@ -172,13 +165,7 @@ export function updateOrder(data, id, action, input = {}) {
       ),
     };
   } else if (action === "fulfill") {
-    const ledger = (data.payments || []).filter((p) => p.orderId === o.id);
-    const ledgerPaid = ledger.length
-      ? ledger.reduce(
-          (n, p) => n + (p.kind === "refund" ? -p.amount : p.amount),
-          0,
-        )
-      : o.paid;
+    const ledgerPaid = orderPaid(data, o);
     if (ledgerPaid < o.total - 0.005)
       throw Error("Record the full payment before fulfillment.");
     next = sell(data, {

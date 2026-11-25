@@ -6,6 +6,7 @@ import {
   ownerForecast,
   recordDirectSalePayment,
   recordPayment,
+  removePaymentEntry,
   taxReport,
   wasteAnalysis,
 } from "./ownerOps.js";
@@ -79,6 +80,31 @@ export default function OwnerWorkspace({
   );
 }
 
+function RemovePaymentButton({ data, entry, act, disabled = false }) {
+  return (
+    <button
+      type="button"
+      className="text-button"
+      disabled={disabled || !entry.id}
+      title={
+        disabled
+          ? "Completed order payments must be corrected with a refund."
+          : "Remove an entry that was recorded by mistake."
+      }
+      onClick={() => {
+        if (
+          confirm(
+            "Permanently remove this payment entry? Use this only for an entry recorded by mistake.",
+          )
+        )
+          act(() => removePaymentEntry(data, entry.id));
+      }}
+    >
+      Remove mistaken entry
+    </button>
+  );
+}
+
 function Receivables({ data, act }) {
   const rows = data.sales.filter((sale) =>
     ["unpaid", "partial"].includes(sale.paymentStatus),
@@ -103,6 +129,10 @@ function Receivables({ data, act }) {
     (sum, sale) => sum + Math.max(0, sale.total - directSalePaid(data, sale)),
     0,
   );
+  const recentEntries = [...(data.payments || [])]
+    .filter((payment) => payment.saleId)
+    .slice(-25)
+    .reverse();
   return (
     <>
       <div className="stats planning-stats">
@@ -159,7 +189,7 @@ function Receivables({ data, act }) {
                 >
                   {rows.map((sale) => (
                     <option key={sale.id} value={sale.id}>
-                      {sale.customer || sale.name} Â·{" "}
+                      {sale.customer || sale.name} ·{" "}
                       {money(sale.total - directSalePaid(data, sale))} due
                     </option>
                   ))}
@@ -330,9 +360,9 @@ function Receivables({ data, act }) {
               return (
                 <tr key={sale.id}>
                   <td>
-                    {sale.date} Â· {sale.name}
+                    {sale.date} · {sale.name}
                   </td>
-                  <td>{sale.customer || "â"}</td>
+                  <td>{sale.customer || "—"}</td>
                   <td className={overdue ? "negative" : ""}>
                     {sale.dueDate || "Not set"}
                     {overdue && <small>Overdue</small>}
@@ -346,6 +376,49 @@ function Receivables({ data, act }) {
             })}
           </tbody>
         </table>
+      </section>
+      <section className="panel table-scroll">
+        <div className="panel-heading">
+          <div>
+            <h2>Recent direct-sale payment entries</h2>
+            <p>
+              Remove only entries recorded by mistake. Valid refunds remain part
+              of the ledger.
+            </p>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>SALE</th>
+              <th>TYPE</th>
+              <th>METHOD</th>
+              <th>AMOUNT</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentEntries.map((entry) => {
+              const sale = data.sales.find((row) => row.id === entry.saleId);
+              return (
+                <tr key={entry.id}>
+                  <td>{entry.date}</td>
+                  <td>{sale?.customer || sale?.name || "Direct sale"}</td>
+                  <td>{entry.kind}</td>
+                  <td>{entry.method}</td>
+                  <td>{money(entry.amount)}</td>
+                  <td>
+                    <RemovePaymentButton data={data} entry={entry} act={act} />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {!recentEntries.length && (
+          <p className="empty-note">No direct-sale payment entries yet.</p>
+        )}
       </section>
     </>
   );
@@ -663,7 +736,7 @@ function PrepSheets({ data }) {
                   </span>
                   <span>
                     <small>TEMPERATURE</small>
-                    <b>{recipe?.bakeTemperature || "â"}</b>
+                    <b>{recipe?.bakeTemperature || "—"}</b>
                   </span>
                 </div>
                 {recipe?.equipment && (
@@ -686,7 +759,7 @@ function PrepSheets({ data }) {
                 </p>
                 <p>
                   <small>KITCHEN NOTES</small>
-                  <b>{plan.notes || "â"}</b>
+                  <b>{plan.notes || "—"}</b>
                 </p>
               </div>
               <div className="prep-checks">
@@ -706,7 +779,7 @@ function PrepSheets({ data }) {
               <div className="batch-label">
                 <div className="label-brand">
                   <span>{profile.name || "Bakery Ledger"}</span>
-                  <small>PRODUCT LABEL Â· CUT ON DOTTED LINE</small>
+                  <small>PRODUCT LABEL · CUT ON DOTTED LINE</small>
                 </div>
                 <h3>{recipe?.name}</h3>
                 <div className="label-grid">
@@ -827,7 +900,7 @@ function InventoryLots({ data }) {
                   <td>
                     {qty(lot.remaining)} {lot.unit}
                   </td>
-                  <td>{lot.supplier || "â"}</td>
+                  <td>{lot.supplier || "—"}</td>
                   <td>{money(lot.packagePrice)} / package</td>
                 </tr>
               );
@@ -893,19 +966,19 @@ function SupplierPrices({ data }) {
         <section className="panel planning-form">
           <h2>Price movement alerts</h2>
           <p>
-            Compares each itemâs two latest receipts from the same supplier.
+            Compares each item’s two latest receipts from the same supplier.
           </p>
           {changes.slice(0, 8).map((row) => (
             <div className="legend" key={`${row.itemName}-${row.supplier}`}>
               <span>
                 <b>{row.itemName}</b>
                 <small>
-                  {row.supplier} Â· latest receipt {row.date}
+                  {row.supplier} · latest receipt {row.date}
                 </small>
               </span>
               <b className={row.change > 0 ? "negative" : "positive"}>
                 {row.change > 0 ? "+" : ""}
-                {row.percent.toFixed(1)}% Â· {money(row.previous)} â{" "}
+                {row.percent.toFixed(1)}% · {money(row.previous)} →{" "}
                 {money(row.latest)}
               </b>
             </div>
@@ -954,7 +1027,7 @@ function SupplierPrices({ data }) {
             {rows.map((row) => (
               <tr key={row.id}>
                 <td>{row.date}</td>
-                <td>{row.supplier || "â"}</td>
+                <td>{row.supplier || "—"}</td>
                 <td>{row.itemName}</td>
                 <td>{money(row.packagePrice)}</td>
                 <td>{money(row.finalPackageCost)}</td>
@@ -1014,7 +1087,7 @@ function Payments({ data, act }) {
                 <option value="">Choose an order</option>
                 {openOrders.map((item) => (
                   <option value={item.id} key={item.id}>
-                    {item.customer || item.recipeName} Â· balance{" "}
+                    {item.customer || item.recipeName} · balance{" "}
                     {money(item.total - orderPaid(data, item))}
                   </option>
                 ))}
@@ -1093,6 +1166,7 @@ function Payments({ data, act }) {
               <th>TYPE</th>
               <th>METHOD</th>
               <th>AMOUNT</th>
+              <th>ACTION</th>
             </tr>
           </thead>
           <tbody>
@@ -1111,8 +1185,18 @@ function Payments({ data, act }) {
                       entry.kind === "refund" ? "negative" : "positive"
                     }
                   >
-                    {entry.kind === "refund" ? "â" : ""}
+                    {entry.kind === "refund" ? "−" : ""}
                     {money(entry.amount)}
+                  </td>
+                  <td>
+                    <RemovePaymentButton
+                      data={data}
+                      entry={entry}
+                      act={act}
+                      disabled={["completed", "fulfilled"].includes(
+                        linked?.status,
+                      )}
+                    />
                   </td>
                 </tr>
               );
