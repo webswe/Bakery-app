@@ -208,7 +208,12 @@ const workspaceMenus = {
     },
   },
   Settings: {
-    primary: ["Tutorial", "User guide", "Business profile", "App customization"],
+    primary: [
+      "Tutorial",
+      "User guide",
+      "Business profile",
+      "App customization",
+    ],
     groups: {
       "Bakery setup": [
         "Setup checklist",
