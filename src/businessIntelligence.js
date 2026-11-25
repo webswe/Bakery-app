@@ -1,6 +1,7 @@
 import { monthlySummary } from "./analytics.js";
 import { savePlan } from "./planning.js";
 import { localDay } from "./dateUtils.js";
+import { linkedPaymentTotal } from "./paymentLedger.js";
 
 const number = (value) => Math.max(0, Number(value) || 0);
 
@@ -121,16 +122,7 @@ export function financialCenter(data, month) {
     Math.max(
       0,
       number(total) -
-        paymentEntries
-          .filter((entry) => entry[`${type}Id`] === id)
-          .reduce(
-            (sum, entry) =>
-              sum +
-              (entry.kind === "refund"
-                ? -number(entry.amount)
-                : number(entry.amount)),
-            0,
-          ),
+        linkedPaymentTotal(paymentEntries, `${type}Id`, id),
     );
   const upcomingCollections = [
     ...(data.orders || [])
@@ -167,16 +159,11 @@ export function financialCenter(data, month) {
             order.pickupDate?.startsWith(month),
         )
         .reduce((sum, order) => {
-          const paid = (data.payments || [])
-            .filter((row) => row.orderId === order.id)
-            .reduce(
-              (total, row) =>
-                total +
-                (row.kind === "refund"
-                  ? -number(row.amount)
-                  : number(row.amount)),
-              0,
-            );
+          const paid = linkedPaymentTotal(
+            data.payments,
+            "orderId",
+            order.id,
+          );
           return sum + Math.max(0, number(order.total) - paid);
         }, 0) +
       summary.sales
@@ -185,16 +172,11 @@ export function financialCenter(data, month) {
             !sale.orderId && ["unpaid", "partial"].includes(sale.paymentStatus),
         )
         .reduce((sum, sale) => {
-          const paid = (data.payments || [])
-            .filter((payment) => payment.saleId === sale.id)
-            .reduce(
-              (total, payment) =>
-                total +
-                (payment.kind === "refund"
-                  ? -number(payment.amount)
-                  : number(payment.amount)),
-              0,
-            );
+          const paid = linkedPaymentTotal(
+            data.payments,
+            "saleId",
+            sale.id,
+          );
           return sum + Math.max(0, number(sale.total) - paid);
         }, 0),
     wasteCost,
