@@ -18,15 +18,6 @@ jobs:
       - run: npm ci
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
-      - name: Preview formatted typography file
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          npx prettier --write src/TypographySystem.css
-          echo "FORMAT_BEGIN"
-          base64 -w 0 src/TypographySystem.css
-          echo
-          echo "FORMAT_END"
       - run: npm test
       - run: npm run format:check
       - run: npm run build
