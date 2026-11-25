@@ -101,6 +101,7 @@ import { localDay, money } from "./uiFormatters.js";
 import AppErrorBoundary from "./AppErrorBoundary.jsx";
 import "./style.css";
 import "./StabilityPolish.css";
+import "./TypographySystem.css";
 const OwnerToolkitWorkspace = lazy(() => import("./OwnerToolkitWorkspace.jsx"));
 const BakeryOperationsWorkspace = lazy(
   () => import("./BakeryOperationsWorkspace.jsx"),
