@@ -56,6 +56,7 @@ import {
   sections,
   pages,
   sectionFor,
+  workspaceMenu,
   readRoute,
   routeHash,
   ownerToolkitPages,
@@ -111,44 +112,6 @@ const BusinessIntelligenceWorkspace = lazy(
 );
 const UserGuideWorkspace = lazy(() => import("./UserGuideWorkspace.jsx"));
 const uid = () => crypto.randomUUID();
-const stockPrimaryPages = [
-  "Inventory dashboard",
-  "Inventory",
-  "Receiving",
-  "Shopping list",
-  "Ingredients",
-  "Packaging",
-];
-const kitchenPrimaryPages = [
-  "Calendar",
-  "Daily planner",
-  "Smart schedule",
-  "Prep sheets",
-  "Product stock",
-  "Recipes",
-];
-const sectionPrimaryPages = {
-  Stock: stockPrimaryPages,
-  Kitchen: kitchenPrimaryPages,
-  Sales: ["Orders", "Receivables", "Quotes", "Customers"],
-  Reports: [
-    "Daily snapshot",
-    "Expenses",
-    "Pricing desk",
-    "Owner forecast",
-    "Tax report",
-    "Waste analysis",
-  ],
-  Settings: [
-    "Tutorial",
-    "User guide",
-    "Help & support",
-    "Business profile",
-    "App customization",
-    "Data cleanup",
-    "Backups",
-  ],
-};
 const lockKey = "bakery-ledger-lock-v1";
 const tutorialKey = "bakery-ledger-tutorial-v1";
 const sidebarCollapsedKey = "bakery-ledger-sidebar-collapsed-v1";
@@ -308,13 +271,8 @@ function App() {
     [month, setMonth] = useState(today().slice(0, 7));
   const section = sectionFor(page),
     info = pages[page];
-  const primaryPages = sectionPrimaryPages[section.name] || null;
-  const sectionTabs = primaryPages
-    ? section.pages.filter((name) => primaryPages.includes(name))
-    : section.pages;
-  const extraSectionTabs = primaryPages
-    ? section.pages.filter((name) => !primaryPages.includes(name))
-    : [];
+  const { primary: sectionTabs, grouped: toolGroups } = workspaceMenu(section);
+  const activeTool = sectionTabs.includes(page) ? "" : page;
   function navigate(nextPage, context = {}) {
     if (
       modalDirty &&
@@ -866,7 +824,7 @@ function App() {
                 className={section.name === group.name ? "active" : ""}
                 aria-current={section.name === group.name ? "true" : undefined}
                 title={group.name}
-                onClick={() => navigate(group.pages[0])}
+                onClick={() => navigate(workspaceMenu(group).primary[0])}
               >
                 <Icon size={19} />
                 {group.name}
@@ -943,7 +901,6 @@ function App() {
           )}
           <div className="page-title">
             <div>
-              <div className="eyebrow">{section.name.toUpperCase()}</div>
               <h1 id="workspace-title" tabIndex={-1}>
                 {info.label}
               </h1>
@@ -994,20 +951,24 @@ function App() {
                   {pages[name].label}
                 </button>
               ))}
-              {!!extraSectionTabs.length && (
+              {!!toolGroups.length && (
                 <select
-                  className={extraSectionTabs.includes(page) ? "active" : ""}
+                  className={activeTool ? "active" : ""}
                   aria-label={`More ${section.name.toLowerCase()} pages`}
-                  value={extraSectionTabs.includes(page) ? page : ""}
+                  value={activeTool}
                   onChange={(event) => navigate(event.target.value)}
                 >
                   <option value="" disabled>
                     More {section.name.toLowerCase()} tools…
                   </option>
-                  {extraSectionTabs.map((name) => (
-                    <option value={name} key={name}>
-                      {pages[name].label}
-                    </option>
+                  {toolGroups.map(([label, names]) => (
+                    <optgroup key={label} label={label}>
+                      {names.map((name) => (
+                        <option value={name} key={name}>
+                          {pages[name].label}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               )}
@@ -1028,7 +989,7 @@ function App() {
                     ? "Accepted orders create production tasks automatically."
                     : page === "Shopping list"
                       ? "After shopping, receive packages to update on-hand stock."
-                      : "Continue your workflow"}
+                      : `Next in ${sectionFor(info.next).name}`}
               </span>
               <button
                 className="text-button"
