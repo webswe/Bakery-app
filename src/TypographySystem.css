@@ -1,8 +1,9 @@
 :root {
-  --font-ui: "DM Sans", "Segoe UI Variable Text", "Segoe UI", system-ui,
-    -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: "Libre Caslon Text", "Iowan Old Style", "Palatino Linotype",
-    Georgia, serif;
+  --font-ui:
+    "DM Sans", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system,
+    BlinkMacSystemFont, sans-serif;
+  --font-display:
+    "Libre Caslon Text", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   --type-caption: 11px;
   --type-label: 12px;
