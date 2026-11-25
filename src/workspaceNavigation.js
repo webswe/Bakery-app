@@ -142,6 +142,107 @@ export const sections = [
     ],
   },
 ];
+const workspaceMenus = {
+  Overview: {
+    primary: ["Overview", "Start a bakery", "Owner desk"],
+    groups: { "Business planning": ["Goals & tasks", "Financial center"] },
+  },
+  Sales: {
+    primary: ["Orders", "Quotes", "Receivables", "Customers"],
+    groups: {
+      "Order preparation": ["Order intake", "Packing"],
+      "Billing & records": ["Documents", "Payments"],
+    },
+  },
+  Kitchen: {
+    primary: ["Calendar", "Daily planner", "Recipes", "Product stock"],
+    groups: {
+      "Plan production": [
+        "Smart schedule",
+        "Production timeline",
+        "Recurring prep",
+        "Can make",
+        "Capacity planner",
+        "Seasonal plans",
+      ],
+      "Run production": [
+        "Prep sheets",
+        "Kitchen binder",
+        "Kitchen timers",
+        "Batch yields",
+        "Production performance",
+      ],
+      "Recipes & labels": [
+        "Recipe lab",
+        "Recipe scaling",
+        "Allergen matrix",
+        "Label studio",
+        "Trace labels",
+        "Batch traceability",
+      ],
+    },
+  },
+  Stock: {
+    primary: ["Inventory dashboard", "Inventory", "Receiving", "Shopping list"],
+    groups: {
+      Catalog: ["Ingredients", "Packaging", "Substitutions"],
+      Purchasing: ["Purchase orders", "Supplier prices", "Supplier insights"],
+      "Lots & expiry": ["Inventory lots", "Waste & expiry", "Use soon"],
+    },
+  },
+  Reports: {
+    primary: ["Daily snapshot", "Expenses", "Pricing desk", "Owner forecast"],
+    groups: {
+      Performance: ["Menu profitability", "Cost alerts", "Sales trends"],
+      "Review & close": [
+        "Daily closeout",
+        "Tax report",
+        "Waste analysis",
+        "Waste coach",
+      ],
+    },
+  },
+  Settings: {
+    primary: [
+      "Tutorial",
+      "User guide",
+      "Business profile",
+      "App customization",
+    ],
+    groups: {
+      "Bakery setup": [
+        "Setup checklist",
+        "Bakery profiles",
+        "Cost settings",
+        "Tax settings",
+        "Equipment care",
+      ],
+      "Data & security": [
+        "Backups",
+        "Secure backups",
+        "Data tools",
+        "Data cleanup",
+        "Change history",
+        "Archive",
+        "Security",
+      ],
+      Support: ["Help & support", "App updates"],
+    },
+  },
+};
+
+export function workspaceMenu(section) {
+  const { primary, groups } = workspaceMenus[section.name];
+  const grouped = Object.entries(groups);
+  const listed = new Set([
+    ...primary,
+    ...grouped.flatMap(([, names]) => names),
+  ]);
+  const remaining = section.pages.filter((name) => !listed.has(name));
+  if (remaining.length) grouped.push(["Other tools", remaining]);
+  return { primary, grouped };
+}
+
 export const pages = {
   Overview: {
     label: "Overview",
@@ -254,6 +355,8 @@ export const pages = {
     label: "Prep sheets",
     description:
       "Print scaled ingredients, kitchen checks, allergens and batch labels for the day.",
+    next: "Daily planner",
+    nextLabel: "Return to production plan",
   },
   "Kitchen binder": {
     label: "Kitchen binder",
@@ -367,8 +470,8 @@ export const pages = {
     label: "Shopping list",
     description:
       "Group purchases by supplier and buy enough for production and minimum stock levels.",
-    next: "Inventory",
-    nextLabel: "Receive purchases",
+    next: "Receiving",
+    nextLabel: "Receive deliveries",
   },
   "Purchase orders": {
     label: "Purchase orders",
@@ -414,6 +517,8 @@ export const pages = {
     label: "Daily snapshot",
     description:
       "Review one day of sales, costs, payments, tax and kitchen output.",
+    next: "Daily closeout",
+    nextLabel: "Open daily closeout",
   },
   Expenses: {
     label: "Expenses",
@@ -424,6 +529,8 @@ export const pages = {
     label: "Pricing & planning",
     description:
       "Build a fee-aware selling price, compare margin targets, and translate one recipe into monthly break-even, revenue, and profit goals.",
+    next: "Financial center",
+    nextLabel: "Review finances",
   },
   "Daily closeout": {
     label: "Daily closeout",
@@ -479,6 +586,8 @@ export const pages = {
     label: "Receive deliveries",
     description:
       "Receive supplier packages once and update stock, lots, costs, movements, and price history together.",
+    next: "Inventory dashboard",
+    nextLabel: "Check updated stock",
   },
   "Supplier insights": {
     label: "Supplier insights",
