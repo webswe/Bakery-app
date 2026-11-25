@@ -185,12 +185,16 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
 function OrderCard({ order: o, act, data, navigate }) {
   const [day, setDay] = useState(o.pickupDate);
   const paid = orderPaid(data, o);
+  const pickupSlot = (data.pickupSlots || []).find(
+    (slot) => slot.id === o.pickupSlotId && slot.date === o.pickupDate,
+  );
   return (
     <section className="panel saved-quote">
       <span className="pill">{o.status}</span>
       <h3>{o.customer || "Customer order"}</h3>
       <p>
         {o.recipeName} · {o.portions} portions · Pickup {o.pickupDate}
+        {pickupSlot && ` · ${pickupSlot.start}–${pickupSlot.end}`}
       </p>
       <p>{o.notes}</p>
       <dl>
@@ -211,6 +215,12 @@ function OrderCard({ order: o, act, data, navigate }) {
       </dl>
       {o.status === "open" && (
         <>
+          <button
+            className="secondary"
+            onClick={() => navigate("Pickup windows", { orderId: o.id })}
+          >
+            {pickupSlot ? "View pickup confirmation" : "Assign pickup window"}
+          </button>
           <button className="secondary" onClick={() => navigate("Payments")}>
             Record payment or refund
           </button>

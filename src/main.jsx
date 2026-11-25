@@ -110,6 +110,9 @@ const BakeryOperationsWorkspace = lazy(
 const BusinessIntelligenceWorkspace = lazy(
   () => import("./BusinessIntelligenceWorkspace.jsx"),
 );
+const HomeBakeryToolsWorkspace = lazy(
+  () => import("./HomeBakeryToolsWorkspace.jsx"),
+);
 const UserGuideWorkspace = lazy(() => import("./UserGuideWorkspace.jsx"));
 const uid = () => crypto.randomUUID();
 const lockKey = "bakery-ledger-lock-v1";
@@ -1037,6 +1040,15 @@ function App() {
             <DataCleanupWorkspace data={data} save={save} navigate={navigate} />
           ) : page === "Expenses" ? (
             <ExpenseWorkspace data={data} save={save} open={open} />
+          ) : ["Order fit", "Pickup windows", "Test batches", "Price preview"].includes(page) ? (
+            <HomeBakeryToolsWorkspace
+              key={page + routeContext.orderId}
+              page={page}
+              data={data}
+              save={save}
+              navigate={navigate}
+              orderId={routeContext.orderId}
+            />
           ) : page === "Pricing desk" ? (
             <PricingDeskWorkspace data={data} save={save} navigate={navigate} />
           ) : page === "Start a bakery" ? (

@@ -20,6 +20,7 @@ export const cleanupGroups = [
       "productLots",
       "productionBatches",
       "recipeVersions",
+      "recipeTrials",
       "recipeComponents",
       "recipePhotos",
       "packagingPresets",
@@ -35,6 +36,7 @@ export const cleanupGroups = [
     fields: [
       "sales",
       "orders",
+      "pickupSlots",
       "quotes",
       "payments",
       "customers",

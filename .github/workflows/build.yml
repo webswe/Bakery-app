@@ -18,6 +18,14 @@ jobs:
       - run: npm ci
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      - name: Capture formatted changes
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          npx prettier --write src/planning.js src/PlanningWorkspace.jsx src/workspaceNavigation.js src/main.jsx src/BakeryTools.jsx src/business.js src/analytics.js src/dataCleanup.js src/homeBakeryTools.js src/HomeBakeryToolsWorkspace.jsx test/homeBakeryTools.test.js
+          echo FORMAT_DIFF_BEGIN
+          git --no-pager diff --no-color -- src/planning.js src/PlanningWorkspace.jsx src/workspaceNavigation.js src/main.jsx src/BakeryTools.jsx src/business.js src/analytics.js src/dataCleanup.js src/homeBakeryTools.js src/HomeBakeryToolsWorkspace.jsx test/homeBakeryTools.test.js
+          echo FORMAT_DIFF_END
       - run: npm test
       - run: npm run format:check
       - run: npm run build
