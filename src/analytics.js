@@ -49,6 +49,8 @@ export function migrateData(data) {
     expenses: list(data.expenses),
     salesTaxRate: data.salesTaxRate ?? 0,
     orders: list(data.orders),
+    pickupSlots: list(data.pickupSlots),
+    recipeTrials: list(data.recipeTrials),
     customers: list(data.customers),
     documentCounters: data.documentCounters || {},
     businessProfile: {

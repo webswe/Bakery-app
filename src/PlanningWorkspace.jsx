@@ -285,6 +285,8 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
     portions: 1,
     margin: pricingPolicy.targetMargin,
     extraCost: 0,
+    oneOffPurchase: 0,
+    oneOffReusable: 0,
     taxRate: data.salesTaxRate ?? 0,
     customer: initialCustomer?.name || "",
     customerId: initialCustomer?.id || "",
@@ -441,6 +443,40 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
                 />
               </label>
             </div>
+            <details open={Number(form.oneOffPurchase) > 0 || undefined}>
+              <summary>One-off purchases</summary>
+              <p className="hint">
+                Enter special supplies bought for this request and what you
+                expect to recover through reuse or resale. Include regular
+                packaging in the recipe.
+              </p>
+              <div className="form-row">
+                <label>
+                  Purchase cost ($)
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.oneOffPurchase ?? 0}
+                    onChange={(event) =>
+                      change("oneOffPurchase", event.target.value || 0)
+                    }
+                  />
+                </label>
+                <label>
+                  Reusable or resale value ($)
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.oneOffReusable ?? 0}
+                    onChange={(event) =>
+                      change("oneOffReusable", event.target.value || 0)
+                    }
+                  />
+                </label>
+              </div>
+            </details>
             <label>
               Quote date
               <input
@@ -505,7 +541,17 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
               {quote.wastePercent > 0 && (
                 <>
                   <dt>Contingency ({quote.wastePercent}%)</dt>
-                  <dd>{money(quote.cost - quote.baseCost)}</dd>
+                  <dd>
+                    {money(
+                      quote.cost - quote.baseCost - (quote.oneOffRecovery || 0),
+                    )}
+                  </dd>
+                </>
+              )}
+              {quote.oneOffRecovery > 0 && (
+                <>
+                  <dt>One-off purchase to recover</dt>
+                  <dd>{money(quote.oneOffRecovery)}</dd>
                 </>
               )}
               {quote.processingFee > 0 && (

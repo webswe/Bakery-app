@@ -59,10 +59,15 @@ export function quoteCalculation(data, input) {
       batches +
       number(input.extraCost, "Extra cost"),
   );
+  const oneOffPurchase = number(input.oneOffPurchase ?? 0, "One-off purchase");
+  const oneOffReusable = number(input.oneOffReusable ?? 0, "Reusable value");
+  if (oneOffReusable > oneOffPurchase)
+    throw Error("Reusable value cannot exceed the one-off purchase cost.");
+  const oneOffRecovery = moneyRound(oneOffPurchase - oneOffReusable);
   const savedPolicy = data.settings?.pricingGuide;
   const policy = normalizePricingPolicy(data.settings);
   const wastePercent = savedPolicy ? policy.wastePercent : 0;
-  const cost = moneyRound(baseCost * (1 + wastePercent / 100));
+  const cost = moneyRound(baseCost * (1 + wastePercent / 100) + oneOffRecovery);
   const priced = priceForMargin({
     cost,
     targetMargin: margin,
@@ -80,6 +85,7 @@ export function quoteCalculation(data, input) {
     batches,
     producedPortions: batches * recipe.yield,
     baseCost,
+    ...(oneOffRecovery > 0 ? { oneOffRecovery } : {}),
     cost,
     wastePercent,
     processingFee: priced.processingFee,

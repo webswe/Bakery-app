@@ -147,7 +147,12 @@ export function updateOrder(data, id, action, input = {}) {
     patch = { paid };
   } else if (action === "reschedule") {
     const pickupDate = validDate(input.pickupDate);
-    patch = { pickupDate };
+    patch = {
+      pickupDate,
+      ...(pickupDate !== o.pickupDate && o.pickupSlotId
+        ? { pickupSlotId: "" }
+        : {}),
+    };
     next = {
       ...data,
       productionPlans: data.productionPlans.map((p) =>
