@@ -1,0 +1,320 @@
+:root {
+  --font-ui: "DM Sans", "Segoe UI Variable Text", "Segoe UI", system-ui,
+    -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Libre Caslon Text", "Iowan Old Style", "Palatino Linotype",
+    Georgia, serif;
+  --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  --type-caption: 11px;
+  --type-label: 12px;
+  --type-body: 13px;
+  --type-control: 14px;
+  --type-section: 16px;
+  --type-card-title: 20px;
+}
+
+@media screen {
+  html {
+    font-size: 14px;
+  }
+
+  body,
+  button,
+  input,
+  select,
+  textarea {
+    font-family: var(--font-ui);
+  }
+
+  body {
+    font-size: var(--type-body);
+    line-height: 1.55;
+    font-kerning: normal;
+    font-feature-settings:
+      "kern" 1,
+      "liga" 1;
+  }
+
+  h1,
+  h3,
+  .brand,
+  .sidebar-note > span,
+  .footer-note {
+    font-family: var(--font-display);
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: var(--premium-ink, #172b2a);
+    text-wrap: balance;
+  }
+
+  h1,
+  .page-title h1 {
+    margin-block: 6px 8px;
+    font-size: clamp(29px, 2.7vw, 36px);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+  }
+
+  h2,
+  .panel-heading h2,
+  .planning-form > h2,
+  .quote-preview > h2 {
+    font-size: var(--type-section);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+  }
+
+  h3,
+  .recipe-card h2,
+  .guide-hero h2 {
+    font-size: var(--type-card-title);
+    line-height: 1.3;
+    letter-spacing: -0.018em;
+  }
+
+  p,
+  li,
+  dd {
+    font-size: var(--type-body);
+    line-height: 1.65;
+  }
+
+  p,
+  .hint,
+  .empty-note,
+  .accounting-note {
+    text-wrap: pretty;
+  }
+
+  .page-title p {
+    max-width: 72ch;
+    font-size: 13.5px;
+    line-height: 1.65;
+  }
+
+  small,
+  td small,
+  .stat small,
+  .workspace small,
+  .brand small {
+    font-size: var(--type-caption);
+    line-height: 1.5;
+  }
+
+  .panel-heading p,
+  .recipe-feature p,
+  .empty p,
+  .guide-article-heading em,
+  .cleanup-option small,
+  .sidebar-note p {
+    font-size: var(--type-label);
+    line-height: 1.6;
+  }
+
+  .hint,
+  .empty-note,
+  .accounting-note,
+  .workflow-handoff {
+    font-size: var(--type-label);
+    line-height: 1.6;
+  }
+
+  .eyebrow,
+  .nav-label {
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  header {
+    font-size: var(--type-label);
+    line-height: 1.4;
+  }
+
+  nav button {
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.005em;
+  }
+
+  button,
+  .primary,
+  .secondary,
+  .danger-button,
+  .text-button {
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  label,
+  .modal label,
+  .planning-form label,
+  .planning-toolbar label,
+  fieldset legend {
+    font-size: var(--type-label);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  input,
+  select,
+  textarea,
+  .section-top input,
+  .modal input,
+  .modal select,
+  .modal textarea {
+    font-size: var(--type-control);
+    font-weight: 400;
+    line-height: 1.45;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    font-size: 13px;
+    opacity: 0.82;
+  }
+
+  summary {
+    font-size: var(--type-body);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  th {
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  td {
+    font-size: 12.75px;
+    line-height: 1.5;
+  }
+
+  td b,
+  dt,
+  dd {
+    font-weight: 600;
+  }
+
+  dt {
+    font-size: var(--type-label);
+    line-height: 1.45;
+  }
+
+  .stat > div,
+  .finance-metric > span {
+    font-size: var(--type-label);
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+    text-transform: none;
+  }
+
+  .stat strong,
+  .finance-metric > b,
+  .ring strong,
+  .setup-ring,
+  td,
+  dd,
+  time,
+  input[type="number"],
+  input[type="date"],
+  input[type="month"] {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .stat strong {
+    font-size: clamp(27px, 2.1vw, 31px);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+  }
+
+  .legend {
+    font-size: var(--type-label);
+    line-height: 1.45;
+  }
+
+  .badge,
+  .pill,
+  .tag,
+  kbd {
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .guide-article-heading small,
+  .guide-article-body h3,
+  .cleanup-option em {
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+
+  .guide-article-heading b,
+  .cleanup-option b {
+    font-size: var(--type-body);
+    line-height: 1.4;
+  }
+
+  code,
+  pre,
+  .launch-policy-preview {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  svg text {
+    font-family: var(--font-ui);
+  }
+
+  @media (max-width: 850px) {
+    h1,
+    .page-title h1 {
+      font-size: clamp(27px, 6vw, 32px);
+    }
+
+    .content {
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 580px) {
+    h1,
+    .page-title h1 {
+      font-size: clamp(25px, 8vw, 30px);
+    }
+
+    h2,
+    .panel-heading h2,
+    .planning-form > h2 {
+      font-size: 15px;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    th {
+      font-size: 10px;
+    }
+
+    td {
+      font-size: 12.5px;
+    }
+  }
+}
