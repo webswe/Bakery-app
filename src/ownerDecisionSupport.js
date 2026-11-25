@@ -2,6 +2,7 @@ import { fullCost } from "./operations.js";
 import { recordPersonalUse } from "./inventoryLots.js";
 import { adjustFinishedStock } from "./productLots.js";
 import { purchaseTax, saleRevenue } from "./taxation.js";
+import { linkedPaymentTotal } from "./paymentLedger.js";
 
 const number = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0);
 const validDay = (value) => {
@@ -297,17 +298,7 @@ export function cashFlowForecast(data, start, days = 30) {
   const end = addDays(start, length - 1);
   const opening = openingCashOn(data, start);
   const payments = data.payments || [];
-  const paidFor = (field, id) =>
-    payments
-      .filter((payment) => payment[field] === id)
-      .reduce(
-        (sum, payment) =>
-          sum +
-          (payment.kind === "refund"
-            ? -number(payment.amount)
-            : number(payment.amount)),
-        0,
-      );
+  const paidFor = (field, id) => linkedPaymentTotal(payments, field, id);
   const events = recordedCashEvents(data, start, end);
   (data.orders || [])
     .filter(
