@@ -183,12 +183,7 @@ const workspaceMenus = {
     },
   },
   Stock: {
-    primary: [
-      "Inventory dashboard",
-      "Inventory",
-      "Receiving",
-      "Shopping list",
-    ],
+    primary: ["Inventory dashboard", "Inventory", "Receiving", "Shopping list"],
     groups: {
       Catalog: ["Ingredients", "Packaging", "Substitutions"],
       Purchasing: ["Purchase orders", "Supplier prices", "Supplier insights"],
