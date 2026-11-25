@@ -199,7 +199,12 @@ const workspaceMenus = {
   Reports: {
     primary: ["Daily snapshot", "Expenses", "Pricing desk", "Owner forecast"],
     groups: {
-      Performance: ["Price preview", "Menu profitability", "Cost alerts", "Sales trends"],
+      Performance: [
+        "Price preview",
+        "Menu profitability",
+        "Cost alerts",
+        "Sales trends",
+      ],
       "Review & close": [
         "Daily closeout",
         "Tax report",
@@ -252,19 +257,23 @@ export function workspaceMenu(section) {
 export const pages = {
   "Order fit": {
     label: "Can I take this order?",
-    description: "Check stock and scheduled kitchen time before promising a pickup date.",
+    description:
+      "Check stock and scheduled kitchen time before promising a pickup date.",
   },
   "Pickup windows": {
     label: "Pickup windows",
-    description: "Set pickup times, limit bookings, and copy customer confirmations.",
+    description:
+      "Set pickup times, limit bookings, and copy customer confirmations.",
   },
   "Test batches": {
     label: "Test batches",
-    description: "Compare actual yield, ingredient cost, prep time, and tasting notes before updating a recipe.",
+    description:
+      "Compare actual yield, ingredient cost, prep time, and tasting notes before updating a recipe.",
   },
   "Price preview": {
     label: "Menu price preview",
-    description: "Compare current and proposed margins and see which open quotes you may want to review.",
+    description:
+      "Compare current and proposed margins and see which open quotes you may want to review.",
   },
   Overview: {
     label: "Overview",

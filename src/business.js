@@ -149,7 +149,9 @@ export function updateOrder(data, id, action, input = {}) {
     const pickupDate = validDate(input.pickupDate);
     patch = {
       pickupDate,
-      ...(pickupDate !== o.pickupDate && o.pickupSlotId ? { pickupSlotId: "" } : {}),
+      ...(pickupDate !== o.pickupDate && o.pickupSlotId
+        ? { pickupSlotId: "" }
+        : {}),
     };
     next = {
       ...data,

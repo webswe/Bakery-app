@@ -458,7 +458,9 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
                     min="0"
                     step="0.01"
                     value={form.oneOffPurchase ?? 0}
-                    onChange={(event) => change("oneOffPurchase", event.target.value || 0)}
+                    onChange={(event) =>
+                      change("oneOffPurchase", event.target.value || 0)
+                    }
                   />
                 </label>
                 <label>
@@ -468,7 +470,9 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
                     min="0"
                     step="0.01"
                     value={form.oneOffReusable ?? 0}
-                    onChange={(event) => change("oneOffReusable", event.target.value || 0)}
+                    onChange={(event) =>
+                      change("oneOffReusable", event.target.value || 0)
+                    }
                   />
                 </label>
               </div>
@@ -537,7 +541,11 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
               {quote.wastePercent > 0 && (
                 <>
                   <dt>Contingency ({quote.wastePercent}%)</dt>
-                  <dd>{money(quote.cost - quote.baseCost - (quote.oneOffRecovery || 0))}</dd>
+                  <dd>
+                    {money(
+                      quote.cost - quote.baseCost - (quote.oneOffRecovery || 0),
+                    )}
+                  </dd>
                 </>
               )}
               {quote.oneOffRecovery > 0 && (

@@ -1040,7 +1040,12 @@ function App() {
             <DataCleanupWorkspace data={data} save={save} navigate={navigate} />
           ) : page === "Expenses" ? (
             <ExpenseWorkspace data={data} save={save} open={open} />
-          ) : ["Order fit", "Pickup windows", "Test batches", "Price preview"].includes(page) ? (
+          ) : [
+              "Order fit",
+              "Pickup windows",
+              "Test batches",
+              "Price preview",
+            ].includes(page) ? (
             <HomeBakeryToolsWorkspace
               key={page + routeContext.orderId}
               page={page}

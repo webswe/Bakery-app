@@ -33,14 +33,21 @@ export function checkOrderFit(data, input, today = localDay()) {
   if (pickup < today) throw Error("Choose today or a future pickup date.");
 
   const batches = Math.ceil(portions / batchYield);
-  const hasTiming = Number(recipe.bakeMinutes) > 0 &&
+  const hasTiming =
+    Number(recipe.bakeMinutes) > 0 &&
     (Number(recipe.prepMinutes) > 0 || Number(recipe.laborMinutes) > 0);
   const existingPlans = data.productionPlans || [];
   const scheduled = (date) => ({
     ...data,
     productionPlans: [
       ...existingPlans,
-      { id: "order-fit-preview", recipeId: recipe.id, date, batches, status: "planned" },
+      {
+        id: "order-fit-preview",
+        recipeId: recipe.id,
+        date,
+        batches,
+        status: "planned",
+      },
     ],
   });
   const itemIds = new Set(recipe.lines.map((line) => line.itemId));
@@ -58,7 +65,11 @@ export function checkOrderFit(data, input, today = localDay()) {
       shortages,
       overloaded,
       errors: stock.errors,
-      fits: hasTiming && !shortages.length && !overloaded.length && !stock.errors.length,
+      fits:
+        hasTiming &&
+        !shortages.length &&
+        !overloaded.length &&
+        !stock.errors.length,
     };
   }
 
@@ -99,7 +110,9 @@ export function promoteTestBatch(data, trialId, recipeId) {
   if (!trial) throw Error("Choose a saved test batch.");
   const { quantity } = recipeSaleDetails(target);
   if (trial.yield < quantity)
-    throw Error("The trial yield is smaller than the main recipe’s selling unit.");
+    throw Error(
+      "The trial yield is smaller than the main recipe’s selling unit.",
+    );
   const next = {
     ...structuredClone(trial.recipe),
     id: target.id,
@@ -117,7 +130,9 @@ export function promoteTestBatch(data, trialId, recipeId) {
   const withHistory = saveRecipeRevision(data, target, next);
   return {
     ...withHistory,
-    recipes: data.recipes.map((recipe) => recipe.id === target.id ? next : recipe),
+    recipes: data.recipes.map((recipe) =>
+      recipe.id === target.id ? next : recipe,
+    ),
   };
 }
 
@@ -145,9 +160,15 @@ export function savePickupSlot(data, input, id = "") {
     throw Error("Move the assigned orders before changing the pickup time.");
   if (reservations.length > limit)
     throw Error("The limit is below the number of assigned orders.");
-  if (slots.some(
-    (slot) => slot.id !== id && slot.date === date && start < slot.end && end > slot.start,
-  ))
+  if (
+    slots.some(
+      (slot) =>
+        slot.id !== id &&
+        slot.date === date &&
+        start < slot.end &&
+        end > slot.start,
+    )
+  )
     throw Error("This window overlaps another pickup window.");
   const slot = { id: id || crypto.randomUUID(), date, start, end, limit };
   return {
@@ -159,7 +180,10 @@ export function savePickupSlot(data, input, id = "") {
 export function removePickupSlot(data, id) {
   if (pickupReservations(data, id).length)
     throw Error("Move the assigned orders before removing this window.");
-  return { ...data, pickupSlots: (data.pickupSlots || []).filter((slot) => slot.id !== id) };
+  return {
+    ...data,
+    pickupSlots: (data.pickupSlots || []).filter((slot) => slot.id !== id),
+  };
 }
 
 export function assignPickupSlot(data, orderId, slotId) {
@@ -169,7 +193,10 @@ export function assignPickupSlot(data, orderId, slotId) {
     const slot = (data.pickupSlots || []).find((entry) => entry.id === slotId);
     if (!slot || slot.date !== order.pickupDate)
       throw Error("Choose a window on the order’s pickup date.");
-    if (pickupReservations(data, slotId).filter((entry) => entry.id !== orderId).length >= slot.limit)
+    if (
+      pickupReservations(data, slotId).filter((entry) => entry.id !== orderId)
+        .length >= slot.limit
+    )
       throw Error("This pickup window is full.");
   }
   return {
@@ -182,11 +209,13 @@ export function assignPickupSlot(data, orderId, slotId) {
 
 export function pickupConfirmation(data, order) {
   const slot = (data.pickupSlots || []).find(
-    (entry) => entry.id === order.pickupSlotId && entry.date === order.pickupDate,
+    (entry) =>
+      entry.id === order.pickupSlotId && entry.date === order.pickupDate,
   );
   if (!slot) return "";
   const profile = data.businessProfile || {};
-  const recipe = order.recipeSnapshot?.recipe ||
+  const recipe =
+    order.recipeSnapshot?.recipe ||
     data.recipes.find((entry) => entry.id === order.recipeId);
   const balance = Math.max(0, Number(order.total) - orderPaid(data, order));
   return [
@@ -196,7 +225,9 @@ export function pickupConfirmation(data, order) {
     profile.address && `Pickup address: ${profile.address}`,
     recipe?.storageInstructions && `Storage: ${recipe.storageInstructions}`,
     `Remaining balance: ${money(balance)}`,
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function previewMenuPrice(data, recipeId, price) {
@@ -207,7 +238,9 @@ export function previewMenuPrice(data, recipeId, price) {
   const next = { ...recipe, salePrice, price: salePrice / current.quantity };
   const proposed = recipePricingPlan(next, data.items, data.settings);
   const accepted = new Set(
-    (data.orders || []).filter((order) => order.status !== "cancelled").map((order) => order.quoteId),
+    (data.orders || [])
+      .filter((order) => order.status !== "cancelled")
+      .map((order) => order.quoteId),
   );
   const openQuotes = (data.quotes || []).filter(
     (quote) => quote.recipeId === recipeId && !accepted.has(quote.id),
@@ -220,6 +253,8 @@ export function applyMenuPrice(data, recipeId, price) {
   const withHistory = saveRecipeRevision(data, recipe, next);
   return {
     ...withHistory,
-    recipes: data.recipes.map((entry) => entry.id === recipeId ? next : entry),
+    recipes: data.recipes.map((entry) =>
+      entry.id === recipeId ? next : entry,
+    ),
   };
 }
