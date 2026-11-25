@@ -381,7 +381,10 @@ function Receivables({ data, act }) {
         <div className="panel-heading">
           <div>
             <h2>Recent direct-sale payment entries</h2>
-            <p>Remove only entries recorded by mistake. Valid refunds remain part of the ledger.</p>
+            <p>
+              Remove only entries recorded by mistake. Valid refunds remain part
+              of the ledger.
+            </p>
           </div>
         </div>
         <table>
@@ -413,7 +416,9 @@ function Receivables({ data, act }) {
             })}
           </tbody>
         </table>
-        {!recentEntries.length && <p className="empty-note">No direct-sale payment entries yet.</p>}
+        {!recentEntries.length && (
+          <p className="empty-note">No direct-sale payment entries yet.</p>
+        )}
       </section>
     </>
   );
