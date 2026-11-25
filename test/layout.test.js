@@ -52,7 +52,6 @@ test("operating cost edits preserve unrelated application settings", () => {
   );
 });
 
-
 test("owner workspace punctuation remains readable UTF-8 text", () => {
   assert.doesNotMatch(ownerWorkspace, /Â|â|â|â/);
   assert.match(ownerWorkspace, /·/);
