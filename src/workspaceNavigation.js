@@ -234,7 +234,10 @@ const workspaceMenus = {
 export function workspaceMenu(section) {
   const { primary, groups } = workspaceMenus[section.name];
   const grouped = Object.entries(groups);
-  const listed = new Set([...primary, ...grouped.flatMap(([, names]) => names)]);
+  const listed = new Set([
+    ...primary,
+    ...grouped.flatMap(([, names]) => names),
+  ]);
   const remaining = section.pages.filter((name) => !listed.has(name));
   if (remaining.length) grouped.push(["Other tools", remaining]);
   return { primary, grouped };
