@@ -2,6 +2,7 @@ import React, { useDeferredValue, useMemo, useState } from "react";
 import { customerActivity, saveCustomer } from "./customerOps.js";
 import { localDate, saveQuote } from "./planning.js";
 import { money } from "./uiFormatters.js";
+import { linkedPaymentTotal } from "./paymentLedger.js";
 
 export default function CustomerWorkspace({ data, save, navigate }) {
   const [editing, setEditing] = useState(null);
@@ -133,19 +134,16 @@ export default function CustomerWorkspace({ data, save, navigate }) {
                   sale.customerId === customer.id &&
                   ["unpaid", "partial"].includes(sale.paymentStatus),
               );
-              const balanceDue = receivables.reduce((sum, sale) => {
-                const paid = (data.payments || [])
-                  .filter((payment) => payment.saleId === sale.id)
-                  .reduce(
-                    (total, payment) =>
-                      total +
-                      (payment.kind === "refund"
-                        ? -payment.amount
-                        : payment.amount),
+              const balanceDue = receivables.reduce(
+                (sum, sale) =>
+                  sum +
+                  Math.max(
                     0,
-                  );
-                return sum + Math.max(0, sale.total - paid);
-              }, 0);
+                    sale.total -
+                      linkedPaymentTotal(data.payments, "saleId", sale.id),
+                  ),
+                0,
+              );
               const lastOrder = [...activity.orders].sort((a, b) =>
                 (b.pickupDate || "").localeCompare(a.pickupDate || ""),
               )[0];
