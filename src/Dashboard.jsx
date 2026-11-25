@@ -72,8 +72,7 @@ export default function Dashboard({ data, month, save, navigate }) {
       sum +
       Math.max(
         0,
-        sale.total -
-          linkedPaymentTotal(data.payments, "saleId", sale.id),
+        sale.total - linkedPaymentTotal(data.payments, "saleId", sale.id),
       ),
     0,
   );
