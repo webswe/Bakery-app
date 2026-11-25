@@ -810,6 +810,7 @@ function App() {
         <div className="nav-label">MAIN MENU</div>
         <nav aria-label="Main workspace">
           {sections.map((group, index) => {
+            const [landingPage] = workspaceMenu(group).primary;
             const Icon = [
               LayoutDashboard,
               BookOpen,
@@ -824,7 +825,7 @@ function App() {
                 className={section.name === group.name ? "active" : ""}
                 aria-current={section.name === group.name ? "true" : undefined}
                 title={group.name}
-                onClick={() => navigate(workspaceMenu(group).primary[0])}
+                onClick={() => navigate(landingPage)}
               >
                 <Icon size={19} />
                 {group.name}
