@@ -121,8 +121,7 @@ export function financialCenter(data, month) {
   const balanceFor = (id, type, total) =>
     Math.max(
       0,
-      number(total) -
-        linkedPaymentTotal(paymentEntries, `${type}Id`, id),
+      number(total) - linkedPaymentTotal(paymentEntries, `${type}Id`, id),
     );
   const upcomingCollections = [
     ...(data.orders || [])
@@ -159,11 +158,7 @@ export function financialCenter(data, month) {
             order.pickupDate?.startsWith(month),
         )
         .reduce((sum, order) => {
-          const paid = linkedPaymentTotal(
-            data.payments,
-            "orderId",
-            order.id,
-          );
+          const paid = linkedPaymentTotal(data.payments, "orderId", order.id);
           return sum + Math.max(0, number(order.total) - paid);
         }, 0) +
       summary.sales
@@ -172,11 +167,7 @@ export function financialCenter(data, month) {
             !sale.orderId && ["unpaid", "partial"].includes(sale.paymentStatus),
         )
         .reduce((sum, sale) => {
-          const paid = linkedPaymentTotal(
-            data.payments,
-            "saleId",
-            sale.id,
-          );
+          const paid = linkedPaymentTotal(data.payments, "saleId", sale.id);
           return sum + Math.max(0, number(sale.total) - paid);
         }, 0),
     wasteCost,
