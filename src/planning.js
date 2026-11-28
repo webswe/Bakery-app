@@ -47,7 +47,7 @@ export function quoteCalculation(data, input) {
   )
     throw Error("Set purchase prices before quoting.");
   const portions = number(input.portions, "Portions", 1);
-  if (!Number.isInteger(portions) || !(recipe.yield > 0))
+  if (!Number.isSafeInteger(portions) || !Number.isFinite(Number(recipe.yield)) || !(recipe.yield > 0))
     throw Error("Enter whole portions and a valid recipe yield.");
   const margin = number(input.margin, "Margin");
   const taxRate = number(input.taxRate, "Tax rate");
@@ -98,7 +98,23 @@ export function quoteCalculation(data, input) {
     margin: priced.margin,
   };
 }
+export function acceptedQuoteIds(orders = []) {
+  return new Set(
+    orders
+      .filter((order) => order.quoteId && order.status !== "cancelled")
+      .map((order) => order.quoteId),
+  );
+}
+
+export function removeQuote(data, id) {
+  if (acceptedQuoteIds(data.orders).has(id))
+    throw Error("This quote is linked to an order and must be kept.");
+  return { ...data, quotes: data.quotes.filter((quote) => quote.id !== id) };
+}
+
 export function saveQuote(data, input, id) {
+  if (id && acceptedQuoteIds(data.orders).has(id))
+    throw Error("This quote is linked to an order and cannot be recalculated.");
   const snapshot = quoteCalculation(data, input);
   const quoteDate = date(input.date);
   const customerResult = ensureCustomer(data, input);

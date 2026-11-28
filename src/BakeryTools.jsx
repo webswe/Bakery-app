@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   createOrder,
   updateOrder,
@@ -7,7 +7,7 @@ import {
   recordWaste,
   scaleRecipe,
 } from "./business.js";
-import { localDate } from "./planning.js";
+import { acceptedQuoteIds, localDate } from "./planning.js";
 import { readBackups } from "./backupStorage.js";
 import { migrateData } from "./analytics.js";
 import { orderPaid } from "./ownerOps.js";
@@ -67,8 +67,12 @@ export default function BakeryTools({
   );
 }
 function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
+  const availableQuotes = useMemo(() => {
+    const accepted = acceptedQuoteIds(data.orders);
+    return data.quotes.filter((quote) => !accepted.has(quote.id));
+  }, [data.orders, data.quotes]);
   const [quoteId, setQuote] = useState(
-      data.quotes.some((q) => q.id === initialQuoteId) ? initialQuoteId : "",
+      availableQuotes.some((q) => q.id === initialQuoteId) ? initialQuoteId : "",
     ),
     [pickupDate, setDate] = useState(localDate),
     [deposit, setDeposit] = useState(0),
@@ -91,6 +95,7 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
               act(() => createOrder(data, { quoteId, pickupDate, deposit }))
             ) {
               setDeposit(0);
+              setQuote("");
               setAccepted(true);
             }
           }}
@@ -103,7 +108,7 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
               onChange={(e) => setQuote(e.target.value)}
             >
               <option value="">Choose a quote</option>
-              {data.quotes.map((q) => (
+              {availableQuotes.map((q) => (
                 <option key={q.id} value={q.id}>
                   {q.customer || "Customer"} · {q.snapshot.recipeName} ·{" "}
                   {money(q.snapshot.total)}
@@ -133,7 +138,9 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
               />
             </label>
           </div>
-          <button className="primary">Accept quote & plan production</button>
+          <button className="primary" disabled={!quoteId}>
+            Accept quote & plan production
+          </button>
         </form>
       </section>
       {accepted && (

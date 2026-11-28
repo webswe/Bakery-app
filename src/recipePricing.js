@@ -2,8 +2,10 @@ import { lineCost } from "./costing.js";
 import {
   evaluateListPrice,
   normalizePricingPolicy,
+  normalizeUnitsPerOrder,
   priceForMargin,
 } from "./pricingStrategy.js";
+import { customerTax } from "./taxation.js";
 
 const saleFormats = {
   individual: "individual dessert",
@@ -107,13 +109,15 @@ export function recipePricingPlan(recipe, items, settings = {}, input = {}) {
   const processorFeePercent = clamp(policy.processorFeePercent, 0, 50);
   const processorFixedFee = Math.max(0, finite(policy.processorFixedFee));
   const discountPercent = clamp(policy.discountPercent, 0, 90);
+  const unitsPerOrder = normalizeUnitsPerOrder(policy.unitsPerOrder);
+  const fixedFeePerUnit = processorFixedFee / unitsPerOrder;
   const roundTo = Math.max(0.01, finite(policy.roundTo, 0.5));
   const bufferedBatchCost = costs.total * (1 + wastePercent / 100);
   const costPerSellingUnit = bufferedBatchCost / costs.sellableUnits;
   const pricingInput = {
     cost: costPerSellingUnit,
     processorFeePercent,
-    processorFixedFee,
+    processorFixedFee: fixedFeePerUnit,
     discountPercent,
     roundTo,
   };
@@ -132,7 +136,7 @@ export function recipePricingPlan(recipe, items, settings = {}, input = {}) {
   const salesTaxRate = clamp(policy.salesTaxRate, 0, 100);
   const suggestedSale = recommendation.listPrice;
   const suggestedPortion = suggestedSale / costs.quantity;
-  const customerTotal = suggestedSale * (1 + salesTaxRate / 100);
+  const customerTotal = customerTax(suggestedSale, salesTaxRate).total;
   const laborHours = Math.max(0, finite(recipe.laborMinutes)) / 60;
   return {
     ...costs,
@@ -141,8 +145,10 @@ export function recipePricingPlan(recipe, items, settings = {}, input = {}) {
     wastePercent,
     processorFeePercent,
     processorFixedFee,
+    unitsPerOrder,
+    fixedFeePerUnit,
     discountPercent,
-    roundTo,
+    roundTo: recommendation.roundTo,
     bufferedBatchCost,
     costPerSellingUnit,
     current,
@@ -151,6 +157,8 @@ export function recipePricingPlan(recipe, items, settings = {}, input = {}) {
     suggestedSale,
     customerTotal,
     salesTaxRate,
+    suggestedRevenue: recommendation.realizedRevenue,
+    suggestedProcessingFee: recommendation.processingFee,
     suggestedProfit: recommendation.profit,
     suggestedMargin: recommendation.margin,
     suggestedMarkup: recommendation.markup,

@@ -40,6 +40,12 @@ import {
 } from "./WorkspaceUtilities.jsx";
 import { readRecentPages, rememberPage } from "./qol.js";
 import { resolveAppearance } from "./appearanceThemes.js";
+import {
+  readOptionalStorage,
+  writeOptionalStorage,
+  removeOptionalStorage,
+  readWorkspaceDraft,
+} from "./optionalWorkspaceStorage.js";
 import { normalizeDashboardConfig } from "./dashboardConfig.js";
 import { ensureCustomer } from "./customerOps.js";
 import { parseQuantity } from "./quantity.js";
@@ -121,6 +127,7 @@ const nonTextInputTypes = new Set([
   "submit",
 ]);
 function recoverTextFieldFocus(event) {
+  if (event.button !== 0) return;
   const field = event.target.closest?.(
     "input, textarea, [contenteditable='true']",
   );
@@ -140,7 +147,9 @@ function recoverTextFieldFocus(event) {
       field.focus({ preventScroll: true });
   };
   focus();
-  requestAnimationFrame(focus);
+  requestAnimationFrame(() => {
+    if (document.activeElement === document.body) focus();
+  });
 }
 const readLock = () => {
   try {
@@ -239,11 +248,11 @@ function App() {
   const [lockConfig, setLockState] = useState(readLock);
   const [locked, setLocked] = useState(() => !!readLock());
   const [showTutorial, setShowTutorial] = useState(
-    () => !localStorage.getItem(tutorialKey),
+    () => !readOptionalStorage(localStorage, tutorialKey),
   );
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () => localStorage.getItem(sidebarCollapsedKey) === "true",
+    () => readOptionalStorage(localStorage, sidebarCollapsedKey) === "true",
   );
   const [savedAt, setSavedAt] = useState(null);
   const [visibleActivity, setVisibleActivity] = useState(50);
@@ -258,6 +267,7 @@ function App() {
     ),
     [modal, setModal] = useState(null),
     [modalDirty, setModalDirty] = useState(false),
+    [modalDraftSaved, setModalDraftSaved] = useState(null),
     [error, setError] = useState(""),
     [month, setMonth] = useState(today().slice(0, 7));
   const section = sectionFor(page),
@@ -268,7 +278,9 @@ function App() {
     if (
       modalDirty &&
       !confirm(
-        "Leave this unsaved draft? It will remain available to recover later.",
+        modalDraftSaved
+          ? "Leave this form? Its draft will be available to recover later."
+          : "Leave this form? Recent changes could not be autosaved.",
       )
     )
       return;
@@ -283,6 +295,7 @@ function App() {
     const handle = () => {
       const route = readRoute(window.location.hash);
       setModal(null);
+      setModalDirty(false);
       setPage(route.page);
       setRouteContext(route.context);
       setError("");
@@ -298,7 +311,7 @@ function App() {
     window.scrollTo(0, 0);
   }, [page]);
   useEffect(() => {
-    localStorage.setItem(sidebarCollapsedKey, String(sidebarCollapsed));
+    writeOptionalStorage(localStorage, sidebarCollapsedKey, String(sidebarCollapsed));
   }, [sidebarCollapsed]);
   useEffect(() => {
     setRecentPages((current) => rememberPage(localStorage, current, page));
@@ -328,7 +341,7 @@ function App() {
             Math.round(cell.getBoundingClientRect().width),
           ),
       );
-      localStorage.setItem(key, JSON.stringify(widths));
+      writeOptionalStorage(localStorage, key, JSON.stringify(widths));
     };
     document.addEventListener("pointerup", remember);
     return () => {
@@ -419,11 +432,11 @@ function App() {
     if (!desktop?.createDeviceBackup) return;
     const day = today();
     const key = "bakery-ledger-device-backup-day-v1";
-    if (localStorage.getItem(key) === day) return;
+    if (readOptionalStorage(localStorage, key) === day) return;
     desktop
       .createDeviceBackup(data, day)
       .then((result) => {
-        if (result?.available) localStorage.setItem(key, day);
+        if (result?.available) writeOptionalStorage(localStorage, key, day);
       })
       .catch(() => {
         /* a portable backup remains available in Secure backups */
@@ -436,7 +449,7 @@ function App() {
     setLocked(false);
   }
   function closeTutorial() {
-    localStorage.setItem(tutorialKey, "complete");
+    writeOptionalStorage(localStorage, tutorialKey, "complete");
     setShowTutorial(false);
   }
   function save(next, restoring = false) {
@@ -471,23 +484,16 @@ function App() {
   }
   function open(type, value) {
     setError("");
-    let nextValue = value;
-    let restoredDraft = false;
-    if (["item", "recipe", "expense"].includes(type)) {
-      try {
-        const draft = JSON.parse(
-          localStorage.getItem(modalDraftKey(type, value)),
-        );
-        if (draft) {
-          nextValue = { ...(value || {}), ...draft };
-          restoredDraft = true;
-        }
-      } catch {
-        /* ignore unreadable draft */
-      }
-    }
+    const draft = ["item", "recipe", "expense"].includes(type)
+      ? readWorkspaceDraft(localStorage, modalDraftKey(type, value))
+      : null;
     setModalDirty(false);
-    setModal({ type, value: nextValue, restoredDraft });
+    setModalDraftSaved(null);
+    setModal({
+      type,
+      value: draft ? { ...(value || {}), ...draft } : value,
+      restoredDraft: Boolean(draft),
+    });
   }
   function saveModalDraft(event) {
     if (!modal || !["item", "recipe", "expense"].includes(modal.type)) return;
@@ -499,16 +505,22 @@ function App() {
         amount: row.querySelector('[name="quantity"]')?.value,
         unit: row.querySelector('[name="lineUnit"]')?.value,
       }));
-    localStorage.setItem(
+    const saved = writeOptionalStorage(
+      localStorage,
       modalDraftKey(modal.type, modal.value),
       JSON.stringify(draft),
     );
+    setModalDraftSaved(saved);
     setModalDirty(true);
   }
   function closeModal() {
     if (
       modalDirty &&
-      !confirm("Close this form? Your draft will remain saved on this device.")
+      !confirm(
+        modalDraftSaved
+          ? "Close this form? Its draft will remain saved on this device."
+          : "Close this form? Recent changes could not be autosaved.",
+      )
     )
       return;
     setModalDirty(false);
@@ -665,8 +677,11 @@ function App() {
           throw Error(
             "Selling-unit quantity must be between 1 and the batch yield.",
           );
-        if (!(salePrice >= 0)) throw Error("Enter a valid selling price.");
+        if (!Number.isFinite(salePrice) || salePrice < 0)
+          throw Error("Enter a valid selling price.");
+        const previous = data.recipes.find((recipe) => recipe.id === modal.value?.id);
         const r = {
+          ...previous,
           id: modal.value?.id || uid(),
           name: f.name,
           category: f.category,
@@ -689,7 +704,7 @@ function App() {
           electricityKwh: +f.electricityKwh || 0,
           overheadPerBatch: +f.overheadPerBatch || 0,
         };
-        const withRevision = saveRecipeRevision(data, modal.value, r);
+        const withRevision = saveRecipeRevision(data, previous, r);
         persist({
           ...withRevision,
           recipes: [...data.recipes.filter((x) => x.id !== r.id), r],
@@ -709,7 +724,7 @@ function App() {
       if (modal.type === "expense")
         persist(saveExpense(data, { ...modal.value, ...f }));
       if (["item", "recipe", "expense"].includes(modal.type))
-        localStorage.removeItem(modalDraftKey(modal.type, modal.value));
+        removeOptionalStorage(localStorage, modalDraftKey(modal.type, modal.value));
       setModalDirty(false);
       setModal(null);
     } catch (err) {
@@ -1419,7 +1434,12 @@ function App() {
               </button>
             </div>
             <form onSubmit={submit} onInput={saveModalDraft}>
-              {modal.restoredDraft && (
+              {modalDraftSaved === false && (
+                <p className="hint" role="status">
+                  Draft autosave is unavailable. Save this form before closing to keep your changes.
+                </p>
+              )}
+              {modal.restoredDraft && modalDraftSaved !== false && (
                 <p className="draft-status">Recovered your autosaved draft.</p>
               )}
               {modal.type === "tax" ? (

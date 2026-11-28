@@ -1,3 +1,5 @@
+import { writeOptionalStorage } from "./optionalWorkspaceStorage.js";
+
 const recentPagesKey = "bakery-ledger-recent-pages-v1";
 
 export function readRecentPages(storage) {
@@ -13,7 +15,7 @@ export function readRecentPages(storage) {
 
 export function rememberPage(storage, pages, page) {
   const next = [page, ...pages.filter((item) => item !== page)].slice(0, 6);
-  storage.setItem(recentPagesKey, JSON.stringify(next));
+  writeOptionalStorage(storage, recentPagesKey, JSON.stringify(next));
   return next;
 }
 

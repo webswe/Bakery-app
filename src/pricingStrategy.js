@@ -5,6 +5,9 @@ const finite = (value, fallback = 0) => {
 const clamp = (value, minimum, maximum) =>
   Math.min(maximum, Math.max(minimum, finite(value, minimum)));
 
+export const normalizeUnitsPerOrder = (value) =>
+  Math.round(clamp(value ?? 1, 1, 1000));
+
 export function normalizePricingPolicy(settings = {}) {
   const saved = settings.pricingGuide || {};
   const ownerGoals = settings.ownerGoals || {};
@@ -20,6 +23,7 @@ export function normalizePricingPolicy(settings = {}) {
     processorFeePercent: clamp(saved.processorFeePercent ?? 0, 0, 50),
     processorFixedFee: Math.max(0, finite(saved.processorFixedFee)),
     discountPercent: clamp(saved.discountPercent ?? 0, 0, 90),
+    unitsPerOrder: normalizeUnitsPerOrder(saved.unitsPerOrder),
     roundTo: Math.max(0.01, finite(saved.roundTo, 0.5)),
     monthlyFixedCosts: Math.max(
       0,
@@ -62,19 +66,23 @@ export function evaluateListPrice(input) {
 
 export function priceForMargin(input) {
   const cost = Math.max(0, finite(input.cost));
-  const targetMargin = clamp(input.targetMargin, 0, 90);
-  const feeRate = clamp(input.processorFeePercent, 0, 50) / 100;
+  const targetMargin = Number(input.targetMargin ?? 0);
+  if (!Number.isFinite(targetMargin) || targetMargin < 0 || targetMargin >= 100)
+    throw Error("Target margin must be between 0% and less than 100%.");
+  const feePercent = clamp(input.processorFeePercent, 0, 50);
+  const feeRate = feePercent / 100;
   const discountRate = clamp(input.discountPercent, 0, 90) / 100;
   const fixedFee = Math.max(0, finite(input.processorFixedFee));
-  const roundTo = Math.max(0.01, finite(input.roundTo, 0.01));
+  const increment = Math.max(1, Math.round(finite(input.roundTo, 0.01) * 100));
   const denominator = 1 - targetMargin / 100 - feeRate;
-  if (denominator <= 0)
+  if (targetMargin + feePercent >= 100)
     throw Error("Target margin and processing fee must total less than 100%.");
   const realizedRequired = (cost + fixedFee) / denominator;
   const rawListPrice = realizedRequired / Math.max(0.01, 1 - discountRate);
-  const listPrice = Number(
-    (Math.ceil(rawListPrice / roundTo - 1e-9) * roundTo).toFixed(10),
-  );
+  const listCents = Math.ceil((rawListPrice * 100) / increment - 1e-9) * increment;
+  if (!Number.isSafeInteger(listCents))
+    throw Error("Calculated price is too large. Check costs and margin.");
+  const listPrice = listCents / 100;
   return {
     ...evaluateListPrice({
       ...input,
@@ -83,7 +91,7 @@ export function priceForMargin(input) {
     }),
     rawListPrice,
     targetMargin,
-    roundTo,
+    roundTo: increment / 100,
   };
 }
 

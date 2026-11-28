@@ -1,37 +1,58 @@
 import { monthlySummary } from "./analytics.js";
+import { saveRecipeRevision } from "./bakeryOperations.js";
 import { recipePricingPlan, recipeSaleDetails } from "./recipePricing.js";
 import {
   monthlySalesPlan,
   normalizePricingPolicy,
   priceForMargin,
 } from "./pricingStrategy.js";
+import { customerTax } from "./taxation.js";
+
+export function pricingDeskDefaults(data, recipeId) {
+  const recipe = data.recipes.find((row) => row.id === recipeId);
+  return {
+    ...normalizePricingPolicy({
+      ...data.settings,
+      pricingGuide: {
+        ...data.settings?.pricingGuide,
+        ...recipe?.pricingPlan,
+      },
+    }),
+    salesTaxRate: data.salesTaxRate ?? 0,
+  };
+}
+
+function usablePlan(data, recipe, input) {
+  if (!recipe) throw Error("Choose a recipe.");
+  if (!recipe.lines?.length || !Number.isFinite(Number(recipe.yield)) || !(recipe.yield > 0))
+    throw Error("Set up recipe ingredients and a positive batch yield first.");
+  const unpriced = data.items.find(
+    (item) => item.needsPrice && recipe.lines.some((line) => line.itemId === item.id),
+  );
+  if (unpriced) throw Error(`Set a purchase price for ${unpriced.name} first.`);
+  const unitsPerOrder = Number(input.unitsPerOrder);
+  if (!Number.isInteger(unitsPerOrder) || unitsPerOrder < 1 || unitsPerOrder > 1000)
+    throw Error("Enter 1 to 1,000 selling units per order.");
+
+  const plan = recipePricingPlan(recipe, data.items, data.settings, input);
+  if (!plan.wholeSaleUnits)
+    throw Error(`Increase the recipe yield or lower the selling quantity so a batch makes at least one ${plan.label}.`);
+  return plan;
+}
 
 export function pricingDeskReport(data, recipeId, input = {}, month = "") {
   const recipe = data.recipes.find((row) => row.id === recipeId);
-  if (!recipe) throw Error("Choose a recipe.");
-  const policy = {
-    ...normalizePricingPolicy(data.settings),
-    ...input,
-  };
-  const plan = recipePricingPlan(recipe, data.items, data.settings, {
-    ...policy,
-    salesTaxRate: input.salesTaxRate ?? data.salesTaxRate ?? 0,
-  });
+  const policy = { ...pricingDeskDefaults(data, recipeId), ...input };
+  const plan = usablePlan(data, recipe, policy);
   const summary = monthlySummary(
     data,
     month || new Date().toISOString().slice(0, 7),
   );
-  const variableCostPerUnit =
-    (plan.variableTotal * (1 + plan.wastePercent / 100)) / plan.sellableUnits;
-  const unitContribution =
-    plan.suggestedSale * (1 - plan.discountPercent / 100) -
-    plan.suggestedSale *
-      (1 - plan.discountPercent / 100) *
-      (plan.processorFeePercent / 100) -
-    plan.processorFixedFee -
-    variableCostPerUnit;
+  // Batch overhead repeats with production, in addition to monthly fixed expenses.
+  const variableCostPerUnit = plan.costPerSellingUnit;
+  const unitContribution = plan.suggestedRevenue - plan.suggestedProcessingFee - variableCostPerUnit;
   const monthly = monthlySalesPlan({
-    unitRevenue: plan.suggestedSale * (1 - plan.discountPercent / 100),
+    unitRevenue: plan.suggestedRevenue,
     unitProfit: plan.suggestedProfit,
     unitContribution,
     fixedCosts: policy.monthlyFixedCosts,
@@ -41,20 +62,27 @@ export function pricingDeskReport(data, recipeId, input = {}, month = "") {
     actualProfit: summary.profit,
     workingDays: policy.workingDays,
   });
+  const formula = {
+    cost: plan.costPerSellingUnit,
+    processorFeePercent: plan.processorFeePercent,
+    processorFixedFee: plan.fixedFeePerUnit,
+    discountPercent: plan.discountPercent,
+    roundTo: plan.roundTo,
+  };
   const ladderMargins = [...new Set([20, 30, 35, 40, 50, plan.targetMargin])]
-    .filter((value) => value <= 90)
+    .filter((value) => value + plan.processorFeePercent < 100)
     .sort((a, b) => a - b);
-  const ladder = ladderMargins.map((targetMargin) => ({
-    targetMargin,
-    ...priceForMargin({
-      cost: plan.costPerSellingUnit,
-      targetMargin,
-      processorFeePercent: plan.processorFeePercent,
-      processorFixedFee: plan.processorFixedFee,
-      discountPercent: plan.discountPercent,
-      roundTo: plan.roundTo,
-    }),
-  }));
+  const ladder = ladderMargins.map((targetMargin) =>
+    priceForMargin({ ...formula, targetMargin }),
+  );
+  const units = plan.unitsPerOrder;
+  const order = {
+    units,
+    listSubtotal: plan.suggestedSale * units,
+    ...customerTax(plan.suggestedRevenue * units, plan.salesTaxRate),
+    processingFee: plan.suggestedProcessingFee * units,
+    profit: plan.suggestedProfit * units,
+  };
   return {
     recipe,
     sale: recipeSaleDetails(recipe),
@@ -65,6 +93,8 @@ export function pricingDeskReport(data, recipeId, input = {}, month = "") {
     summary,
     unitContribution,
     variableCostPerUnit,
+    breakEvenPrice: priceForMargin({ ...formula, targetMargin: 0 }).listPrice,
+    order,
   };
 }
 
@@ -84,31 +114,29 @@ export function savePricingPolicy(data, input) {
 
 export function applyPricingRecommendation(data, recipeId, input = {}) {
   const recipe = data.recipes.find((row) => row.id === recipeId);
-  if (!recipe) throw Error("Choose a recipe.");
-  const plan = recipePricingPlan(recipe, data.items, data.settings, {
+  const plan = usablePlan(data, recipe, {
+    ...pricingDeskDefaults(data, recipeId),
     ...input,
-    salesTaxRate: input.salesTaxRate ?? data.salesTaxRate ?? 0,
   });
+  const next = {
+    ...recipe,
+    salePrice: plan.suggestedSale,
+    price: plan.suggestedSale / plan.quantity,
+    pricingPlan: {
+      ...recipe.pricingPlan,
+      targetMargin: plan.targetMargin,
+      minimumMargin: plan.minimumMargin,
+      wastePercent: plan.wastePercent,
+      processorFeePercent: plan.processorFeePercent,
+      processorFixedFee: plan.processorFixedFee,
+      unitsPerOrder: plan.unitsPerOrder,
+      discountPercent: plan.discountPercent,
+      roundTo: plan.roundTo,
+    },
+  };
+  const withHistory = saveRecipeRevision(data, recipe, next);
   return {
-    ...data,
-    recipes: data.recipes.map((row) =>
-      row.id === recipeId
-        ? {
-            ...row,
-            salePrice: plan.suggestedSale,
-            price: plan.suggestedSale / plan.quantity,
-            pricingPlan: {
-              ...row.pricingPlan,
-              targetMargin: plan.targetMargin,
-              minimumMargin: plan.minimumMargin,
-              wastePercent: plan.wastePercent,
-              processorFeePercent: plan.processorFeePercent,
-              processorFixedFee: plan.processorFixedFee,
-              discountPercent: plan.discountPercent,
-              roundTo: plan.roundTo,
-            },
-          }
-        : row,
-    ),
+    ...withHistory,
+    recipes: data.recipes.map((row) => row.id === recipeId ? next : row),
   };
 }
