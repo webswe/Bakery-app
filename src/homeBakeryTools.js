@@ -2,7 +2,7 @@ import { capacityForecast, saveRecipeRevision } from "./bakeryOperations.js";
 import { validDate } from "./business.js";
 import { localDay } from "./dateUtils.js";
 import { orderPaid } from "./paymentLedger.js";
-import { inventoryForecast } from "./planning.js";
+import { acceptedQuoteIds, inventoryForecast } from "./planning.js";
 import { addDays } from "./productLots.js";
 import { recipePricingPlan, recipeSaleDetails } from "./recipePricing.js";
 import { money } from "./uiFormatters.js";
@@ -237,11 +237,7 @@ export function previewMenuPrice(data, recipeId, price) {
   if (!Number.isFinite(salePrice)) throw Error("Enter a valid selling price.");
   const next = { ...recipe, salePrice, price: salePrice / current.quantity };
   const proposed = recipePricingPlan(next, data.items, data.settings);
-  const accepted = new Set(
-    (data.orders || [])
-      .filter((order) => order.status !== "cancelled")
-      .map((order) => order.quoteId),
-  );
+  const accepted = acceptedQuoteIds(data.orders);
   const openQuotes = (data.quotes || []).filter(
     (quote) => quote.recipeId === recipeId && !accepted.has(quote.id),
   );

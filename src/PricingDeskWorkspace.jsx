@@ -2,10 +2,10 @@ import React, { useMemo, useState } from "react";
 import { ArrowUpRight, Calculator, CircleDollarSign, Save } from "lucide-react";
 import {
   applyPricingRecommendation,
+  pricingDeskDefaults,
   pricingDeskReport,
   savePricingPolicy,
 } from "./pricingPlanner.js";
-import { normalizePricingPolicy } from "./pricingStrategy.js";
 import { localDay, money } from "./uiFormatters.js";
 import "./PricingPlannerStyles.css";
 
@@ -21,13 +21,9 @@ const quantity = (value) =>
       }).format(value);
 
 export default function PricingDeskWorkspace({ data, save, navigate }) {
-  const defaults = normalizePricingPolicy(data.settings);
   const [recipeId, setRecipeId] = useState(data.recipes[0]?.id || "");
   const [month, setMonth] = useState(localDay().slice(0, 7));
-  const [form, setForm] = useState({
-    ...defaults,
-    salesTaxRate: data.salesTaxRate ?? 0,
-  });
+  const [form, setForm] = useState(() => pricingDeskDefaults(data, recipeId));
   const [status, setStatus] = useState("");
   const change = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -88,6 +84,7 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
               value={recipeId}
               onChange={(event) => {
                 setRecipeId(event.target.value);
+                setForm(pricingDeskDefaults(data, event.target.value));
                 setStatus("");
               }}
             >
@@ -177,6 +174,22 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
               />
             </label>
           </div>
+          <label>
+            Selling units in a typical order
+            <input
+              type="number"
+              min="1"
+              max="1000"
+              step="1"
+              value={form.unitsPerOrder}
+              onChange={(event) => change("unitsPerOrder", event.target.value)}
+            />
+          </label>
+          <p className="hint">
+            Enter how many boxes, dozens, or other selling units a customer
+            normally buys in one payment. The fixed card fee is charged once for
+            that order.
+          </p>
           <div className="form-row">
             <label>
               Round selling price to ($)
@@ -202,13 +215,14 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
           </div>
           <button
             className="secondary"
+            disabled={!report}
             onClick={() => {
-              save(savePricingPolicy(data, form));
-              setStatus("Pricing assumptions saved.");
+              if (save(savePricingPolicy(data, form)))
+                setStatus("Default pricing assumptions saved.");
             }}
           >
             <Save size={16} />
-            Save assumptions
+            Save as defaults
           </button>
         </section>
 
@@ -243,9 +257,9 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
                 <b>per {report.plan.label}</b>
               </div>
               <dl className="snapshot-ledger">
-                <dt>Customer total with tax</dt>
-                <dd>{money(report.plan.customerTotal)}</dd>
-                <dt>Profit after discount and fees</dt>
+                <dt>Break-even price per selling unit</dt>
+                <dd>{money(report.breakEvenPrice)}</dd>
+                <dt>Profit per unit after discount and fees</dt>
                 <dd>{money(report.plan.suggestedProfit)}</dd>
                 <dt>Achieved margin after rounding</dt>
                 <dd>{percent(report.plan.suggestedMargin)}</dd>
@@ -266,27 +280,32 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
                   selling units.
                 </p>
               )}
-              {!!report.plan.portionsShort && (
-                <p className="error">
-                  This batch is {report.plan.portionsShort} portion
-                  {report.plan.portionsShort === 1 ? "" : "s"} short of one{" "}
-                  {report.plan.label}. Increase the yield or reduce the selling
-                  quantity.
-                </p>
-              )}
+              <details className="conversion-box" open>
+                <summary>
+                  Example order · {report.order.units} selling unit(s)
+                </summary>
+                <dl className="snapshot-ledger">
+                  <dt>Before discount</dt>
+                  <dd>{money(report.order.listSubtotal)}</dd>
+                  <dt>After discount, before tax</dt>
+                  <dd>{money(report.order.net)}</dd>
+                  <dt>Customer sales tax</dt>
+                  <dd>{money(report.order.tax)}</dd>
+                  <dt>Customer pays</dt>
+                  <dd>{money(report.order.total)}</dd>
+                  <dt>Estimated processing fee</dt>
+                  <dd>{money(report.order.processingFee)}</dd>
+                  <dt>Estimated order profit</dt>
+                  <dd>{money(report.order.profit)}</dd>
+                </dl>
+              </details>
               <button
                 className="primary"
                 onClick={() => {
-                  const withPolicy = savePricingPolicy(data, form);
-                  save(
-                    applyPricingRecommendation(withPolicy, recipeId, {
-                      ...form,
-                      salesTaxRate: form.salesTaxRate,
-                    }),
-                  );
-                  setStatus(
-                    `${report.recipe.name} now uses the recommended before-tax price.`,
-                  );
+                  if (save(applyPricingRecommendation(data, recipeId, form)))
+                    setStatus(
+                      `${report.recipe.name} now uses the recommended before-tax price.`,
+                    );
                 }}
               >
                 Apply {money(report.plan.suggestedSale)} to recipe

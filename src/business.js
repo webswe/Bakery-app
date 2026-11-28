@@ -1,5 +1,10 @@
 import { purchaseTax } from "./taxation.js";
-import { inventoryForecast, savePlan, localDate } from "./planning.js";
+import {
+  acceptedQuoteIds,
+  inventoryForecast,
+  savePlan,
+  localDate,
+} from "./planning.js";
 import { sell, fullCost } from "./operations.js";
 import { consumeLots } from "./inventoryLots.js";
 import { allocateDocumentNumber } from "./documentOps.js";
@@ -24,6 +29,8 @@ export function validDate(value) {
 export function createOrder(data, input) {
   const quote = data.quotes.find((q) => q.id === input.quoteId);
   if (!quote) throw Error("Choose a saved quote.");
+  if (acceptedQuoteIds(data.orders).has(quote.id))
+    throw Error("This quote already has an order.");
   if (!data.recipes.some((r) => r.id === quote.recipeId))
     throw Error("The quoted recipe is missing.");
   const total = positive(quote.snapshot.total, "quote total", true),

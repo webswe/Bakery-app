@@ -7,8 +7,10 @@ import React, {
   useState,
 } from "react";
 import {
+  acceptedQuoteIds,
   localDate,
   inventoryForecast,
+  removeQuote,
   quoteCalculation,
   saveQuote,
   savePlan,
@@ -18,6 +20,11 @@ import { checklistSteps, toggleChecklist } from "./business.js";
 import { fullCost } from "./operations.js";
 import { normalizePricingPolicy } from "./pricingStrategy.js";
 import { money } from "./uiFormatters.js";
+import {
+  readOptionalStorage,
+  readWorkspaceDraft,
+  writeOptionalStorage,
+} from "./optionalWorkspaceStorage.js";
 const qty = (n) => Number(n.toFixed(3));
 const nextWeek = () => {
   const d = new Date();
@@ -76,12 +83,17 @@ function InventoryDashboard({ data, open }) {
   const [through, setThrough] = useState(nextWeek),
     [search, setSearch] = useState(""),
     [filter, setFilter] = useState(
-      () => localStorage.getItem("bakery-ledger-inventory-filter") || "all",
+      () =>
+        readOptionalStorage(localStorage, "bakery-ledger-inventory-filter") ||
+        "all",
     );
-  useEffect(
-    () => localStorage.setItem("bakery-ledger-inventory-filter", filter),
-    [filter],
-  );
+  useEffect(() => {
+    writeOptionalStorage(
+      localStorage,
+      "bakery-ledger-inventory-filter",
+      filter,
+    );
+  }, [filter]);
   const deferredSearch = useDeferredValue(search).toLocaleLowerCase();
   const forecast = useMemo(
     () => inventoryForecast(data, through || localDate()),
@@ -293,19 +305,22 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
     notes: "",
     date: localDate(),
   });
-  const [form, setForm] = useState(() => {
-      try {
-        const draft = JSON.parse(localStorage.getItem(draftKey));
-        return initialCustomer ? empty() : { ...empty(), ...(draft || {}) };
-      } catch {
-        return empty();
-      }
-    }),
+  const [form, setForm] = useState(() =>
+      initialCustomer
+        ? empty()
+        : { ...empty(), ...readWorkspaceDraft(localStorage, draftKey) },
+    ),
     [editing, setEditing] = useState(null),
     [notice, setNotice] = useState(""),
+    [draftSaved, setDraftSaved] = useState(null),
     [visibleQuotes, setVisibleQuotes] = useState(30);
+  const newQuoteDraft = useRef(null);
+  const accepted = useMemo(() => acceptedQuoteIds(data.orders), [data.orders]);
   useEffect(() => {
-    if (!editing) localStorage.setItem(draftKey, JSON.stringify(form));
+    if (!editing)
+      setDraftSaved(
+        writeOptionalStorage(localStorage, draftKey, JSON.stringify(form)),
+      );
   }, [form, editing]);
   const change = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -318,8 +333,8 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
     problem = e.message;
   }
   function reset() {
-    localStorage.removeItem(draftKey);
-    setForm(empty());
+    setForm(newQuoteDraft.current || empty());
+    newQuoteDraft.current = null;
     setEditing(null);
   }
   return (
@@ -341,8 +356,12 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
               }
             }}
           >
-            {!editing && localStorage.getItem(draftKey) && (
-              <p className="draft-status">Draft autosaved on this device.</p>
+            {!editing && draftSaved !== null && (
+              <p className="draft-status" role="status">
+                {draftSaved
+                  ? "Draft autosaved on this device."
+                  : "Draft autosave is unavailable. Save the quote before leaving."}
+              </p>
             )}
             <RecipeSelect
               data={data}
@@ -598,6 +617,7 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
           .map((q) => (
             <section className="panel saved-quote" key={q.id}>
               <span className="pill">{q.quoteNumber || q.date}</span>
+              {accepted.has(q.id) && <span className="pill">Accepted</span>}
               <h3>{q.customer || "Untitled customer"}</h3>
               <p>
                 {q.snapshot.recipeName} · {q.snapshot.portions} portions
@@ -614,11 +634,13 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
                   className="primary"
                   onClick={() => navigate("Orders", { quoteId: q.id })}
                 >
-                  Create order
+                  {accepted.has(q.id) ? "View orders" : "Create order"}
                 </button>
                 <button
                   className="secondary"
+                  disabled={accepted.has(q.id)}
                   onClick={() => {
+                    if (!editing) newQuoteDraft.current = form;
                     setForm({ ...q });
                     setEditing(q.id);
                     setNotice("");
@@ -635,13 +657,11 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
                 </button>
                 <button
                   className="text-button"
+                  disabled={accepted.has(q.id)}
                   onClick={() => {
                     if (confirm("Delete this saved quote?")) {
                       if (
-                        act(() => ({
-                          ...data,
-                          quotes: data.quotes.filter((x) => x.id !== q.id),
-                        })) &&
+                        act(() => removeQuote(data, q.id)) &&
                         editing === q.id
                       )
                         reset();
