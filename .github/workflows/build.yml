@@ -18,6 +18,14 @@ jobs:
       - run: npm ci
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      - name: Capture formatted cleanup
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          npx prettier --write src/main.jsx src/CatalogEditorFields.jsx src/WorkspaceLockScreen.jsx src/backupStorage.js test/backup-storage.test.js
+          echo CLEANUP_DIFF_BEGIN
+          git --no-pager diff --no-color -- src/main.jsx src/CatalogEditorFields.jsx src/WorkspaceLockScreen.jsx src/backupStorage.js test/backup-storage.test.js
+          echo CLEANUP_DIFF_END
       - run: npm test
       - run: npm run format:check
       - run: npm run build
