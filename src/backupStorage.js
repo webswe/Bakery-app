@@ -1,3 +1,5 @@
+import { recipeCost, units } from "./costing.js";
+
 export const storageKey = "bakery-ledger-v1";
 const backupKey = "bakery-ledger-backups-v1";
 const unreadableBackupKey = "bakery-ledger-backups-unreadable-v1";
@@ -78,4 +80,33 @@ export function persistWorkspace(storage, next, day, restoring = false) {
         data: old,
       },
     ]);
+}
+
+export function parseWorkspaceBackup(text) {
+  const backup = JSON.parse(text);
+  if (
+    !backup ||
+    !["items", "recipes", "sales", "expenses"].every((key) =>
+      Array.isArray(backup[key]),
+    )
+  )
+    throw Error("Invalid backup");
+
+  for (const item of backup.items) {
+    if (
+      !item.id ||
+      !item.name ||
+      !Object.hasOwn(units, item.unit) ||
+      !(item.amount > 0) ||
+      !(item.price >= 0)
+    )
+      throw Error("Invalid ingredient");
+  }
+
+  for (const recipe of backup.recipes) {
+    if (!(recipe.yield > 0) || !Array.isArray(recipe.lines))
+      throw Error("Invalid recipe");
+    recipeCost(recipe, backup.items);
+  }
+  return backup;
 }
