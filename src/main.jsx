@@ -1,8 +1,4 @@
-import {
-  applyPurchaseTaxRates,
-  purchaseTax,
-  taxRate,
-} from "./taxation.js";
+import { applyPurchaseTaxRates, purchaseTax, taxRate } from "./taxation.js";
 import Operations, { SaleFields } from "./InventoryWorkspace.jsx";
 import { addPresets, sellMany, fullCost } from "./operations.js";
 import Dashboard from "./Dashboard.jsx";
@@ -234,8 +230,7 @@ function App() {
   const [data, setData] = useState(() => {
     try {
       return migrateData(
-        JSON.parse(localStorage.getItem(storageKey)) ||
-          addPresets(initial),
+        JSON.parse(localStorage.getItem(storageKey)) || addPresets(initial),
       );
     } catch {
       return migrateData(addPresets(initial));
