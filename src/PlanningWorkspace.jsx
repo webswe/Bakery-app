@@ -20,7 +20,11 @@ import { checklistSteps, toggleChecklist } from "./business.js";
 import { fullCost } from "./operations.js";
 import { normalizePricingPolicy } from "./pricingStrategy.js";
 import { money } from "./uiFormatters.js";
-import { readOptionalStorage, readWorkspaceDraft, writeOptionalStorage } from "./optionalWorkspaceStorage.js";
+import {
+  readOptionalStorage,
+  readWorkspaceDraft,
+  writeOptionalStorage,
+} from "./optionalWorkspaceStorage.js";
 const qty = (n) => Number(n.toFixed(3));
 const nextWeek = () => {
   const d = new Date();
@@ -79,14 +83,17 @@ function InventoryDashboard({ data, open }) {
   const [through, setThrough] = useState(nextWeek),
     [search, setSearch] = useState(""),
     [filter, setFilter] = useState(
-      () => readOptionalStorage(localStorage, "bakery-ledger-inventory-filter") || "all",
+      () =>
+        readOptionalStorage(localStorage, "bakery-ledger-inventory-filter") ||
+        "all",
     );
-  useEffect(
-    () => {
-      writeOptionalStorage(localStorage, "bakery-ledger-inventory-filter", filter);
-    },
-    [filter],
-  );
+  useEffect(() => {
+    writeOptionalStorage(
+      localStorage,
+      "bakery-ledger-inventory-filter",
+      filter,
+    );
+  }, [filter]);
   const deferredSearch = useDeferredValue(search).toLocaleLowerCase();
   const forecast = useMemo(
     () => inventoryForecast(data, through || localDate()),
@@ -299,7 +306,9 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
     date: localDate(),
   });
   const [form, setForm] = useState(() =>
-      initialCustomer ? empty() : { ...empty(), ...readWorkspaceDraft(localStorage, draftKey) },
+      initialCustomer
+        ? empty()
+        : { ...empty(), ...readWorkspaceDraft(localStorage, draftKey) },
     ),
     [editing, setEditing] = useState(null),
     [notice, setNotice] = useState(""),
@@ -309,7 +318,9 @@ function QuoteStudio({ data, act, navigate, customerId: initialCustomerId }) {
   const accepted = useMemo(() => acceptedQuoteIds(data.orders), [data.orders]);
   useEffect(() => {
     if (!editing)
-      setDraftSaved(writeOptionalStorage(localStorage, draftKey, JSON.stringify(form)));
+      setDraftSaved(
+        writeOptionalStorage(localStorage, draftKey, JSON.stringify(form)),
+      );
   }, [form, editing]);
   const change = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }));

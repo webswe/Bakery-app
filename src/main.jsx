@@ -311,7 +311,11 @@ function App() {
     window.scrollTo(0, 0);
   }, [page]);
   useEffect(() => {
-    writeOptionalStorage(localStorage, sidebarCollapsedKey, String(sidebarCollapsed));
+    writeOptionalStorage(
+      localStorage,
+      sidebarCollapsedKey,
+      String(sidebarCollapsed),
+    );
   }, [sidebarCollapsed]);
   useEffect(() => {
     setRecentPages((current) => rememberPage(localStorage, current, page));
@@ -679,7 +683,9 @@ function App() {
           );
         if (!Number.isFinite(salePrice) || salePrice < 0)
           throw Error("Enter a valid selling price.");
-        const previous = data.recipes.find((recipe) => recipe.id === modal.value?.id);
+        const previous = data.recipes.find(
+          (recipe) => recipe.id === modal.value?.id,
+        );
         const r = {
           ...previous,
           id: modal.value?.id || uid(),
@@ -724,7 +730,10 @@ function App() {
       if (modal.type === "expense")
         persist(saveExpense(data, { ...modal.value, ...f }));
       if (["item", "recipe", "expense"].includes(modal.type))
-        removeOptionalStorage(localStorage, modalDraftKey(modal.type, modal.value));
+        removeOptionalStorage(
+          localStorage,
+          modalDraftKey(modal.type, modal.value),
+        );
       setModalDirty(false);
       setModal(null);
     } catch (err) {
@@ -1436,7 +1445,8 @@ function App() {
             <form onSubmit={submit} onInput={saveModalDraft}>
               {modalDraftSaved === false && (
                 <p className="hint" role="status">
-                  Draft autosave is unavailable. Save this form before closing to keep your changes.
+                  Draft autosave is unavailable. Save this form before closing
+                  to keep your changes.
                 </p>
               )}
               {modal.restoredDraft && modalDraftSaved !== false && (

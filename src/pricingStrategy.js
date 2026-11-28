@@ -79,7 +79,8 @@ export function priceForMargin(input) {
     throw Error("Target margin and processing fee must total less than 100%.");
   const realizedRequired = (cost + fixedFee) / denominator;
   const rawListPrice = realizedRequired / Math.max(0.01, 1 - discountRate);
-  const listCents = Math.ceil((rawListPrice * 100) / increment - 1e-9) * increment;
+  const listCents =
+    Math.ceil((rawListPrice * 100) / increment - 1e-9) * increment;
   if (!Number.isSafeInteger(listCents))
     throw Error("Calculated price is too large. Check costs and margin.");
   const listPrice = listCents / 100;

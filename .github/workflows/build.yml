@@ -18,14 +18,6 @@ jobs:
       - run: npm ci
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
-      - name: Capture formatted changes
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          npx prettier --write src/pricingStrategy.js src/recipePricing.js src/pricingPlanner.js src/PricingDeskWorkspace.jsx src/planning.js src/business.js src/BakeryTools.jsx src/homeBakeryTools.js src/optionalWorkspaceStorage.js src/qol.js src/main.jsx src/PlanningWorkspace.jsx test/pricingReliability.test.js
-          echo PRICING_DIFF_BEGIN
-          git --no-pager diff --no-color -- src/pricingStrategy.js src/recipePricing.js src/pricingPlanner.js src/PricingDeskWorkspace.jsx src/planning.js src/business.js src/BakeryTools.jsx src/homeBakeryTools.js src/optionalWorkspaceStorage.js src/qol.js src/main.jsx src/PlanningWorkspace.jsx test/pricingReliability.test.js
-          echo PRICING_DIFF_END
       - run: npm test
       - run: npm run format:check
       - run: npm run build

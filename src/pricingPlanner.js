@@ -24,19 +24,30 @@ export function pricingDeskDefaults(data, recipeId) {
 
 function usablePlan(data, recipe, input) {
   if (!recipe) throw Error("Choose a recipe.");
-  if (!recipe.lines?.length || !Number.isFinite(Number(recipe.yield)) || !(recipe.yield > 0))
+  if (
+    !recipe.lines?.length ||
+    !Number.isFinite(Number(recipe.yield)) ||
+    !(recipe.yield > 0)
+  )
     throw Error("Set up recipe ingredients and a positive batch yield first.");
   const unpriced = data.items.find(
-    (item) => item.needsPrice && recipe.lines.some((line) => line.itemId === item.id),
+    (item) =>
+      item.needsPrice && recipe.lines.some((line) => line.itemId === item.id),
   );
   if (unpriced) throw Error(`Set a purchase price for ${unpriced.name} first.`);
   const unitsPerOrder = Number(input.unitsPerOrder);
-  if (!Number.isInteger(unitsPerOrder) || unitsPerOrder < 1 || unitsPerOrder > 1000)
+  if (
+    !Number.isInteger(unitsPerOrder) ||
+    unitsPerOrder < 1 ||
+    unitsPerOrder > 1000
+  )
     throw Error("Enter 1 to 1,000 selling units per order.");
 
   const plan = recipePricingPlan(recipe, data.items, data.settings, input);
   if (!plan.wholeSaleUnits)
-    throw Error(`Increase the recipe yield or lower the selling quantity so a batch makes at least one ${plan.label}.`);
+    throw Error(
+      `Increase the recipe yield or lower the selling quantity so a batch makes at least one ${plan.label}.`,
+    );
   return plan;
 }
 
@@ -50,7 +61,8 @@ export function pricingDeskReport(data, recipeId, input = {}, month = "") {
   );
   // Batch overhead repeats with production, in addition to monthly fixed expenses.
   const variableCostPerUnit = plan.costPerSellingUnit;
-  const unitContribution = plan.suggestedRevenue - plan.suggestedProcessingFee - variableCostPerUnit;
+  const unitContribution =
+    plan.suggestedRevenue - plan.suggestedProcessingFee - variableCostPerUnit;
   const monthly = monthlySalesPlan({
     unitRevenue: plan.suggestedRevenue,
     unitProfit: plan.suggestedProfit,
@@ -137,6 +149,6 @@ export function applyPricingRecommendation(data, recipeId, input = {}) {
   const withHistory = saveRecipeRevision(data, recipe, next);
   return {
     ...withHistory,
-    recipes: data.recipes.map((row) => row.id === recipeId ? next : row),
+    recipes: data.recipes.map((row) => (row.id === recipeId ? next : row)),
   };
 }

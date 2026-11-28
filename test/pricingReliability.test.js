@@ -19,9 +19,7 @@ import { rememberPage } from "../src/qol.js";
 function workspace() {
   return migrateData({
     salesTaxRate: 7,
-    items: [
-      { id: "flour", name: "Flour", unit: "g", amount: 1000, price: 12 },
-    ],
+    items: [{ id: "flour", name: "Flour", unit: "g", amount: 1000, price: 12 }],
     recipes: [
       {
         id: "cookies",
@@ -74,7 +72,10 @@ test("pricing blocks incomplete recipe costs and recipes without a full selling 
   assert.throws(() => pricingDeskReport(data, "cookies"), /Flour/);
   data.items[0].needsPrice = false;
   data.recipes[0].yield = 1;
-  assert.throws(() => applyPricingRecommendation(data, "cookies"), /at least one box/);
+  assert.throws(
+    () => applyPricingRecommendation(data, "cookies"),
+    /at least one box/,
+  );
 });
 
 test("rounding stays on whole cents and honors quote margins above 90 percent", () => {
@@ -82,7 +83,11 @@ test("rounding stays on whole cents and honors quote margins above 90 percent", 
   assert.equal(price.listPrice, 100);
   assert.ok(price.margin >= 95);
   assert.equal(price.roundTo, 0.02);
-  assert.throws(() => priceForMargin({ cost: 5, targetMargin: 70, processorFeePercent: 30 }), /less than 100%/);
+  assert.throws(
+    () =>
+      priceForMargin({ cost: 5, targetMargin: 70, processorFeePercent: 30 }),
+    /less than 100%/,
+  );
 });
 
 test("accepting an existing quote twice cannot create a second order or edit the original", () => {
@@ -100,7 +105,10 @@ test("accepting an existing quote twice cannot create a second order or edit the
   const accepted = createOrder(quoted, orderInput);
   assert.equal(accepted.orders.length, 1);
   assert.equal(accepted.productionPlans.length, 1);
-  assert.throws(() => createOrder(accepted, orderInput), /already has an order/);
+  assert.throws(
+    () => createOrder(accepted, orderInput),
+    /already has an order/,
+  );
   assert.throws(() => saveQuote(accepted, input, id), /cannot be recalculated/);
   assert.throws(() => removeQuote(accepted, id), /must be kept/);
 
@@ -109,11 +117,16 @@ test("accepting an existing quote twice cannot create a second order or edit the
 });
 
 test("unavailable optional storage leaves drafts and navigation usable in memory", () => {
-  const fail = () => { throw Error("Storage unavailable"); };
+  const fail = () => {
+    throw Error("Storage unavailable");
+  };
   const storage = { getItem: fail, setItem: fail, removeItem: fail };
   assert.equal(readWorkspaceDraft(storage, "draft"), null);
   assert.equal(writeOptionalStorage(storage, "draft", "{}"), false);
   assert.equal(removeOptionalStorage(storage, "draft"), false);
-  assert.deepEqual(rememberPage(storage, ["Overview"], "Quotes"), ["Quotes", "Overview"]);
+  assert.deepEqual(rememberPage(storage, ["Overview"], "Quotes"), [
+    "Quotes",
+    "Overview",
+  ]);
   assert.equal(readWorkspaceDraft({ getItem: () => "[]" }, "draft"), null);
 });

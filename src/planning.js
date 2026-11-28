@@ -47,7 +47,11 @@ export function quoteCalculation(data, input) {
   )
     throw Error("Set purchase prices before quoting.");
   const portions = number(input.portions, "Portions", 1);
-  if (!Number.isSafeInteger(portions) || !Number.isFinite(Number(recipe.yield)) || !(recipe.yield > 0))
+  if (
+    !Number.isSafeInteger(portions) ||
+    !Number.isFinite(Number(recipe.yield)) ||
+    !(recipe.yield > 0)
+  )
     throw Error("Enter whole portions and a valid recipe yield.");
   const margin = number(input.margin, "Margin");
   const taxRate = number(input.taxRate, "Tax rate");

@@ -72,7 +72,9 @@ function Orders({ data, act, navigate, quoteId: initialQuoteId }) {
     return data.quotes.filter((quote) => !accepted.has(quote.id));
   }, [data.orders, data.quotes]);
   const [quoteId, setQuote] = useState(
-      availableQuotes.some((q) => q.id === initialQuoteId) ? initialQuoteId : "",
+      availableQuotes.some((q) => q.id === initialQuoteId)
+        ? initialQuoteId
+        : "",
     ),
     [pickupDate, setDate] = useState(localDate),
     [deposit, setDeposit] = useState(0),

@@ -187,8 +187,8 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
           </label>
           <p className="hint">
             Enter how many boxes, dozens, or other selling units a customer
-            normally buys in one payment. The fixed card fee is charged once
-            for that order.
+            normally buys in one payment. The fixed card fee is charged once for
+            that order.
           </p>
           <div className="form-row">
             <label>
@@ -281,7 +281,9 @@ export default function PricingDeskWorkspace({ data, save, navigate }) {
                 </p>
               )}
               <details className="conversion-box" open>
-                <summary>Example order · {report.order.units} selling unit(s)</summary>
+                <summary>
+                  Example order · {report.order.units} selling unit(s)
+                </summary>
                 <dl className="snapshot-ledger">
                   <dt>Before discount</dt>
                   <dd>{money(report.order.listSubtotal)}</dd>

@@ -1,5 +1,10 @@
 import { purchaseTax } from "./taxation.js";
-import { acceptedQuoteIds, inventoryForecast, savePlan, localDate } from "./planning.js";
+import {
+  acceptedQuoteIds,
+  inventoryForecast,
+  savePlan,
+  localDate,
+} from "./planning.js";
 import { sell, fullCost } from "./operations.js";
 import { consumeLots } from "./inventoryLots.js";
 import { allocateDocumentNumber } from "./documentOps.js";
